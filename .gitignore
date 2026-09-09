@@ -26,3 +26,21 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Backend (Java/Maven)
+backend/target/
+backend/.mvn/
+*.class
+*.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Env & secrets
+.env
+*.env.local
+
+# OS
+.DS_Store
