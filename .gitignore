@@ -33,6 +33,11 @@ backend/.mvn/
 *.class
 *.jar
 
+# Frontend (Angular/Node)
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
 # IDE
 .idea/
 *.iml
