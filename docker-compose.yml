@@ -1,0 +1,25 @@
+services:
+  db:
+    image: postgres:16
+    container_name: assoue-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    volumes:
+      - assoue_pg_data:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer
+    container_name: assoue-adminer
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    depends_on:
+      - db
+
+volumes:
+  assoue_pg_data:

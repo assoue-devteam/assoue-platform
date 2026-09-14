@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/assoue_db
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+  flyway:
+    enabled: true
+
+paydunya:
+  mode: ${PAYDUNYA_MODE:test}
+  master-key: ${PAYDUNYA_MASTER_KEY}
+  private-key: ${PAYDUNYA_PRIVATE_KEY}
+  token: ${PAYDUNYA_TOKEN}

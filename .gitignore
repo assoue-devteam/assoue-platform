@@ -29,7 +29,6 @@ yarn-error.log*
 
 # Backend (Java/Maven)
 backend/target/
-backend/.mvn/
 *.class
 *.jar
 
