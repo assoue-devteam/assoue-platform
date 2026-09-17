@@ -10,6 +10,10 @@ spring:
   flyway:
     enabled: true
 
+jwt:
+  secret: ${JWT_SECRET}
+  expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
 paydunya:
   mode: ${PAYDUNYA_MODE:test}
   master-key: ${PAYDUNYA_MASTER_KEY}
