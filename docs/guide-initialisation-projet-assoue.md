@@ -1,11 +1,13 @@
 # Guide d'initialisation — Projet AS'Soué (v2)
 
-Hypothèses retenues : Java 21 · Spring Boot 3.3.x · Angular 18 · Node 20 LTS · package de base `bf.assoue.platform` · monorepo · GitHub · Docker pour l'infra locale · OpenCode comme agent de codage.
+Hypothèses retenues : Java 21 · Spring Boot 3.3.x · Angular 18 · Node 20 LTS · package de base `bf.assoue.platform` · monorepo · GitHub · Docker pour l'infra locale · Claude Code comme agent de codage.
 
 **Décisions prises depuis la v1 de ce guide, à connaître avant de continuer :**
 - Le pilier **Formation** est hors scope de code pour cette livraison (4 semaines) — modélisé mais pas implémenté. Le module `formation/` n'est donc pas généré dans cette itération.
 - Fournisseur de paiement mobile tranché : **PayDunya**, en agrégateur unique (couvre Orange Money Burkina + Moov Burkina Faso via une seule intégration). Pas d'appel direct aux API Orange Money ou Moov.
 - Le dépôt GitHub `assoue-platform` a déjà été créé — les étapes de création sont conservées ci-dessous pour référence mais marquées comme faites.
+- **OpenCode a été abandonné** au profit de **Claude Code**, chaque développeur sur son propre compte Claude Pro individuel. `AGENTS.md` et `opencode.json` n'existent plus dans le repo, remplacés par `CLAUDE.md` et `.claude/rules/`.
+- Le squelette du projet a déjà été généré via `/init` — sections 1 à 4 ci-dessous décrivent donc un état déjà largement en place, pas une marche à suivre restant à exécuter dans l'ordre. Vérifie plutôt que tu recrées.
 
 ---
 
@@ -17,9 +19,10 @@ Avec 4 personnes, 4 semaines, et un besoin de coordination front/back permanent,
 assoue-platform/
 ├── backend/                 # Spring Boot
 ├── frontend/                # Angular
-├── docs/                    # CDC, diagrammes, décisions d'architecture (ADR), AGENTS.md fait référence à ces fichiers
-├── AGENTS.md                # instructions pour l'agent de codage (OpenCode)
-├── opencode.json             # config des modèles utilisés par OpenCode
+├── docs/                    # CDC, diagrammes, décisions d'architecture (ADR) — CLAUDE.md fait référence à ces fichiers
+├── .claude/
+│   └── rules/                # backend.md, frontend.md — conventions par pile technique, chargées à la demande
+├── CLAUDE.md                 # instructions pour Claude Code, lu à chaque session
 ├── docker-compose.yml        # Infra locale (Postgres, Adminer)
 ├── .env.example
 ├── .gitignore
@@ -281,36 +284,27 @@ Comme le backend et le frontend avancent en parallèle dès la semaine 1, défin
 
 ---
 
-## 5. Agent de codage — OpenCode
+## 5. Agent de codage — Claude Code
 
-- `AGENTS.md` à la racine du repo, lu automatiquement par OpenCode à chaque session — contient les règles de comportement, l'architecture, les garde-fous (déjà livré séparément).
-- `opencode.json` à la racine, committé (sans clé) :
-```json
-{
-  "$schema": "https://opencode.ai/config.json",
-  "model": "deepseek/deepseek-v4-pro",
-  "agent": {
-    "spike": {
-      "model": "anthropic/claude-sonnet-5"
-    }
-  }
-}
-```
-- Chaque développeur configure ses propres clés API en local (`opencode auth login`), jamais commitées.
-- Voir le guide de supervision séparé (`guide-supervision-opencode.md`, pour le chef de projet uniquement) pour le détail de configuration et de suivi.
+OpenCode a été abandonné (voir historique de décision) — les 4 développeurs utilisent Claude Code, chacun sur son propre compte Claude Pro individuel (jamais de compte partagé entre plusieurs personnes — voir la mise en garde sur les limites d'usage partagées).
+
+- `CLAUDE.md` à la racine du repo, lu automatiquement par Claude Code à chaque session — contient le contexte projet, les règles de comportement générales, les garde-fous. Fichier autonome, ne dépend plus d'`AGENTS.md` (supprimé du repo, comme `opencode.json`).
+- `.claude/rules/backend.md` et `.claude/rules/frontend.md` — conventions détaillées par pile technique (Spring Boot / Angular), chargées automatiquement selon les fichiers touchés, pas à chaque session.
+- Pas de clé API à configurer en local pour un usage Pro standard — chaque dev se connecte simplement avec `claude` puis `/login` sur son propre compte.
+- `/init` peut être relancé à tout moment pour que Claude Code enrichisse `CLAUDE.md` avec l'état réel du code (commandes build/run/test détectées, architecture telle qu'elle existe vraiment) — il ne l'écrase pas, il complète les sections manquantes. Une seule personne le lance, le reste de l'équipe récupère par `git pull`.
 
 ---
 
 ## 6. Checklist d'onboarding — jour 1 pour chaque développeur
 
-1. Installer : Docker Desktop, JDK 21, Node 20 LTS, OpenCode (`npm i -g opencode-ai`), IDE (IntelliJ recommandé pour le backend, VS Code pour le frontend)
+1. Installer : Docker Desktop, JDK 21, Node 20 LTS, Claude Code (voir docs.claude.com pour la commande d'installation selon l'OS), IDE (IntelliJ recommandé pour le backend, VS Code pour le frontend)
 2. `git clone <repo>` puis `git checkout develop`
 3. `cp .env.example .env` et remplir les valeurs (demander les vrais identifiants au reste de l'équipe, jamais dans Git)
 4. `docker compose up -d` → vérifier Adminer sur `:8081`
 5. Backend : `cd backend && ./mvnw spring-boot:run` → vérifier Swagger sur `:8080/swagger-ui.html`
 6. Frontend : `cd frontend && npm install && ng serve --proxy-config proxy.conf.json` → vérifier `:4200`
-7. `opencode auth login` pour configurer sa propre clé API DeepSeek (fournie par le point de facturation unique de l'équipe)
-8. Créer sa première branche `feature/...` à partir de `develop`
+7. `claude` puis `/login` avec son **propre** compte Claude Pro — jamais les identifiants d'un collègue
+8. Créer sa première branche `feature/...` à partir de `develop` — **jamais de commit direct sur `main`**, même pour une modification mineure
 
 ---
 
