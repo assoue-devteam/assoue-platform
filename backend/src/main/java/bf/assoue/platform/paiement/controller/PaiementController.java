@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.security.Principal;
 import java.util.Map;
 
 @RestController
@@ -21,10 +22,10 @@ public class PaiementController {
     private final PaiementService paiementService;
 
     @PostMapping("/commandes/{commandeId}")
-    public PaiementResponse initier(@PathVariable Long commandeId, HttpServletRequest request) {
+    public PaiementResponse initier(@PathVariable Long commandeId, HttpServletRequest request, Principal principal) {
         String callbackUrl = request.getRequestURL().toString().replace(
                 "/api/paiements/commandes/" + commandeId, "/api/paiements/webhook");
-        return paiementService.initier(commandeId, callbackUrl);
+        return paiementService.initier(commandeId, callbackUrl, principal.getName());
     }
 
     @PostMapping("/webhook")
