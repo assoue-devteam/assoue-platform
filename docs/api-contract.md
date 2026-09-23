@@ -30,6 +30,26 @@ Erreurs : `401` identifiants invalides, `423` compte bloqué après 3 échecs co
 
 Toutes les routes protégées attendent `Authorization: Bearer <token>`.
 
+### `GET /api/utilisateurs?verrouilles=`
+Rôle ADMIN. `verrouilles` est optionnel : `true` ne renvoie que les comptes bloqués par le compteur d'échecs (SA-02), `false` que les comptes actifs. Réponse `200` :
+```json
+[{ "id": 1, "email": "collecteur@example.com", "nom": "Sawadogo", "prenom": "Issa", "verrouille": false, "roles": ["COLLECTEUR"] }]
+```
+`verrouille` vaut `true` à partir de 3 échecs de connexion consécutifs.
+
+### `POST /api/utilisateurs`
+Rôle ADMIN. Seul chemin pour créer un compte COLLECTEUR ou ADMIN — `POST /api/auth/register` donne toujours CLIENT.
+```json
+{ "email": "collecteur@example.com", "motDePasse": "au moins 8 caractères", "nom": "Sawadogo", "prenom": "Issa", "roles": ["COLLECTEUR"] }
+```
+Réponse `201` : même format que la liste. Erreurs : `409` email déjà utilisé, `400` rôle inconnu ou validation échouée.
+
+### `PUT /api/utilisateurs/{id}/roles`
+Rôle ADMIN. Requête : `{ "roles": ["COLLECTEUR"] }` — remplace l'ensemble des rôles. `404` utilisateur introuvable, `400` rôle inconnu.
+
+### `POST /api/utilisateurs/{id}/debloquer`
+Rôle ADMIN (SA-02). Remet le compteur d'échecs à zéro : le compte verrouillé après 3 échecs peut de nouveau se connecter. Sans corps de requête. Réponse `200` : l'utilisateur au format ci-dessus, avec `verrouille: false`. `404` utilisateur introuvable.
+
 ## Commerce
 
 ### `GET /api/categories`
@@ -55,8 +75,21 @@ Réponse `201` :
 ```
 Erreurs : `400` produit en rupture ou requête sans ligne, `404` produit introuvable.
 
+### `GET /api/commandes?statut=`
+Rôle ADMIN (vue manager, MG-02). `statut` est optionnel (`EN_ATTENTE_PAIEMENT` ou `PAYEE`), les plus récentes d'abord. Réponse `200` :
+```json
+[{ "id": 10, "clientEmail": "client@example.com", "statut": "PAYEE", "dateCreation": "...", "total": 30000, "lignes": [{ "produitId": 1, "produitNom": "...", "quantite": 2, "prixUnitaire": 15000 }] }]
+```
+
+### `GET /api/commandes/en-attente?heures=24`
+Rôle ADMIN (MG-05). Commandes restées au statut `EN_ATTENTE_PAIEMENT` au-delà du délai indiqué (24 h par défaut), les plus anciennes d'abord. Réponse `200` :
+```json
+[{ "id": 10, "clientEmail": "client@example.com", "dateCreation": "...", "heuresDAttente": 30, "total": 30000 }]
+```
+Pas de notification poussée tant que l'infra temps réel (US-04) n'existe pas : le manager interroge cet endpoint.
+
 ### `GET /api/commandes/{id}`
-Authentifié, uniquement le client propriétaire de la commande. Réponse `200` au même format que la création. `404` si introuvable ou n'appartient pas à l'appelant (pour ne pas révéler l'existence d'une commande d'un tiers).
+Authentifié (rôle CLIENT ou ADMIN). Le client n'accède qu'à ses propres commandes ; le manager (rôle ADMIN) accède à n'importe laquelle pour en connaître le statut réel sans dépendre du webhook (MG-02). Réponse `200` au même format que la création. `404` si introuvable ou, pour un client, si elle n'est pas la sienne (pour ne pas révéler l'existence d'une commande d'un tiers).
 
 ## Paiement
 
@@ -91,11 +124,30 @@ Réponse `201` :
 { "id": 5, "referenceClient": "...", "statut": "DECLAREE", "dateDeclaration": "...", "latitude": 12.3714, "longitude": -1.5197, "lignes": [{ "materiau": "Plastique", "quantiteEstimee": 15.5 }] }
 ```
 
+### `PUT /api/collectes/{id}`
+Authentifié (rôle COLLECTEUR), uniquement le collecteur qui a saisi la déclaration. Corrige une saisie terrain (COL-03) :
+```json
+{ "materiauId": 2, "quantiteEstimee": 20.5, "localisation": { "lat": 12.3714, "lng": -1.5197 } }
+```
+`referenceClient` n'est pas modifiable. Réponse `200` au même format que la déclaration. Erreurs : `400` si la collecte n'est plus au statut `DECLAREE`, `404` si elle est introuvable ou appartient à un autre collecteur.
+
 ### `GET /api/collectes/mes-collectes`
 Authentifié (rôle COLLECTEUR). Liste les déclarations du collecteur connecté, même format que ci-dessus.
 
+### `GET /api/collectes?collecteurId=&statut=`
+Rôle ADMIN (vue manager, MG-04). Les deux filtres sont optionnels ; `statut` vaut `DECLAREE`, `VALIDEE` ou `TRAITEE`. Réponse `200` :
+```json
+[{ "id": 5, "collecteurId": 3, "collecteurEmail": "collecteur@example.com", "statut": "TRAITEE", "dateDeclaration": "...", "latitude": 12.3714, "longitude": -1.5197, "lignes": [{ "materiau": "Plastique", "quantiteEstimee": 15.5 }] }]
+```
+
+### `GET /api/collectes/volumes`
+Rôle ADMIN. Volumes cumulés par collecteur et par matériau (MG-04). Réponse `200` :
+```json
+[{ "collecteurId": 3, "collecteurEmail": "collecteur@example.com", "materiau": "Plastique", "quantiteTotale": 42.5, "nombreDeclarations": 4 }]
+```
+
 ### `PUT /api/collectes/{id}/valider`
-Authentifié (rôle ADMIN). Passe la déclaration en statut `VALIDEE`.
+Authentifié (rôle ADMIN). Passe une déclaration `DECLAREE` en statut `VALIDEE`. `400` si elle est déjà validée ou traitée.
 
 ### `PUT /api/collectes/{id}/traiter`
 Authentifié (rôle ADMIN). Passe une collecte `VALIDEE` en `TRAITEE` et incrémente le stock de matière première correspondant (US-05). `400` si la collecte n'est pas encore validée.

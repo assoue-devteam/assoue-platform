@@ -2,6 +2,8 @@ package bf.assoue.platform.commerce.service;
 
 import bf.assoue.platform.auth.model.Utilisateur;
 import bf.assoue.platform.auth.repository.UtilisateurRepository;
+import bf.assoue.platform.commerce.dto.CommandeAdminResponse;
+import bf.assoue.platform.commerce.dto.CommandeEnAttenteResponse;
 import bf.assoue.platform.commerce.dto.CommandeRequest;
 import bf.assoue.platform.commerce.dto.CommandeResponse;
 import bf.assoue.platform.commerce.model.Commande;
@@ -16,6 +18,9 @@ import bf.assoue.platform.stock.service.StockService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -55,14 +60,44 @@ public class CommandeService {
         return CommandeResponse.depuis(commandeRepository.save(commande));
     }
 
-    public CommandeResponse consulter(Long id, String emailClient) {
+    /**
+     * MG-02 : le manager consulte n'importe quelle commande pour en connaître le
+     * statut réel sans dépendre du webhook ; le client, lui, reste limité aux
+     * siennes (404 sur celle d'un tiers, pour ne pas en révéler l'existence).
+     */
+    public CommandeResponse consulter(Long id, String emailAppelant, boolean estManager) {
         Commande commande = trouver(id);
 
-        if (!commande.getClient().getEmail().equals(emailClient)) {
+        if (!estManager && !commande.getClient().getEmail().equals(emailAppelant)) {
             throw new RessourceIntrouvableException("Commande introuvable : " + id);
         }
 
         return CommandeResponse.depuis(commande);
+    }
+
+    /** MG-02 : suivi de l'ensemble des commandes clients, filtrable par statut. */
+    public List<CommandeAdminResponse> lister(CommandeStatut statut) {
+        List<Commande> commandes = statut != null
+                ? commandeRepository.findByStatutOrderByDateCreationDesc(statut)
+                : commandeRepository.findAllByOrderByDateCreationDesc();
+
+        return commandes.stream().map(CommandeAdminResponse::depuis).toList();
+    }
+
+    /**
+     * MG-05 : commandes restées en attente de paiement au-delà du délai, à relancer.
+     * Pas de notification poussée tant que l'infra temps réel (US-04) n'existe pas —
+     * le manager interroge cet endpoint.
+     */
+    public List<CommandeEnAttenteResponse> enAttenteDepuis(int heures) {
+        LocalDateTime maintenant = LocalDateTime.now();
+
+        return commandeRepository
+                .findByStatutAndDateCreationBeforeOrderByDateCreationAsc(
+                        CommandeStatut.EN_ATTENTE_PAIEMENT, maintenant.minusHours(heures))
+                .stream()
+                .map(commande -> CommandeEnAttenteResponse.depuis(commande, maintenant))
+                .toList();
     }
 
     /**

@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private static final int TENTATIVES_MAX_AVANT_BLOCAGE = 3;
+    public static final int TENTATIVES_MAX_AVANT_BLOCAGE = 3;
     private static final String ROLE_PAR_DEFAUT = "CLIENT";
 
     private final UtilisateurRepository utilisateurRepository;

@@ -15,8 +15,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 /**
  * Paiement webhook (`/api/paiements/webhook`) public : PayDunya appelle cet
- * endpoint côté serveur sans JWT, la vérification d'authenticité se fait par
- * signature/token PayDunya dans le contrôleur, pas par Spring Security.
+ * endpoint côté serveur sans JWT. La validation métier repose ensuite sur la
+ * revérification du statut réel via l'API PayDunya côté service.
  */
 @Configuration
 @EnableWebSecurity

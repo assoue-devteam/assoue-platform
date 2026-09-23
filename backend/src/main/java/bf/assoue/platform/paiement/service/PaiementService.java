@@ -27,9 +27,13 @@ public class PaiementService {
     private final PaydunyaClient paydunyaClient;
 
     @Transactional
-    public PaiementResponse initier(Long commandeId, String callbackUrl) {
+    public PaiementResponse initier(Long commandeId, String callbackUrl, String emailClient) {
         Commande commande = commandeRepository.findById(commandeId)
                 .orElseThrow(() -> new RessourceIntrouvableException("Commande introuvable : " + commandeId));
+
+        if (!commande.getClient().getEmail().equals(emailClient)) {
+            throw new RessourceIntrouvableException("Commande introuvable : " + commandeId);
+        }
 
         BigDecimal total = CommandeResponse.depuis(commande).total();
 

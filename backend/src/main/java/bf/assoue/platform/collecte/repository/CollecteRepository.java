@@ -12,4 +12,8 @@ public interface CollecteRepository extends JpaRepository<Collecte, Long> {
 
     List<Collecte> findByCollecteurEmailOrderByDateDeclarationDesc(String email);
 
+    List<Collecte> findAllByOrderByDateDeclarationDesc();
+
+    List<Collecte> findByCollecteurIdOrderByDateDeclarationDesc(Long collecteurId);
+
 }
