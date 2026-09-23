@@ -6,6 +6,7 @@ import bf.assoue.platform.collecte.dto.CollecteResponse;
 import bf.assoue.platform.collecte.dto.DeclarationCollecteRequest;
 import bf.assoue.platform.collecte.dto.LocalisationRequest;
 import bf.assoue.platform.collecte.dto.ModificationCollecteRequest;
+import bf.assoue.platform.collecte.dto.VolumeCollecteResponse;
 import bf.assoue.platform.collecte.model.Collecte;
 import bf.assoue.platform.collecte.model.CollecteStatut;
 import bf.assoue.platform.collecte.model.LigneCollecte;
@@ -24,6 +25,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -146,6 +148,32 @@ class CollecteServiceTest {
                 .isInstanceOf(RequeteInvalideException.class);
 
         verify(collecteRepository, never()).save(any());
+    }
+
+    @Test
+    void volumes_cumuleLesQuantitesParCollecteurEtParMateriau() {
+        Collecte premiere = collecteDe(CollecteStatut.TRAITEE, "collecteur@example.com");
+        Collecte seconde = collecteDe(CollecteStatut.DECLAREE, "collecteur@example.com");
+        when(collecteRepository.findAllByOrderByDateDeclarationDesc()).thenReturn(List.of(premiere, seconde));
+
+        List<VolumeCollecteResponse> volumes = collecteService.volumes();
+
+        assertThat(volumes).singleElement().satisfies(volume -> {
+            assertThat(volume.collecteurEmail()).isEqualTo("collecteur@example.com");
+            assertThat(volume.materiau()).isEqualTo("Plastique");
+            assertThat(volume.quantiteTotale()).isEqualByComparingTo("20");
+            assertThat(volume.nombreDeclarations()).isEqualTo(2);
+        });
+    }
+
+    @Test
+    void lister_filtreSurLeStatutDemande() {
+        when(collecteRepository.findAllByOrderByDateDeclarationDesc()).thenReturn(List.of(
+                collecteDe(CollecteStatut.DECLAREE, "collecteur@example.com"),
+                collecteDe(CollecteStatut.TRAITEE, "autre@example.com")));
+
+        assertThat(collecteService.lister(null, CollecteStatut.TRAITEE)).singleElement()
+                .satisfies(collecte -> assertThat(collecte.collecteurEmail()).isEqualTo("autre@example.com"));
     }
 
     private Collecte collecteDe(CollecteStatut statut, String emailCollecteur) {

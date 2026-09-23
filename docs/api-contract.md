@@ -118,6 +118,18 @@ Authentifié (rôle COLLECTEUR), uniquement le collecteur qui a saisi la déclar
 ### `GET /api/collectes/mes-collectes`
 Authentifié (rôle COLLECTEUR). Liste les déclarations du collecteur connecté, même format que ci-dessus.
 
+### `GET /api/collectes?collecteurId=&statut=`
+Rôle ADMIN (vue manager, MG-04). Les deux filtres sont optionnels ; `statut` vaut `DECLAREE`, `VALIDEE` ou `TRAITEE`. Réponse `200` :
+```json
+[{ "id": 5, "collecteurId": 3, "collecteurEmail": "collecteur@example.com", "statut": "TRAITEE", "dateDeclaration": "...", "latitude": 12.3714, "longitude": -1.5197, "lignes": [{ "materiau": "Plastique", "quantiteEstimee": 15.5 }] }]
+```
+
+### `GET /api/collectes/volumes`
+Rôle ADMIN. Volumes cumulés par collecteur et par matériau (MG-04). Réponse `200` :
+```json
+[{ "collecteurId": 3, "collecteurEmail": "collecteur@example.com", "materiau": "Plastique", "quantiteTotale": 42.5, "nombreDeclarations": 4 }]
+```
+
 ### `PUT /api/collectes/{id}/valider`
 Authentifié (rôle ADMIN). Passe une déclaration `DECLAREE` en statut `VALIDEE`. `400` si elle est déjà validée ou traitée.
 

@@ -2,10 +2,12 @@ package bf.assoue.platform.collecte.service;
 
 import bf.assoue.platform.auth.model.Utilisateur;
 import bf.assoue.platform.auth.repository.UtilisateurRepository;
+import bf.assoue.platform.collecte.dto.CollecteAdminResponse;
 import bf.assoue.platform.collecte.dto.CollecteResponse;
 import bf.assoue.platform.collecte.dto.DeclarationCollecteRequest;
 import bf.assoue.platform.collecte.dto.LocalisationRequest;
 import bf.assoue.platform.collecte.dto.ModificationCollecteRequest;
+import bf.assoue.platform.collecte.dto.VolumeCollecteResponse;
 import bf.assoue.platform.collecte.model.*;
 import bf.assoue.platform.collecte.repository.CollecteRepository;
 import bf.assoue.platform.collecte.repository.MateriauRepository;
@@ -17,7 +19,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -96,6 +101,46 @@ public class CollecteService {
         return collecteRepository.findByCollecteurEmailOrderByDateDeclarationDesc(emailCollecteur).stream()
                 .map(CollecteResponse::depuis)
                 .toList();
+    }
+
+    /**
+     * Vue manager (MG-04) : toutes les déclarations, filtrables par collecteur et
+     * par statut. Le filtre statut est appliqué en mémoire, le volume de déclarations
+     * reste faible à ce stade du projet.
+     */
+    public List<CollecteAdminResponse> lister(Long collecteurId, CollecteStatut statut) {
+        List<Collecte> collectes = collecteurId != null
+                ? collecteRepository.findByCollecteurIdOrderByDateDeclarationDesc(collecteurId)
+                : collecteRepository.findAllByOrderByDateDeclarationDesc();
+
+        return collectes.stream()
+                .filter(collecte -> statut == null || collecte.getStatut() == statut)
+                .map(CollecteAdminResponse::depuis)
+                .toList();
+    }
+
+    /** Volumes cumulés par collecteur et par matériau (MG-04). */
+    public List<VolumeCollecteResponse> volumes() {
+        Map<String, VolumeCollecteResponse> cumul = new LinkedHashMap<>();
+
+        for (Collecte collecte : collecteRepository.findAllByOrderByDateDeclarationDesc()) {
+            Utilisateur collecteur = collecte.getCollecteur();
+
+            for (LigneCollecte ligne : collecte.getLignes()) {
+                String materiau = ligne.getMateriau().getNom();
+                VolumeCollecteResponse courant = cumul.get(collecteur.getId() + "|" + materiau);
+
+                BigDecimal quantite = courant == null
+                        ? ligne.getQuantiteEstimee()
+                        : courant.quantiteTotale().add(ligne.getQuantiteEstimee());
+                long declarations = courant == null ? 1 : courant.nombreDeclarations() + 1;
+
+                cumul.put(collecteur.getId() + "|" + materiau, new VolumeCollecteResponse(
+                        collecteur.getId(), collecteur.getEmail(), materiau, quantite, declarations));
+            }
+        }
+
+        return List.copyOf(cumul.values());
     }
 
     @Transactional

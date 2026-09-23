@@ -1,8 +1,11 @@
 package bf.assoue.platform.collecte.controller;
 
+import bf.assoue.platform.collecte.dto.CollecteAdminResponse;
 import bf.assoue.platform.collecte.dto.CollecteResponse;
 import bf.assoue.platform.collecte.dto.DeclarationCollecteRequest;
 import bf.assoue.platform.collecte.dto.ModificationCollecteRequest;
+import bf.assoue.platform.collecte.dto.VolumeCollecteResponse;
+import bf.assoue.platform.collecte.model.CollecteStatut;
 import bf.assoue.platform.collecte.service.CollecteService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +42,19 @@ public class CollecteController {
     @PreAuthorize("hasRole('COLLECTEUR')")
     public List<CollecteResponse> mesCollectes(Principal principal) {
         return collecteService.mesCollectes(principal.getName());
+    }
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<CollecteAdminResponse> lister(@RequestParam(required = false) Long collecteurId,
+                                              @RequestParam(required = false) CollecteStatut statut) {
+        return collecteService.lister(collecteurId, statut);
+    }
+
+    @GetMapping("/volumes")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<VolumeCollecteResponse> volumes() {
+        return collecteService.volumes();
     }
 
     @PutMapping("/{id}/valider")
