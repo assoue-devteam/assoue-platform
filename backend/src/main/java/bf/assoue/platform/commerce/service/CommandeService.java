@@ -2,6 +2,7 @@ package bf.assoue.platform.commerce.service;
 
 import bf.assoue.platform.auth.model.Utilisateur;
 import bf.assoue.platform.auth.repository.UtilisateurRepository;
+import bf.assoue.platform.commerce.dto.CommandeEnAttenteResponse;
 import bf.assoue.platform.commerce.dto.CommandeRequest;
 import bf.assoue.platform.commerce.dto.CommandeResponse;
 import bf.assoue.platform.commerce.model.Commande;
@@ -16,6 +17,9 @@ import bf.assoue.platform.stock.service.StockService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -63,6 +67,22 @@ public class CommandeService {
         }
 
         return CommandeResponse.depuis(commande);
+    }
+
+    /**
+     * MG-05 : commandes restées en attente de paiement au-delà du délai, à relancer.
+     * Pas de notification poussée tant que l'infra temps réel (US-04) n'existe pas —
+     * le manager interroge cet endpoint.
+     */
+    public List<CommandeEnAttenteResponse> enAttenteDepuis(int heures) {
+        LocalDateTime maintenant = LocalDateTime.now();
+
+        return commandeRepository
+                .findByStatutAndDateCreationBeforeOrderByDateCreationAsc(
+                        CommandeStatut.EN_ATTENTE_PAIEMENT, maintenant.minusHours(heures))
+                .stream()
+                .map(commande -> CommandeEnAttenteResponse.depuis(commande, maintenant))
+                .toList();
     }
 
     /**

@@ -72,6 +72,13 @@ Réponse `201` :
 ```
 Erreurs : `400` produit en rupture ou requête sans ligne, `404` produit introuvable.
 
+### `GET /api/commandes/en-attente?heures=24`
+Rôle ADMIN (MG-05). Commandes restées au statut `EN_ATTENTE_PAIEMENT` au-delà du délai indiqué (24 h par défaut), les plus anciennes d'abord. Réponse `200` :
+```json
+[{ "id": 10, "clientEmail": "client@example.com", "dateCreation": "...", "heuresDAttente": 30, "total": 30000 }]
+```
+Pas de notification poussée tant que l'infra temps réel (US-04) n'existe pas : le manager interroge cet endpoint.
+
 ### `GET /api/commandes/{id}`
 Authentifié, uniquement le client propriétaire de la commande. Réponse `200` au même format que la création. `404` si introuvable ou n'appartient pas à l'appelant (pour ne pas révéler l'existence d'une commande d'un tiers).
 
