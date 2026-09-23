@@ -13,7 +13,7 @@ Statuts confrontés au code (backend Spring Boot + frontend Angular). Le fronten
 | Story | Statut déclaré | État réel |
 | --- | --- | --- |
 | SA-01 | Terminé | Livré (403 par rôle + administration des comptes et des rôles, `GET/POST /api/utilisateurs`, `PUT /api/utilisateurs/{id}/roles`) |
-| SA-02 | En cours | Partiel — blocage au 3e échec (423) OK, pas d'endpoint de déblocage par le super admin |
+| SA-02 | En cours | Livré — blocage au 3e échec (423) + `GET /api/utilisateurs?verrouilles=true` et `POST /api/utilisateurs/{id}/debloquer` |
 | SA-03 | Terminé | Livré — la validation exige désormais le statut `DECLAREE` (une collecte traitée ne peut plus régresser) |
 | SA-04 | Terminé | Livré |
 | SA-05 | Terminé | Livré — logique encore dans `StockController` plutôt que dans `StockService` |

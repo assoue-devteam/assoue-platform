@@ -30,8 +30,8 @@ Erreurs : `401` identifiants invalides, `423` compte bloqué après 3 échecs co
 
 Toutes les routes protégées attendent `Authorization: Bearer <token>`.
 
-### `GET /api/utilisateurs`
-Rôle ADMIN. Réponse `200` :
+### `GET /api/utilisateurs?verrouilles=`
+Rôle ADMIN. `verrouilles` est optionnel : `true` ne renvoie que les comptes bloqués par le compteur d'échecs (SA-02), `false` que les comptes actifs. Réponse `200` :
 ```json
 [{ "id": 1, "email": "collecteur@example.com", "nom": "Sawadogo", "prenom": "Issa", "verrouille": false, "roles": ["COLLECTEUR"] }]
 ```
@@ -46,6 +46,9 @@ Réponse `201` : même format que la liste. Erreurs : `409` email déjà utilis�
 
 ### `PUT /api/utilisateurs/{id}/roles`
 Rôle ADMIN. Requête : `{ "roles": ["COLLECTEUR"] }` — remplace l'ensemble des rôles. `404` utilisateur introuvable, `400` rôle inconnu.
+
+### `POST /api/utilisateurs/{id}/debloquer`
+Rôle ADMIN (SA-02). Remet le compteur d'échecs à zéro : le compte verrouillé après 3 échecs peut de nouveau se connecter. Sans corps de requête. Réponse `200` : l'utilisateur au format ci-dessus, avec `verrouille: false`. `404` utilisateur introuvable.
 
 ## Commerce
 

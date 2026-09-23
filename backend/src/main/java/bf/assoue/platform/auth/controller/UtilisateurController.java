@@ -22,8 +22,8 @@ public class UtilisateurController {
     private final UtilisateurService utilisateurService;
 
     @GetMapping
-    public List<UtilisateurResponse> lister() {
-        return utilisateurService.lister();
+    public List<UtilisateurResponse> lister(@RequestParam(required = false) Boolean verrouilles) {
+        return utilisateurService.lister(verrouilles);
     }
 
     @PostMapping
@@ -34,6 +34,11 @@ public class UtilisateurController {
     @PutMapping("/{id}/roles")
     public UtilisateurResponse remplacerRoles(@PathVariable Long id, @Valid @RequestBody MajRolesRequest requete) {
         return utilisateurService.remplacerRoles(id, requete);
+    }
+
+    @PostMapping("/{id}/debloquer")
+    public UtilisateurResponse debloquer(@PathVariable Long id) {
+        return utilisateurService.debloquer(id);
     }
 
 }

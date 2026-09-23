@@ -9,6 +9,7 @@ import bf.assoue.platform.auth.repository.RoleRepository;
 import bf.assoue.platform.auth.repository.UtilisateurRepository;
 import bf.assoue.platform.common.exception.EmailDejaUtiliseException;
 import bf.assoue.platform.common.exception.RequeteInvalideException;
+import bf.assoue.platform.common.exception.RessourceIntrouvableException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -16,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -78,6 +80,48 @@ class UtilisateurServiceTest {
                 .isInstanceOf(RequeteInvalideException.class);
 
         verify(utilisateurRepository, never()).save(any());
+    }
+
+    @Test
+    void lister_neRetientQueLesComptesVerrouillesQuandLeFiltreEstActif() {
+        when(utilisateurRepository.findAll()).thenReturn(List.of(
+                compte(1L, "client@example.com", 0),
+                compte(2L, "bloque@example.com", AuthService.TENTATIVES_MAX_AVANT_BLOCAGE)));
+
+        List<UtilisateurResponse> verrouilles = utilisateurService.lister(true);
+
+        assertThat(verrouilles).extracting(UtilisateurResponse::email).containsExactly("bloque@example.com");
+    }
+
+    @Test
+    void debloquer_remetLeCompteurDEchecsAZero() {
+        Utilisateur bloque = compte(2L, "bloque@example.com", AuthService.TENTATIVES_MAX_AVANT_BLOCAGE);
+        when(utilisateurRepository.findById(2L)).thenReturn(Optional.of(bloque));
+        when(utilisateurRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        UtilisateurResponse reponse = utilisateurService.debloquer(2L);
+
+        assertThat(bloque.getTentativesEchouees()).isZero();
+        assertThat(reponse.verrouille()).isFalse();
+    }
+
+    @Test
+    void debloquer_refuseUnUtilisateurInconnu() {
+        when(utilisateurRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> utilisateurService.debloquer(99L))
+                .isInstanceOf(RessourceIntrouvableException.class);
+
+        verify(utilisateurRepository, never()).save(any());
+    }
+
+    private Utilisateur compte(Long id, String email, int tentativesEchouees) {
+        return Utilisateur.builder()
+                .id(id)
+                .email(email)
+                .tentativesEchouees(tentativesEchouees)
+                .roles(Set.of(new Role(1L, "CLIENT")))
+                .build();
     }
 
 }
