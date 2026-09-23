@@ -2,6 +2,7 @@ package bf.assoue.platform.commerce.service;
 
 import bf.assoue.platform.auth.model.Utilisateur;
 import bf.assoue.platform.auth.repository.UtilisateurRepository;
+import bf.assoue.platform.commerce.dto.CommandeAdminResponse;
 import bf.assoue.platform.commerce.dto.CommandeEnAttenteResponse;
 import bf.assoue.platform.commerce.dto.CommandeRequest;
 import bf.assoue.platform.commerce.dto.CommandeResponse;
@@ -59,14 +60,28 @@ public class CommandeService {
         return CommandeResponse.depuis(commandeRepository.save(commande));
     }
 
-    public CommandeResponse consulter(Long id, String emailClient) {
+    /**
+     * MG-02 : le manager consulte n'importe quelle commande pour en connaître le
+     * statut réel sans dépendre du webhook ; le client, lui, reste limité aux
+     * siennes (404 sur celle d'un tiers, pour ne pas en révéler l'existence).
+     */
+    public CommandeResponse consulter(Long id, String emailAppelant, boolean estManager) {
         Commande commande = trouver(id);
 
-        if (!commande.getClient().getEmail().equals(emailClient)) {
+        if (!estManager && !commande.getClient().getEmail().equals(emailAppelant)) {
             throw new RessourceIntrouvableException("Commande introuvable : " + id);
         }
 
         return CommandeResponse.depuis(commande);
+    }
+
+    /** MG-02 : suivi de l'ensemble des commandes clients, filtrable par statut. */
+    public List<CommandeAdminResponse> lister(CommandeStatut statut) {
+        List<Commande> commandes = statut != null
+                ? commandeRepository.findByStatutOrderByDateCreationDesc(statut)
+                : commandeRepository.findAllByOrderByDateCreationDesc();
+
+        return commandes.stream().map(CommandeAdminResponse::depuis).toList();
     }
 
     /**

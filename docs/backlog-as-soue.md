@@ -19,7 +19,7 @@ Statuts confrontés au code (backend Spring Boot + frontend Angular). Le fronten
 | SA-05 | Terminé | Livré — logique encore dans `StockController` plutôt que dans `StockService` |
 | SA-06 | En cours | Partiel — le webhook revérifie bien le statut réel, pas de vue de supervision des paiements ni de test |
 | MG-01 | Terminé | Livré côté API (pas d'écran) |
-| MG-02 | En cours | Non couvert pour le manager — `GET /api/commandes/{id}` reste réservé au client propriétaire |
+| MG-02 | En cours | Livré — `GET /api/commandes/{id}` ouvert au manager (ADMIN) sans dépendre du webhook, plus `GET /api/commandes?statut=` |
 | MG-03 | Terminé | Livré côté API (rôle ADMIN) |
 | MG-04 | À faire | Livré — `GET /api/collectes?collecteurId=&statut=` et `GET /api/collectes/volumes` |
 | MG-05 | À faire | Livré côté API — `GET /api/commandes/en-attente?heures=24`, pas de notification poussée (US-04 absente) |

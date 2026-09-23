@@ -13,4 +13,8 @@ public interface CommandeRepository extends JpaRepository<Commande, Long> {
 
     List<Commande> findByStatutAndDateCreationBeforeOrderByDateCreationAsc(CommandeStatut statut, LocalDateTime avant);
 
+    List<Commande> findAllByOrderByDateCreationDesc();
+
+    List<Commande> findByStatutOrderByDateCreationDesc(CommandeStatut statut);
+
 }

@@ -75,6 +75,12 @@ Réponse `201` :
 ```
 Erreurs : `400` produit en rupture ou requête sans ligne, `404` produit introuvable.
 
+### `GET /api/commandes?statut=`
+Rôle ADMIN (vue manager, MG-02). `statut` est optionnel (`EN_ATTENTE_PAIEMENT` ou `PAYEE`), les plus récentes d'abord. Réponse `200` :
+```json
+[{ "id": 10, "clientEmail": "client@example.com", "statut": "PAYEE", "dateCreation": "...", "total": 30000, "lignes": [{ "produitId": 1, "produitNom": "...", "quantite": 2, "prixUnitaire": 15000 }] }]
+```
+
 ### `GET /api/commandes/en-attente?heures=24`
 Rôle ADMIN (MG-05). Commandes restées au statut `EN_ATTENTE_PAIEMENT` au-delà du délai indiqué (24 h par défaut), les plus anciennes d'abord. Réponse `200` :
 ```json
@@ -83,7 +89,7 @@ Rôle ADMIN (MG-05). Commandes restées au statut `EN_ATTENTE_PAIEMENT` au-delà
 Pas de notification poussée tant que l'infra temps réel (US-04) n'existe pas : le manager interroge cet endpoint.
 
 ### `GET /api/commandes/{id}`
-Authentifié, uniquement le client propriétaire de la commande. Réponse `200` au même format que la création. `404` si introuvable ou n'appartient pas à l'appelant (pour ne pas révéler l'existence d'une commande d'un tiers).
+Authentifié (rôle CLIENT ou ADMIN). Le client n'accède qu'à ses propres commandes ; le manager (rôle ADMIN) accède à n'importe laquelle pour en connaître le statut réel sans dépendre du webhook (MG-02). Réponse `200` au même format que la création. `404` si introuvable ou, pour un client, si elle n'est pas la sienne (pour ne pas révéler l'existence d'une commande d'un tiers).
 
 ## Paiement
 
