@@ -4,6 +4,8 @@ import bf.assoue.platform.auth.model.Utilisateur;
 import bf.assoue.platform.auth.repository.UtilisateurRepository;
 import bf.assoue.platform.collecte.dto.CollecteResponse;
 import bf.assoue.platform.collecte.dto.DeclarationCollecteRequest;
+import bf.assoue.platform.collecte.dto.LocalisationRequest;
+import bf.assoue.platform.collecte.dto.ModificationCollecteRequest;
 import bf.assoue.platform.collecte.model.*;
 import bf.assoue.platform.collecte.repository.CollecteRepository;
 import bf.assoue.platform.collecte.repository.MateriauRepository;
@@ -42,12 +44,7 @@ public class CollecteService {
         Materiau materiau = materiauRepository.findById(requete.materiauId())
                 .orElseThrow(() -> new RessourceIntrouvableException("Matériau introuvable : " + requete.materiauId()));
 
-        PointCollecte pointCollecte = pointCollecteRepository
-                .findByLatitudeAndLongitude(requete.localisation().lat(), requete.localisation().lng())
-                .orElseGet(() -> pointCollecteRepository.save(PointCollecte.builder()
-                        .latitude(requete.localisation().lat())
-                        .longitude(requete.localisation().lng())
-                        .build()));
+        PointCollecte pointCollecte = resoudrePointCollecte(requete.localisation());
 
         Collecte collecte = Collecte.builder()
                 .referenceClient(requete.referenceClient())
@@ -65,6 +62,36 @@ public class CollecteService {
         return CollecteResponse.depuis(collecteRepository.save(collecte));
     }
 
+    /**
+     * COL-03 : tant que la déclaration est au statut DECLAREE, le collecteur qui
+     * l'a saisie peut corriger sa saisie. Une fois VALIDEE ou TRAITEE, elle est figée.
+     */
+    @Transactional
+    public CollecteResponse modifier(Long collecteId, ModificationCollecteRequest requete, String emailCollecteur) {
+        Collecte collecte = trouver(collecteId);
+
+        if (!collecte.getCollecteur().getEmail().equals(emailCollecteur)) {
+            throw new RessourceIntrouvableException("Collecte introuvable : " + collecteId);
+        }
+
+        if (collecte.getStatut() != CollecteStatut.DECLAREE) {
+            throw new RequeteInvalideException("Une collecte " + collecte.getStatut() + " n'est plus modifiable");
+        }
+
+        Materiau materiau = materiauRepository.findById(requete.materiauId())
+                .orElseThrow(() -> new RessourceIntrouvableException("Matériau introuvable : " + requete.materiauId()));
+
+        collecte.setPointCollecte(resoudrePointCollecte(requete.localisation()));
+
+        LigneCollecte ligne = collecte.getLignes().isEmpty()
+                ? nouvelleLigne(collecte)
+                : collecte.getLignes().getFirst();
+        ligne.setMateriau(materiau);
+        ligne.setQuantiteEstimee(requete.quantiteEstimee());
+
+        return CollecteResponse.depuis(collecteRepository.save(collecte));
+    }
+
     public List<CollecteResponse> mesCollectes(String emailCollecteur) {
         return collecteRepository.findByCollecteurEmailOrderByDateDeclarationDesc(emailCollecteur).stream()
                 .map(CollecteResponse::depuis)
@@ -74,6 +101,11 @@ public class CollecteService {
     @Transactional
     public CollecteResponse valider(Long collecteId) {
         Collecte collecte = trouver(collecteId);
+
+        if (collecte.getStatut() != CollecteStatut.DECLAREE) {
+            throw new RequeteInvalideException("Seule une collecte déclarée peut être validée");
+        }
+
         collecte.setStatut(CollecteStatut.VALIDEE);
         return CollecteResponse.depuis(collecteRepository.save(collecte));
     }
@@ -92,6 +124,20 @@ public class CollecteService {
 
         collecte.setStatut(CollecteStatut.TRAITEE);
         return CollecteResponse.depuis(collecteRepository.save(collecte));
+    }
+
+    private PointCollecte resoudrePointCollecte(LocalisationRequest localisation) {
+        return pointCollecteRepository.findByLatitudeAndLongitude(localisation.lat(), localisation.lng())
+                .orElseGet(() -> pointCollecteRepository.save(PointCollecte.builder()
+                        .latitude(localisation.lat())
+                        .longitude(localisation.lng())
+                        .build()));
+    }
+
+    private LigneCollecte nouvelleLigne(Collecte collecte) {
+        LigneCollecte ligne = LigneCollecte.builder().collecte(collecte).build();
+        collecte.getLignes().add(ligne);
+        return ligne;
     }
 
     private Collecte trouver(Long id) {

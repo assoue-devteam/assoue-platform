@@ -108,11 +108,18 @@ Réponse `201` :
 { "id": 5, "referenceClient": "...", "statut": "DECLAREE", "dateDeclaration": "...", "latitude": 12.3714, "longitude": -1.5197, "lignes": [{ "materiau": "Plastique", "quantiteEstimee": 15.5 }] }
 ```
 
+### `PUT /api/collectes/{id}`
+Authentifié (rôle COLLECTEUR), uniquement le collecteur qui a saisi la déclaration. Corrige une saisie terrain (COL-03) :
+```json
+{ "materiauId": 2, "quantiteEstimee": 20.5, "localisation": { "lat": 12.3714, "lng": -1.5197 } }
+```
+`referenceClient` n'est pas modifiable. Réponse `200` au même format que la déclaration. Erreurs : `400` si la collecte n'est plus au statut `DECLAREE`, `404` si elle est introuvable ou appartient à un autre collecteur.
+
 ### `GET /api/collectes/mes-collectes`
 Authentifié (rôle COLLECTEUR). Liste les déclarations du collecteur connecté, même format que ci-dessus.
 
 ### `PUT /api/collectes/{id}/valider`
-Authentifié (rôle ADMIN). Passe la déclaration en statut `VALIDEE`.
+Authentifié (rôle ADMIN). Passe une déclaration `DECLAREE` en statut `VALIDEE`. `400` si elle est déjà validée ou traitée.
 
 ### `PUT /api/collectes/{id}/traiter`
 Authentifié (rôle ADMIN). Passe une collecte `VALIDEE` en `TRAITEE` et incrémente le stock de matière première correspondant (US-05). `400` si la collecte n'est pas encore validée.

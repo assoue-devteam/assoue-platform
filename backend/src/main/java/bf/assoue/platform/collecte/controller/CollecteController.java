@@ -2,6 +2,7 @@ package bf.assoue.platform.collecte.controller;
 
 import bf.assoue.platform.collecte.dto.CollecteResponse;
 import bf.assoue.platform.collecte.dto.DeclarationCollecteRequest;
+import bf.assoue.platform.collecte.dto.ModificationCollecteRequest;
 import bf.assoue.platform.collecte.service.CollecteService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +25,14 @@ public class CollecteController {
     @PreAuthorize("hasRole('COLLECTEUR')")
     public ResponseEntity<CollecteResponse> declarer(@Valid @RequestBody DeclarationCollecteRequest requete, Principal principal) {
         return ResponseEntity.status(HttpStatus.CREATED).body(collecteService.declarer(requete, principal.getName()));
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('COLLECTEUR')")
+    public CollecteResponse modifier(@PathVariable Long id,
+                                     @Valid @RequestBody ModificationCollecteRequest requete,
+                                     Principal principal) {
+        return collecteService.modifier(id, requete, principal.getName());
     }
 
     @GetMapping("/mes-collectes")
