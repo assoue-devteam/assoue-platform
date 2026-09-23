@@ -30,6 +30,23 @@ Erreurs : `401` identifiants invalides, `423` compte bloqué après 3 échecs co
 
 Toutes les routes protégées attendent `Authorization: Bearer <token>`.
 
+### `GET /api/utilisateurs`
+Rôle ADMIN. Réponse `200` :
+```json
+[{ "id": 1, "email": "collecteur@example.com", "nom": "Sawadogo", "prenom": "Issa", "verrouille": false, "roles": ["COLLECTEUR"] }]
+```
+`verrouille` vaut `true` à partir de 3 échecs de connexion consécutifs.
+
+### `POST /api/utilisateurs`
+Rôle ADMIN. Seul chemin pour créer un compte COLLECTEUR ou ADMIN — `POST /api/auth/register` donne toujours CLIENT.
+```json
+{ "email": "collecteur@example.com", "motDePasse": "au moins 8 caractères", "nom": "Sawadogo", "prenom": "Issa", "roles": ["COLLECTEUR"] }
+```
+Réponse `201` : même format que la liste. Erreurs : `409` email déjà utilisé, `400` rôle inconnu ou validation échouée.
+
+### `PUT /api/utilisateurs/{id}/roles`
+Rôle ADMIN. Requête : `{ "roles": ["COLLECTEUR"] }` — remplace l'ensemble des rôles. `404` utilisateur introuvable, `400` rôle inconnu.
+
 ## Commerce
 
 ### `GET /api/categories`
