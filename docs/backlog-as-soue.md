@@ -6,6 +6,34 @@ Légende priorité MoSCoW : **M** Must have, **S** Should have, **C** Could have
 
 ---
 
+# État réel vérifié — audit du 23/09/2026
+
+Statuts confrontés au code (backend Spring Boot + frontend Angular). Le frontend ne contient encore aucun écran : toute story marquée « livré » l'est **côté API uniquement**. Backlog gelé non audité.
+
+| Story | Statut déclaré | État réel |
+| --- | --- | --- |
+| SA-01 | Terminé | Livré (403 par rôle + administration des comptes et des rôles, `GET/POST /api/utilisateurs`, `PUT /api/utilisateurs/{id}/roles`) |
+| SA-02 | En cours | Partiel — blocage au 3e échec (423) OK, pas d'endpoint de déblocage par le super admin |
+| SA-03 | Terminé | Livré — la validation exige désormais le statut `DECLAREE` (une collecte traitée ne peut plus régresser) |
+| SA-04 | Terminé | Livré |
+| SA-05 | Terminé | Livré — logique encore dans `StockController` plutôt que dans `StockService` |
+| SA-06 | En cours | Partiel — le webhook revérifie bien le statut réel, pas de vue de supervision des paiements ni de test |
+| MG-01 | Terminé | Livré côté API (pas d'écran) |
+| MG-02 | En cours | Non couvert pour le manager — `GET /api/commandes/{id}` reste réservé au client propriétaire |
+| MG-03 | Terminé | Livré côté API (rôle ADMIN) |
+| MG-04 | À faire | Livré — `GET /api/collectes?collecteurId=&statut=` et `GET /api/collectes/volumes` |
+| MG-05 | À faire | Livré côté API — `GET /api/commandes/en-attente?heures=24`, pas de notification poussée (US-04 absente) |
+| COL-01 | À faire | Prérequis backend livré (compte COLLECTEUR créable) ; PWA et cache hors-ligne restent à faire |
+| COL-02 | À faire | API de déclaration idempotente disponible ; saisie terrain et IndexedDB restent à faire |
+| COL-03 | À faire | Livré — `PUT /api/collectes/{id}`, refusé si la déclaration n'est plus `DECLAREE` |
+| COL-04 | À faire | API disponible (`GET /api/collectes/mes-collectes`) ; écran de suivi à faire |
+| CL-01 | Terminé | API OK, dashboard client inexistant |
+| CL-03 | Terminé | API OK, écran catalogue inexistant |
+| CL-04 | En cours | API OK (initiation restreinte au client propriétaire), redirection front à faire, payload PayDunya non validé en réel |
+| CL-05 | Terminé | API OK, écran de suivi inexistant |
+
+---
+
 # Backlog actif
 
 ## Super Admin
