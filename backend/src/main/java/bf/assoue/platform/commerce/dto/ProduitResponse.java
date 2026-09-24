@@ -7,6 +7,7 @@ public record ProduitResponse(
         String nom,
         String description,
         BigDecimal prix,
+        String imageUrl,
         String categorie,
         boolean enRupture
 ) {
