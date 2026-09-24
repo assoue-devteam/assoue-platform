@@ -33,8 +33,10 @@ public class CommandeService {
 
     @Transactional
     public CommandeResponse creer(CommandeRequest requete, String emailClient) {
-        // Multiplicité 1..* Commande→LigneCommande (docs/domaine-metier.md) : @NotEmpty
-        // sur la requête l'empêche déjà en amont, on ne recrée pas la vérification ici.
+        if (requete.lignes() == null || requete.lignes().isEmpty()) {
+            throw new RequeteInvalideException("Une commande doit contenir au moins une ligne");
+        }
+
         Utilisateur client = utilisateurRepository.findByEmail(emailClient)
                 .orElseThrow(() -> new RessourceIntrouvableException("Utilisateur introuvable : " + emailClient));
 
@@ -73,6 +75,13 @@ public class CommandeService {
         }
 
         return CommandeResponse.depuis(commande);
+    }
+
+    /** CL-05 : le client consulte l'historique de ses propres commandes. */
+    public List<CommandeResponse> listerPourClient(String emailClient) {
+        return commandeRepository.findByClientEmailOrderByDateCreationDesc(emailClient).stream()
+                .map(CommandeResponse::depuis)
+                .toList();
     }
 
     /** MG-02 : suivi de l'ensemble des commandes clients, filtrable par statut. */

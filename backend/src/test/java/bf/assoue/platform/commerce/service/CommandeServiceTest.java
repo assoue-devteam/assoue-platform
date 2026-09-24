@@ -5,6 +5,7 @@ import bf.assoue.platform.auth.repository.UtilisateurRepository;
 import bf.assoue.platform.commerce.dto.CommandeAdminResponse;
 import bf.assoue.platform.commerce.dto.CommandeEnAttenteResponse;
 import bf.assoue.platform.commerce.dto.CommandeRequest;
+import bf.assoue.platform.commerce.dto.CommandeResponse;
 import bf.assoue.platform.commerce.dto.LigneCommandeRequest;
 import bf.assoue.platform.commerce.model.Categorie;
 import bf.assoue.platform.commerce.model.Commande;
@@ -118,6 +119,20 @@ class CommandeServiceTest {
 
         assertThat(commandes).singleElement().satisfies(vue -> {
             assertThat(vue.clientEmail()).isEqualTo("client@example.com");
+            assertThat(vue.statut()).isEqualTo(CommandeStatut.EN_ATTENTE_PAIEMENT);
+            assertThat(vue.total()).isEqualByComparingTo("30000");
+        });
+    }
+
+    @Test
+    void listerPourClient_renvoieLesCommandesDuClient() {
+        when(commandeRepository.findByClientEmailOrderByDateCreationDesc("client@example.com"))
+                .thenReturn(List.of(commandeDe("client@example.com")));
+
+        List<CommandeResponse> commandes = commandeService.listerPourClient("client@example.com");
+
+        assertThat(commandes).singleElement().satisfies(vue -> {
+            assertThat(vue.id()).isEqualTo(10L);
             assertThat(vue.statut()).isEqualTo(CommandeStatut.EN_ATTENTE_PAIEMENT);
             assertThat(vue.total()).isEqualByComparingTo("30000");
         });

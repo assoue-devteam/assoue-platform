@@ -31,6 +31,12 @@ public class CommandeController {
         return ResponseEntity.status(HttpStatus.CREATED).body(commandeService.creer(requete, principal.getName()));
     }
 
+    @GetMapping("/mes-commandes")
+    @PreAuthorize("hasRole('CLIENT')")
+    public List<CommandeResponse> mesCommandes(Principal principal) {
+        return commandeService.listerPourClient(principal.getName());
+    }
+
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public List<CommandeAdminResponse> lister(@RequestParam(required = false) CommandeStatut statut) {
