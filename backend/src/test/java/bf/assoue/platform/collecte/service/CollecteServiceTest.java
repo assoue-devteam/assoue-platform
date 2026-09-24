@@ -2,7 +2,6 @@ package bf.assoue.platform.collecte.service;
 
 import bf.assoue.platform.auth.model.Utilisateur;
 import bf.assoue.platform.auth.repository.UtilisateurRepository;
-import bf.assoue.platform.collecte.dto.CollecteAdminResponse;
 import bf.assoue.platform.collecte.dto.CollecteResponse;
 import bf.assoue.platform.collecte.dto.DeclarationCollecteRequest;
 import bf.assoue.platform.collecte.dto.LocalisationRequest;

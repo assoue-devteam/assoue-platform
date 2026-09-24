@@ -50,26 +50,26 @@ public class StockService {
     }
 
     @Transactional(readOnly = true)
-    public List<bf.assoue.platform.stock.dto.StockProduitResponse> listerStocksProduits() {
+    public List<StockProduitResponse> listerStocksProduits() {
         return stockProduitRepository.findAll().stream()
-                .map(bf.assoue.platform.stock.dto.StockProduitResponse::depuis)
+                .map(StockProduitResponse::depuis)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public List<bf.assoue.platform.stock.dto.StockMatierePremiereResponse> listerStocksMatieresPremieres() {
+    public List<StockMatierePremiereResponse> listerStocksMatieresPremieres() {
         return stockMatierePremiereRepository.findAll().stream()
-                .map(bf.assoue.platform.stock.dto.StockMatierePremiereResponse::depuis)
+                .map(StockMatierePremiereResponse::depuis)
                 .toList();
     }
 
     @Transactional
-    public bf.assoue.platform.stock.dto.StockProduitResponse ajusterStockProduit(Long produitId, int quantite) {
+    public StockProduitResponse ajusterStockProduit(Long produitId, int quantite) {
         StockProduit stock = stockProduitRepository.findByProduitId(produitId)
                 .orElseThrow(() -> new RessourceIntrouvableException("Aucun stock trouvé pour le produit " + produitId));
 
         stock.setQuantite(quantite);
-        return bf.assoue.platform.stock.dto.StockProduitResponse.depuis(stockProduitRepository.save(stock));
+        return StockProduitResponse.depuis(stockProduitRepository.save(stock));
     }
 
     @Transactional
