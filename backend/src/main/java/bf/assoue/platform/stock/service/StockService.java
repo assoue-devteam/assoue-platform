@@ -4,6 +4,8 @@ import bf.assoue.platform.collecte.model.Materiau;
 import bf.assoue.platform.commerce.model.Produit;
 import bf.assoue.platform.common.exception.RequeteInvalideException;
 import bf.assoue.platform.common.exception.RessourceIntrouvableException;
+import bf.assoue.platform.stock.dto.StockMatierePremiereResponse;
+import bf.assoue.platform.stock.dto.StockProduitResponse;
 import bf.assoue.platform.stock.model.StockMatierePremiere;
 import bf.assoue.platform.stock.model.StockProduit;
 import bf.assoue.platform.stock.repository.StockMatierePremiereRepository;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +47,29 @@ public class StockService {
 
         stock.setQuantite(stock.getQuantite() - quantite);
         stockProduitRepository.save(stock);
+    }
+
+    @Transactional(readOnly = true)
+    public List<bf.assoue.platform.stock.dto.StockProduitResponse> listerStocksProduits() {
+        return stockProduitRepository.findAll().stream()
+                .map(bf.assoue.platform.stock.dto.StockProduitResponse::depuis)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<bf.assoue.platform.stock.dto.StockMatierePremiereResponse> listerStocksMatieresPremieres() {
+        return stockMatierePremiereRepository.findAll().stream()
+                .map(bf.assoue.platform.stock.dto.StockMatierePremiereResponse::depuis)
+                .toList();
+    }
+
+    @Transactional
+    public bf.assoue.platform.stock.dto.StockProduitResponse ajusterStockProduit(Long produitId, int quantite) {
+        StockProduit stock = stockProduitRepository.findByProduitId(produitId)
+                .orElseThrow(() -> new RessourceIntrouvableException("Aucun stock trouvé pour le produit " + produitId));
+
+        stock.setQuantite(quantite);
+        return bf.assoue.platform.stock.dto.StockProduitResponse.depuis(stockProduitRepository.save(stock));
     }
 
     @Transactional

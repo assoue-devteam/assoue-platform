@@ -29,4 +29,7 @@ public class StockProduit {
     @Builder.Default
     private int quantite = 0;
 
+    @Version
+    private Long version;
+
 }

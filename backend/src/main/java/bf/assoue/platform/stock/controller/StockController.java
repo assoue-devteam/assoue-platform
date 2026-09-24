@@ -1,11 +1,9 @@
 package bf.assoue.platform.stock.controller;
 
-import bf.assoue.platform.common.exception.RessourceIntrouvableException;
 import bf.assoue.platform.stock.dto.AjustementStockRequest;
 import bf.assoue.platform.stock.dto.StockMatierePremiereResponse;
 import bf.assoue.platform.stock.dto.StockProduitResponse;
-import bf.assoue.platform.stock.repository.StockMatierePremiereRepository;
-import bf.assoue.platform.stock.repository.StockProduitRepository;
+import bf.assoue.platform.stock.service.StockService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -19,25 +17,21 @@ import java.util.List;
 @PreAuthorize("hasRole('ADMIN')")
 public class StockController {
 
-    private final StockProduitRepository stockProduitRepository;
-    private final StockMatierePremiereRepository stockMatierePremiereRepository;
+    private final StockService stockService;
 
     @GetMapping("/produits")
     public List<StockProduitResponse> listerStocksProduits() {
-        return stockProduitRepository.findAll().stream().map(StockProduitResponse::depuis).toList();
+        return stockService.listerStocksProduits();
     }
 
     @GetMapping("/matieres-premieres")
     public List<StockMatierePremiereResponse> listerStocksMatieresPremieres() {
-        return stockMatierePremiereRepository.findAll().stream().map(StockMatierePremiereResponse::depuis).toList();
+        return stockService.listerStocksMatieresPremieres();
     }
 
     @PutMapping("/produits/{produitId}")
     public StockProduitResponse ajusterStockProduit(@PathVariable Long produitId, @Valid @RequestBody AjustementStockRequest requete) {
-        var stock = stockProduitRepository.findByProduitId(produitId)
-                .orElseThrow(() -> new RessourceIntrouvableException("Aucun stock trouvé pour le produit " + produitId));
-        stock.setQuantite(requete.quantite());
-        return StockProduitResponse.depuis(stockProduitRepository.save(stock));
+        return stockService.ajusterStockProduit(produitId, requete.quantite());
     }
 
 }
