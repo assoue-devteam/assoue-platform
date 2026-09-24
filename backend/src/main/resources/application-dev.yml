@@ -19,3 +19,4 @@ paydunya:
   master-key: ${PAYDUNYA_MASTER_KEY}
   private-key: ${PAYDUNYA_PRIVATE_KEY}
   token: ${PAYDUNYA_TOKEN}
+  callback-url: ${PAYDUNYA_CALLBACK_URL:http://localhost:8080/api/paiements/webhook}

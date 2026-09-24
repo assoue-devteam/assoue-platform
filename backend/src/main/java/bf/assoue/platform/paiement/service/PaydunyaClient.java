@@ -27,6 +27,10 @@ public class PaydunyaClient {
     public record InvoiceCree(String token, String urlPaiement) {
     }
 
+    public String urlPaiement(String token) {
+        return "https://paydunya.com/checkout/invoice/" + token;
+    }
+
     public InvoiceCree creerInvoice(BigDecimal montant, String description, String callbackUrl) {
         Map<String, Object> corps = Map.of(
                 "invoice", Map.of(
@@ -46,7 +50,7 @@ public class PaydunyaClient {
                 .body(Map.class);
 
         String token = (String) reponse.get("token");
-        return new InvoiceCree(token, "https://paydunya.com/checkout/invoice/" + token);
+        return new InvoiceCree(token, urlPaiement(token));
     }
 
     public boolean estConfirme(String token) {

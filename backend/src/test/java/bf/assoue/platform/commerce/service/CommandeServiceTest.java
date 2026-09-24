@@ -32,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CommandeServiceTest {
@@ -136,6 +136,43 @@ class CommandeServiceTest {
             assertThat(vue.statut()).isEqualTo(CommandeStatut.EN_ATTENTE_PAIEMENT);
             assertThat(vue.total()).isEqualByComparingTo("30000");
         });
+    }
+
+    @Test
+    void marquerPayee_metAJourStatutEtDecrementeStock_siEnAttentePaiement() {
+        Commande commande = commandeDe("client@example.com");
+        when(commandeRepository.findById(10L)).thenReturn(Optional.of(commande));
+
+        commandeService.marquerPayee(10L);
+
+        assertThat(commande.getStatut()).isEqualTo(CommandeStatut.PAYEE);
+        verify(stockService).decrementerStockProduit(1L, 2);
+        verify(commandeRepository).save(commande);
+    }
+
+    @Test
+    void marquerPayee_neFaitRien_siDejaPayee() {
+        Commande commande = commandeDe("client@example.com");
+        commande.setStatut(CommandeStatut.PAYEE);
+        when(commandeRepository.findById(10L)).thenReturn(Optional.of(commande));
+
+        commandeService.marquerPayee(10L);
+
+        verifyNoInteractions(stockService);
+        verify(commandeRepository, never()).save(commande);
+    }
+
+    @Test
+    void marquerPayee_refuse_siCommandeAnnulee() {
+        Commande commande = commandeDe("client@example.com");
+        commande.setStatut(CommandeStatut.ANNULEE);
+        when(commandeRepository.findById(10L)).thenReturn(Optional.of(commande));
+
+        assertThatThrownBy(() -> commandeService.marquerPayee(10L))
+                .isInstanceOf(RequeteInvalideException.class)
+                .hasMessageContaining("ANNULEE");
+
+        verifyNoInteractions(stockService);
     }
 
     private Commande commandeDe(String emailClient) {

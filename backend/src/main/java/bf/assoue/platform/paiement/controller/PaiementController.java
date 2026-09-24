@@ -3,7 +3,6 @@ package bf.assoue.platform.paiement.controller;
 import bf.assoue.platform.paiement.dto.PaiementResponse;
 import bf.assoue.platform.paiement.dto.PaiementSuperviseResponse;
 import bf.assoue.platform.paiement.service.PaiementService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,10 +20,9 @@ public class PaiementController {
     private final PaiementService paiementService;
 
     @PostMapping("/commandes/{commandeId}")
-    public PaiementResponse initier(@PathVariable Long commandeId, HttpServletRequest request, Principal principal) {
-        String callbackUrl = request.getRequestURL().toString().replace(
-                "/api/paiements/commandes/" + commandeId, "/api/paiements/webhook");
-        return paiementService.initier(commandeId, callbackUrl, principal.getName());
+    @PreAuthorize("hasRole('CLIENT')")
+    public PaiementResponse initier(@PathVariable Long commandeId, Principal principal) {
+        return paiementService.initier(commandeId, principal.getName());
     }
 
     @PostMapping("/webhook")

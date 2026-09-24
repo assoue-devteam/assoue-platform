@@ -42,4 +42,7 @@ public class Commande {
     @Builder.Default
     private List<LigneCommande> lignes = new ArrayList<>();
 
+    @Version
+    private Long version;
+
 }

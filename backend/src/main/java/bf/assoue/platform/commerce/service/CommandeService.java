@@ -122,6 +122,11 @@ public class CommandeService {
             return;
         }
 
+        if (commande.getStatut() != CommandeStatut.EN_ATTENTE_PAIEMENT) {
+            throw new RequeteInvalideException(
+                    "Impossible de marquer comme payée une commande au statut : " + commande.getStatut());
+        }
+
         commande.getLignes().forEach(ligne ->
                 stockService.decrementerStockProduit(ligne.getProduit().getId(), ligne.getQuantite()));
 

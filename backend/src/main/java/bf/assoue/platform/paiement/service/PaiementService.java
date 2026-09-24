@@ -2,6 +2,7 @@ package bf.assoue.platform.paiement.service;
 
 import bf.assoue.platform.commerce.dto.CommandeResponse;
 import bf.assoue.platform.commerce.model.Commande;
+import bf.assoue.platform.commerce.model.CommandeStatut;
 import bf.assoue.platform.commerce.repository.CommandeRepository;
 import bf.assoue.platform.commerce.service.CommandeService;
 import bf.assoue.platform.common.exception.RequeteInvalideException;
@@ -19,6 +20,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,9 +30,10 @@ public class PaiementService {
     private final CommandeRepository commandeRepository;
     private final CommandeService commandeService;
     private final PaydunyaClient paydunyaClient;
+    private final PaydunyaProperties paydunyaProperties;
 
     @Transactional
-    public PaiementResponse initier(Long commandeId, String callbackUrl, String emailClient) {
+    public PaiementResponse initier(Long commandeId, String emailClient) {
         Commande commande = commandeRepository.findById(commandeId)
                 .orElseThrow(() -> new RessourceIntrouvableException("Commande introuvable : " + commandeId));
 
@@ -38,7 +41,22 @@ public class PaiementService {
             throw new RessourceIntrouvableException("Commande introuvable : " + commandeId);
         }
 
+        if (commande.getStatut() == CommandeStatut.PAYEE || commande.getStatut() == CommandeStatut.ANNULEE) {
+            throw new RequeteInvalideException(
+                    "Impossible d'initier un paiement pour une commande avec le statut : " + commande.getStatut());
+        }
+
+        Optional<Paiement> existant = paiementRepository.findByCommandeId(commandeId);
+        if (existant.isPresent()) {
+            Paiement paiementExistant = existant.get();
+            return PaiementResponse.depuis(
+                    paiementExistant,
+                    paydunyaClient.urlPaiement(paiementExistant.getTokenPaydunya())
+            );
+        }
+
         BigDecimal total = CommandeResponse.depuis(commande).total();
+        String callbackUrl = paydunyaProperties.callbackUrlEffectif();
 
         PaydunyaClient.InvoiceCree invoice = paydunyaClient.creerInvoice(
                 total, "Commande AS'Soué n°" + commande.getId(), callbackUrl);

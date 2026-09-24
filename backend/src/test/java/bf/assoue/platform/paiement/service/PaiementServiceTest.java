@@ -7,6 +7,7 @@ import bf.assoue.platform.commerce.repository.CommandeRepository;
 import bf.assoue.platform.commerce.service.CommandeService;
 import bf.assoue.platform.common.exception.RequeteInvalideException;
 import bf.assoue.platform.common.exception.RessourceIntrouvableException;
+import bf.assoue.platform.paiement.dto.PaiementResponse;
 import bf.assoue.platform.paiement.dto.PaiementSuperviseResponse;
 import bf.assoue.platform.paiement.model.Paiement;
 import bf.assoue.platform.paiement.model.PaiementStatut;
@@ -40,6 +41,8 @@ class PaiementServiceTest {
     private CommandeService commandeService;
     @Mock
     private PaydunyaClient paydunyaClient;
+    @Mock
+    private PaydunyaProperties paydunyaProperties;
 
     @InjectMocks
     private PaiementService paiementService;
@@ -192,6 +195,74 @@ class PaiementServiceTest {
         assertThat(supervision.get(1).statut()).isEqualTo(PaiementStatut.CONFIRME);
     }
 
+    @Test
+    void initier_creePaiementEtRetourneUrl_siPremierEssai() {
+        Commande commande = commandeAvecLigne(10L, "client@example.com", CommandeStatut.EN_ATTENTE_PAIEMENT, BigDecimal.valueOf(30000));
+        when(commandeRepository.findById(10L)).thenReturn(Optional.of(commande));
+        when(paiementRepository.findByCommandeId(10L)).thenReturn(Optional.empty());
+        when(paydunyaProperties.callbackUrlEffectif()).thenReturn("http://localhost:8080/api/paiements/webhook");
+        when(paydunyaClient.creerInvoice(eq(BigDecimal.valueOf(30000)), anyString(), eq("http://localhost:8080/api/paiements/webhook")))
+                .thenReturn(new PaydunyaClient.InvoiceCree("tok_new_123", "https://paydunya.com/checkout/invoice/tok_new_123"));
+
+        PaiementResponse response = paiementService.initier(10L, "client@example.com");
+
+        assertThat(response.urlPaiement()).isEqualTo("https://paydunya.com/checkout/invoice/tok_new_123");
+        assertThat(response.statut()).isEqualTo(PaiementStatut.EN_ATTENTE);
+        verify(paiementRepository).save(any(Paiement.class));
+    }
+
+    @Test
+    void initier_reutilisePaiementExistant_enCasDeRetry() {
+        Commande commande = commandeAvecLigne(10L, "client@example.com", CommandeStatut.EN_ATTENTE_PAIEMENT, BigDecimal.valueOf(30000));
+        Paiement existant = Paiement.builder()
+                .id(1L)
+                .commande(commande)
+                .montant(BigDecimal.valueOf(30000))
+                .statut(PaiementStatut.EN_ATTENTE)
+                .tokenPaydunya("tok_exist_456")
+                .build();
+
+        when(commandeRepository.findById(10L)).thenReturn(Optional.of(commande));
+        when(paiementRepository.findByCommandeId(10L)).thenReturn(Optional.of(existant));
+        when(paydunyaClient.urlPaiement("tok_exist_456")).thenReturn("https://paydunya.com/checkout/invoice/tok_exist_456");
+
+        PaiementResponse response = paiementService.initier(10L, "client@example.com");
+
+        assertThat(response.urlPaiement()).isEqualTo("https://paydunya.com/checkout/invoice/tok_exist_456");
+        assertThat(response.statut()).isEqualTo(PaiementStatut.EN_ATTENTE);
+        verify(paydunyaClient, never()).creerInvoice(any(), any(), any());
+        verify(paiementRepository, never()).save(any(Paiement.class));
+    }
+
+    @Test
+    void initier_refusePaiement_siCommandeDejaPayee() {
+        Commande commande = commandeDe(10L, "client@example.com", CommandeStatut.PAYEE);
+        when(commandeRepository.findById(10L)).thenReturn(Optional.of(commande));
+
+        assertThatThrownBy(() -> paiementService.initier(10L, "client@example.com"))
+                .isInstanceOf(RequeteInvalideException.class)
+                .hasMessageContaining("PAYEE");
+    }
+
+    @Test
+    void initier_refusePaiement_siCommandeAnnulee() {
+        Commande commande = commandeDe(10L, "client@example.com", CommandeStatut.ANNULEE);
+        when(commandeRepository.findById(10L)).thenReturn(Optional.of(commande));
+
+        assertThatThrownBy(() -> paiementService.initier(10L, "client@example.com"))
+                .isInstanceOf(RequeteInvalideException.class)
+                .hasMessageContaining("ANNULEE");
+    }
+
+    @Test
+    void initier_refusePaiement_siCommandeAppartientAUnTiers() {
+        Commande commande = commandeDe(10L, "autre@example.com", CommandeStatut.EN_ATTENTE_PAIEMENT);
+        when(commandeRepository.findById(10L)).thenReturn(Optional.of(commande));
+
+        assertThatThrownBy(() -> paiementService.initier(10L, "client@example.com"))
+                .isInstanceOf(RessourceIntrouvableException.class);
+    }
+
     private Commande commandeDe(Long id, String emailClient, CommandeStatut statut) {
         return Commande.builder()
                 .id(id)
@@ -199,6 +270,15 @@ class PaiementServiceTest {
                 .statut(statut)
                 .dateCreation(LocalDateTime.now())
                 .build();
+    }
+
+    private Commande commandeAvecLigne(Long id, String emailClient, CommandeStatut statut, BigDecimal montant) {
+        Commande commande = commandeDe(id, emailClient, statut);
+        bf.assoue.platform.commerce.model.Produit produit = bf.assoue.platform.commerce.model.Produit.builder()
+                .id(1L).nom("Produit").prix(montant).build();
+        commande.getLignes().add(bf.assoue.platform.commerce.model.LigneCommande.builder()
+                .commande(commande).produit(produit).quantite(1).prixUnitaire(montant).build());
+        return commande;
     }
 
 }
