@@ -7,6 +7,7 @@ import bf.assoue.platform.commerce.service.CommandeService;
 import bf.assoue.platform.common.exception.RequeteInvalideException;
 import bf.assoue.platform.common.exception.RessourceIntrouvableException;
 import bf.assoue.platform.paiement.dto.PaiementResponse;
+import bf.assoue.platform.paiement.dto.PaiementSuperviseResponse;
 import bf.assoue.platform.paiement.model.Paiement;
 import bf.assoue.platform.paiement.model.PaiementStatut;
 import bf.assoue.platform.paiement.repository.PaiementRepository;
@@ -15,6 +16,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -53,16 +56,24 @@ public class PaiementService {
     /**
      * Reçoit l'appel webhook PayDunya mais ne se fie jamais à son contenu déclaré :
      * on revérifie le statut réel via l'API confirm avant de valider quoi que ce
-     * soit (US-02 — "aucune commande n'est validée sur une simple absence de réponse").
+     * soit (US-02, SA-06 — "aucune commande n'est validée sur une simple absence de réponse
+     * ni sur la seule foi du contenu du webhook").
+     * On enregistre également le statut prétendu par le webhook et l'heure de réception
+     * pour permettre au super admin de détecter toute tentative de fraude ou divergence.
      */
     @Transactional
     public void traiterWebhook(Map<String, Object> payload) {
         String token = extraireToken(payload);
+        String statutDeclare = extraireStatutDeclare(payload);
 
         Paiement paiement = paiementRepository.findByTokenPaydunya(token)
                 .orElseThrow(() -> new RessourceIntrouvableException("Paiement introuvable pour le token " + token));
 
+        paiement.setStatutAnnonceWebhook(statutDeclare);
+        paiement.setDateDernierWebhook(LocalDateTime.now());
+
         if (paiement.getStatut() == PaiementStatut.CONFIRME) {
+            paiementRepository.save(paiement);
             return;
         }
 
@@ -75,10 +86,17 @@ public class PaiementService {
         }
 
         paiement.setStatut(PaiementStatut.CONFIRME);
-        paiement.setDateConfirmation(java.time.LocalDateTime.now());
+        paiement.setDateConfirmation(LocalDateTime.now());
         paiementRepository.save(paiement);
 
         commandeService.marquerPayee(paiement.getCommande().getId());
+    }
+
+    @Transactional(readOnly = true)
+    public List<PaiementSuperviseResponse> superviser() {
+        return paiementRepository.findAllByOrderByDateCreationDesc().stream()
+                .map(PaiementSuperviseResponse::depuis)
+                .toList();
     }
 
     private String extraireToken(Map<String, Object> payload) {
@@ -92,6 +110,14 @@ public class PaiementService {
         }
 
         return token.toString();
+    }
+
+    private String extraireStatutDeclare(Map<String, Object> payload) {
+        Object status = payload.get("status");
+        if (status == null && payload.get("data") instanceof Map<?, ?> data) {
+            status = data.get("status");
+        }
+        return status != null ? status.toString() : null;
     }
 
 }

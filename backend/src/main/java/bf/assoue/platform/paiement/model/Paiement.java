@@ -43,6 +43,12 @@ public class Paiement {
     @Column(name = "token_paydunya", unique = true)
     private String tokenPaydunya;
 
+    @Column(name = "statut_annonce_webhook")
+    private String statutAnnonceWebhook;
+
+    @Column(name = "date_dernier_webhook")
+    private LocalDateTime dateDernierWebhook;
+
     @Column(name = "date_creation", nullable = false, updatable = false)
     @Builder.Default
     private LocalDateTime dateCreation = LocalDateTime.now();

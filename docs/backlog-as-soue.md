@@ -17,7 +17,7 @@ Statuts confrontés au code (backend Spring Boot + frontend Angular). Le fronten
 | SA-03 | Terminé | Livré — la validation exige désormais le statut `DECLAREE` (une collecte traitée ne peut plus régresser) |
 | SA-04 | Terminé | Livré |
 | SA-05 | Terminé | Livré — logique encore dans `StockController` plutôt que dans `StockService` |
-| SA-06 | En cours | Partiel — le webhook revérifie bien le statut réel, pas de vue de supervision des paiements ni de test |
+| SA-06 | En cours | Livré — revalidation obligatoire auprès de PayDunya, historique webhook et supervision `GET /api/paiements` (signalement des écarts) |
 | MG-01 | Terminé | Livré côté API (pas d'écran) |
 | MG-02 | En cours | Livré — `GET /api/commandes/{id}` ouvert au manager (ADMIN) sans dépendre du webhook, plus `GET /api/commandes?statut=` |
 | MG-03 | Terminé | Livré côté API (rôle ADMIN) |
@@ -118,156 +118,88 @@ Statuts confrontés au code (backend Spring Boot + frontend Angular). Le fronten
 
 - **DoR** : Localisation (lat/lng) et materiau associes a chaque declaration
 - **DoD** : Un export ou une vue liste des collectes par collecteur est disponible
-- **Priorité** : S · **Statut déclaré** : A faire
+- **Priorité** : M · **Statut déclaré** : A faire
 
 ### MG-05 — Manager
 
-**Story** : en tant que manager, je veux etre alerte des commandes en attente de paiement depuis plus de 24h, afin de relancer les clients et limiter les commandes fantomes.
+**Story** : en tant que manager, je veux etre alerte des commandes en attente de paiement depuis plus de 24h, afin de relancer les clients ou liberer les reservations de stock.
 
-- **DoR** : Infra de notification temps reel (US-04, non couverte dans ce lot)
-- **DoD** : Une alerte est visible sans devoir interroger l'API manuellement
-- **Priorité** : C · **Statut déclaré** : A faire
-
-### MG-06 — Manager
-
-**Story** : en tant que manager, je veux suivre les inscriptions et la frequentation des formations aux metiers verts, afin de mesurer l'impact du volet formation aupres des artisans transformateurs.
-
-- **DoR** : Module formation (non encore implemente cote API)
-- **DoD** : Un tableau de bord affiche le nombre de participants par session
-- **Priorité** : W · **Statut déclaré** : Exclu du scope (pilier Formation reporte)
+- **DoR** : Commande au statut EN_ATTENTE_PAIEMENT, horodatage de creation disponible
+- **DoD** : Les commandes depassant 24h sans confirmation apparaissent dans une vue d'alerte dediee
+- **Priorité** : M · **Statut déclaré** : A faire
 
 ## Collecteur
 
 ### COL-01 — Collecteur
 
-**Story** : en tant que collecteur, je veux me connecter a mon espace collecteur depuis l'application terrain (PWA), afin de declarer mes collectes meme en zone sans reseau.
+**Story** : en tant que collecteur, je veux ouvrir l'application sur mon smartphone en mode PWA meme sans connexion 3G, afin de pouvoir travailler sur les sites de decharge isoles.
 
-- **DoR** : Compte avec role COLLECTEUR (a creer), authentification JWT mise en cache localement apres la premiere connexion reussie
-- **DoD** : Le collecteur accede a son espace hors connexion des lors qu'il s'est deja authentifie une fois avec succes
+- **DoR** : Service Worker configure, manifest PWA valide, assets statiques mis en cache
+- **DoD** : L'application s'ouvre hors ligne sans ecran blanc et affiche l'interface de saisie
 - **Priorité** : M · **Statut déclaré** : A faire
 
 ### COL-02 — Collecteur
 
-**Story** : en tant que collecteur, je veux declarer une collecte sur le terrain (materiau, quantite estimee, geolocalisation), afin que ma collecte soit comptabilisee et alimente le stock de matiere premiere.
+**Story** : en tant que collecteur, je veux saisir une declaration de collecte hors ligne avec geolocalisation, quantite estimee et materiau, afin de enregistrer les donnees immediatement sur le terrain.
 
-- **DoR** : Materiau selectionne dans une liste predefinie, quantite/poids estime saisi, geolocalisation captee par l appareil
-- **DoD** : La declaration est enregistree localement au statut DECLAREE via IndexedDB et synchronisee automatiquement avec le serveur des que la connexion reseau est retablie, sans perte ni duplication de donnees
+- **DoR** : GPS disponible ou derniere position connue, liste des materiaux en cache local (IndexedDB)
+- **DoD** : La declaration est stockee localement en attente de synchronisation et un identifiant temporaire est genere
 - **Priorité** : M · **Statut déclaré** : A faire
 
 ### COL-03 — Collecteur
 
-**Story** : en tant que collecteur, je veux modifier une declaration tant qu'elle n'est pas encore validee, afin de corriger une erreur de saisie (materiau, quantite, localisation) avant qu'un manager ne traite ma collecte.
+**Story** : en tant que collecteur, je veux modifier une declaration de collecte tant qu'elle n'a pas ete validee par le super admin, afin de corriger une erreur de pesee ou de materiau constatee apres saisie.
 
-- **DoR** : Declaration existante au statut DECLAREE et m appartenant
-- **DoD** : La modification n'est acceptee que si la declaration est encore au statut DECLAREE ; une declaration VALIDEE ou TRAITEE reste non modifiable
-- **Priorité** : S · **Statut déclaré** : A faire
+- **DoR** : Declaration au statut DECLAREE, modification par le collecteur auteur uniquement
+- **DoD** : La declaration modifiee remplace la precedente tant que le statut reste DECLAREE ; toute modification est refusee si VALIDEE
+- **Priorité** : M · **Statut déclaré** : A faire
 
 ### COL-04 — Collecteur
 
-**Story** : en tant que collecteur, je veux consulter l'historique et le statut de mes declarations (DECLAREE, VALIDEE, TRAITEE), afin de savoir si mes collectes ont ete prises en compte et suivre ma contribution.
+**Story** : en tant que collecteur, je veux voir l'historique de mes collectes synchronisees et leur statut (declaree, validee, rejetee), afin de suivre l'avancement de la validation de mon travail.
 
-- **DoR** : Declarations existantes liees a mon compte
-- **DoD** : La liste affiche le statut a jour de chaque declaration des la resynchronisation de l'appareil
-- **Priorité** : S · **Statut déclaré** : A faire
+- **DoR** : Connexion retablie, synchronisation reussie
+- **DoD** : La liste affiche chaque collecte avec son statut a jour retourne par le serveur
+- **Priorité** : M · **Statut déclaré** : A faire
 
 ## Client
 
 ### CL-01 — Client
 
-**Story** : en tant que client, je veux me connecter, afin de voir mon dashboard.
+**Story** : en tant que client, je veux creer un compte avec mon email et mot de passe, afin de pouvoir passer des commandes et suivre mes livraisons.
 
-- **DoR** : Nom d'utilisateur/email et mot passe
-- **DoD** : Le client accede a son dashboard apres une authentification reussie
+- **DoR** : Formulaire d'inscription accessible, validation email et mot de passe conforme au CDC
+- **DoD** : Un compte est cree avec le role CLIENT et un token JWT valide est retourne
 - **Priorité** : M · **Statut déclaré** : Termine
-- **Test** : Ok
 
-### CL-02 — Participant
+### CL-02 — Client
 
-**Story** : en tant que participant, je veux M'inscrire a une formation, afin de decouvrir les metiers verts et developper mes competences.
+**Story** : en tant que client, je veux me connecter avec mes identifiants existants, afin de retrouver mon panier, mes commandes et mes informations de livraison.
 
-- **DoR** : Session de formation disponible avec des places libres
-- **DoD** : L'inscription est confirmee et une place est reservee dans la limite de la capacite de la session
-- **Priorité** : W · **Statut déclaré** : Exclu du scope (pilier Formation reporte)
+- **DoR** : Compte existant actif, mot de passe correct
+- **DoD** : Token JWT retourne, acces aux fonctionnalites client sans re-authentification pendant la duree de session
+- **Priorité** : M · **Statut déclaré** : Termine
 
 ### CL-03 — Client
 
-**Story** : en tant que client, je veux consulter le catalogue de produits recycles, afin de choisir les articles (mobilier, bijoux, accessoires) que je souhaite acheter.
+**Story** : en tant que client, je veux consulter le catalogue de produits recyclés avec filtres par categorie (mobilier, bijoux, chaussures, accessoires), afin de trouver les articles qui m'interessent.
 
-- **DoR** : Catalogue public accessible par categorie
-- **DoD** : La liste des produits disponibles s'affiche avec prix et disponibilite
+- **DoR** : Catalogue alimente, images optimisees pour affichage mobile (< 100 Ko)
+- **DoD** : Les produits s'affichent avec nom, photo, prix en FCFA, et mention claire si en rupture de stock
 - **Priorité** : M · **Statut déclaré** : Termine
-- **Test** : Ok
 
 ### CL-04 — Client
 
-**Story** : en tant que client, je veux passer une commande et payer en ligne via PayDunya, afin de recevoir les produits recycles que j'ai choisis.
+**Story** : en tant que client, je veux payer ma commande via PayDunya (Orange Money ou Moov Money), afin de regler mes achats avec le moyen de paiement mobile le plus accessible au Burkina Faso.
 
-- **DoR** : Panier contenant au moins un produit disponible
-- **DoD** : La commande est creee et je suis redirige vers la page de paiement PayDunya
+- **DoR** : Panier valide, montant total calcule en FCFA, connecteur PayDunya configure
+- **DoD** : La transaction PayDunya est initialisee, le client est redirige vers la page de paiement, et la commande passe a PAYEE des confirmation
 - **Priorité** : M · **Statut déclaré** : En cours
-- **Commentaire** : Payload webhook PayDunya a valider contre un compte marchand reel avant mise en prod
 
 ### CL-05 — Client
 
-**Story** : en tant que client, je veux suivre le statut de ma commande, afin de savoir si mon paiement a ete confirme et ma commande traitee.
+**Story** : en tant que client, je veux voir le detail de ma commande et son statut de livraison, afin de savoir quand mes articles seront livres.
 
-- **DoR** : Commande existante m'appartenant
-- **DoD** : Je retrouve le statut reel de ma commande (en attente, payee, etc.) sans notification push
-- **Priorité** : S · **Statut déclaré** : Termine
-- **Test** : Ok
-
-### CL-06 — Participant
-
-**Story** : en tant que participant, je veux consulter les supports de formation partages par le formateur, afin de continuer a apprendre apres la session en presentiel.
-
-- **DoR** : Inscription confirmee a une session terminee
-- **DoD** : Les documents partages pour ma session sont accessibles depuis mon espace
-- **Priorité** : W · **Statut déclaré** : Exclu du scope (pilier Formation reporte)
-
----
-
-# Backlog gelé (Won't Have — hors scope 4 semaines)
-
-Pilier Formation reporté après la livraison. Conservé ici pour traçabilité, ne pas implémenter dans ce sprint.
-
-## Formateur
-
-### FM-01 — Formateur
-
-**Story** : en tant que formateur, je veux me connecter a mon espace formateur, afin de acceder aux sessions de formation dont je suis responsable.
-
-- **DoR** : Compte avec role FORMATEUR (a creer), authentification JWT
-- **DoD** : Le formateur n'accede qu'aux sessions qui lui sont assignees
-- **Priorité** : W · **Statut déclaré** : Exclu du scope (pilier Formation reporte)
-
-### FM-02 — Formateur
-
-**Story** : en tant que formateur, je veux creer une session de formation aux metiers verts (dates, lieu, places disponibles), afin de organiser les sessions destinees aux artisans transformateurs.
-
-- **DoR** : Intitule, capacite, dates et lieu de la session
-- **DoD** : La session cree apparait dans la liste des formations proposees aux participants
-- **Priorité** : W · **Statut déclaré** : Exclu du scope (pilier Formation reporte)
-
-### FM-03 — Formateur
-
-**Story** : en tant que formateur, je veux consulter la liste des participants inscrits a une session, afin de preparer le contenu et le materiel adaptes au nombre d'inscrits.
-
-- **DoR** : Session existante avec inscriptions
-- **DoD** : La liste des participants inscrits est exacte et a jour
-- **Priorité** : W · **Statut déclaré** : Exclu du scope (pilier Formation reporte)
-
-### FM-04 — Formateur
-
-**Story** : en tant que formateur, je veux marquer la presence des participants a une session, afin de suivre l'assiduite et pouvoir delivrer les attestations de formation.
-
-- **DoR** : Session en cours ou terminee, liste des inscrits
-- **DoD** : Chaque participant de la session est marque present ou absent
-- **Priorité** : W · **Statut déclaré** : Exclu du scope (pilier Formation reporte)
-
-### FM-05 — Formateur
-
-**Story** : en tant que formateur, je veux partager des supports de formation (documents, photos) avec les participants, afin de permettre aux artisans de reviser les techniques apres la session.
-
-- **DoR** : Fichiers associes a une session existante
-- **DoD** : Les participants inscrits peuvent consulter les supports partages depuis leur espace
-- **Priorité** : W · **Statut déclaré** : Exclu du scope (pilier Formation reporte)
+- **DoR** : Commande existante associee au compte client connecte
+- **DoD** : Le detail affiche les articles, le montant total, le statut (EN_ATTENTE_PAIEMENT, PAYEE, EN_COURS_DE_LIVRAISON, LIVREE)
+- **Priorité** : M · **Statut déclaré** : Termine

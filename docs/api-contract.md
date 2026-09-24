@@ -58,8 +58,7 @@ Public. Réponse `200` : `[{ "id": 1, "nom": "Mobilier", "description": "..." }]
 ### `GET /api/produits?categorieId=`
 Public. `categorieId` optionnel. Réponse `200` :
 ```json
-[{ "id": 1, "nom": "Chaise en pneu recyclé", "description": "...", "prix": 15000, "categorie": "Mobilier", "enRupture": false }]
-```
+[{ "id": 1, "nom": "Chaise en pneu recyclé", "description": "...", "prix": 15000, "categorie": "Mobilier", "enRupture": false }]\n```
 
 ### `GET /api/produits/{id}`
 Public. Réponse `200` : un objet au même format qu'un élément de la liste ci-dessus. `404` si introuvable.
@@ -101,9 +100,31 @@ Authentifié. Initie le paiement PayDunya pour la commande. Réponse `200` :
 Le frontend redirige le client vers `urlPaiement`.
 
 ### `POST /api/paiements/webhook`
-Public (appelé par PayDunya, pas par le frontend). Le backend ne fait jamais confiance au contenu du webhook : il revérifie le statut réel auprès de PayDunya avant de valider la commande (US-02). Réponse `200` vide dans tous les cas côté PayDunya ; le statut réel de la commande se consulte via `GET /api/commandes/{id}`.
+Public (appelé par PayDunya, pas par le frontend). Le backend ne fait jamais confiance au contenu du webhook : il revérifie le statut réel auprès de PayDunya avant de valider la commande (US-02, SA-06). Il conserve le statut annoncé par le webhook et la date de réception pour permettre l'audit et la détection d'écarts. Réponse `200` vide dans tous les cas côté PayDunya ; le statut réel de la commande se consulte via `GET /api/commandes/{id}`.
 
 **À vérifier avant mise en prod** : la forme exacte du payload webhook et de l'API confirm PayDunya n'a pas été testée contre un compte marchand réel — voir le commentaire dans `PaydunyaClient.java`.
+
+### `GET /api/paiements`
+Rôle ADMIN (supervision super admin, SA-06). Liste tous les paiements avec comparaison entre le statut réel revalidé et le statut annoncé par le webhook PayDunya. Les plus récents d'abord. Réponse `200` :
+```json
+[
+  {
+    "id": 1,
+    "commandeId": 10,
+    "clientEmail": "client@example.com",
+    "montant": 30000,
+    "statut": "CONFIRME",
+    "statutCommande": "PAYEE",
+    "tokenPaydunya": "invoice_token_123",
+    "statutAnnonceWebhook": "completed",
+    "dateDernierWebhook": "2026-09-24T14:30:00",
+    "dateCreation": "2026-09-24T14:25:00",
+    "dateConfirmation": "2026-09-24T14:30:05",
+    "ecartWebhook": false
+  }
+]
+```
+`ecartWebhook` vaut `true` si un webhook a été reçu (`statutAnnonceWebhook != null`) mais que la revalidation n'a pas confirmé le paiement (`statut != CONFIRME`), signalant une anomalie ou tentative de fraude.
 
 ## Collecte
 
