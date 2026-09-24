@@ -46,17 +46,40 @@ public class PaiementService {
                     "Impossible d'initier un paiement pour une commande avec le statut : " + commande.getStatut());
         }
 
+        BigDecimal total = CommandeResponse.depuis(commande).total();
+        String callbackUrl = paydunyaProperties.callbackUrlEffectif();
+
         Optional<Paiement> existant = paiementRepository.findByCommandeId(commandeId);
         if (existant.isPresent()) {
             Paiement paiementExistant = existant.get();
-            return PaiementResponse.depuis(
-                    paiementExistant,
-                    paydunyaClient.urlPaiement(paiementExistant.getTokenPaydunya())
-            );
-        }
 
-        BigDecimal total = CommandeResponse.depuis(commande).total();
-        String callbackUrl = paydunyaProperties.callbackUrlEffectif();
+            // Si le paiement est déjà confirmé, la garde statut au-dessus aurait dû bloquer,
+            // mais par sécurité on le renvoit tel quel.
+            if (paiementExistant.getStatut() == PaiementStatut.CONFIRME) {
+                return PaiementResponse.depuis(
+                        paiementExistant,
+                        paydunyaClient.urlPaiement(paiementExistant.getTokenPaydunya())
+                );
+            }
+
+            // Réutiliser le token existant seulement si l'invoice PayDunya est encore ouverte.
+            // Si le token est expiré/invalide (ECHOUE ou invoice fermée côté PayDunya),
+            // on régénère une nouvelle invoice et on met à jour l'enregistrement.
+            if (paydunyaClient.estEnAttente(paiementExistant.getTokenPaydunya())) {
+                return PaiementResponse.depuis(
+                        paiementExistant,
+                        paydunyaClient.urlPaiement(paiementExistant.getTokenPaydunya())
+                );
+            }
+
+            // Token mort → recréer une invoice et mettre à jour le paiement existant
+            PaydunyaClient.InvoiceCree nouvelleInvoice = paydunyaClient.creerInvoice(
+                    total, "Commande AS'Soué n°" + commande.getId(), callbackUrl);
+            paiementExistant.setTokenPaydunya(nouvelleInvoice.token());
+            paiementExistant.setStatut(PaiementStatut.EN_ATTENTE);
+            paiementRepository.save(paiementExistant);
+            return PaiementResponse.depuis(paiementExistant, nouvelleInvoice.urlPaiement());
+        }
 
         PaydunyaClient.InvoiceCree invoice = paydunyaClient.creerInvoice(
                 total, "Commande AS'Soué n°" + commande.getId(), callbackUrl);

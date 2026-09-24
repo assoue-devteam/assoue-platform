@@ -14,7 +14,7 @@ import bf.assoue.platform.paiement.model.PaiementStatut;
 import bf.assoue.platform.paiement.repository.PaiementRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
+
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -212,7 +212,7 @@ class PaiementServiceTest {
     }
 
     @Test
-    void initier_reutilisePaiementExistant_enCasDeRetry() {
+    void initier_reutilisePaiementExistant_siTokenEncoreValide() {
         Commande commande = commandeAvecLigne(10L, "client@example.com", CommandeStatut.EN_ATTENTE_PAIEMENT, BigDecimal.valueOf(30000));
         Paiement existant = Paiement.builder()
                 .id(1L)
@@ -224,6 +224,8 @@ class PaiementServiceTest {
 
         when(commandeRepository.findById(10L)).thenReturn(Optional.of(commande));
         when(paiementRepository.findByCommandeId(10L)).thenReturn(Optional.of(existant));
+        // Le token est encore ouvert côté PayDunya → on réutilise
+        when(paydunyaClient.estEnAttente("tok_exist_456")).thenReturn(true);
         when(paydunyaClient.urlPaiement("tok_exist_456")).thenReturn("https://paydunya.com/checkout/invoice/tok_exist_456");
 
         PaiementResponse response = paiementService.initier(10L, "client@example.com");
@@ -232,6 +234,39 @@ class PaiementServiceTest {
         assertThat(response.statut()).isEqualTo(PaiementStatut.EN_ATTENTE);
         verify(paydunyaClient, never()).creerInvoice(any(), any(), any());
         verify(paiementRepository, never()).save(any(Paiement.class));
+    }
+
+    @Test
+    void initier_regenereInvoice_siTokenExpire() {
+        // Scénario : le client retente après que l'invoice PayDunya a expiré (ECHOUE).
+        // Le service doit recréer une nouvelle invoice et mettre à jour le token existant.
+        Commande commande = commandeAvecLigne(10L, "client@example.com", CommandeStatut.EN_ATTENTE_PAIEMENT, BigDecimal.valueOf(30000));
+        Paiement existant = Paiement.builder()
+                .id(1L)
+                .commande(commande)
+                .montant(BigDecimal.valueOf(30000))
+                .statut(PaiementStatut.ECHOUE)
+                .tokenPaydunya("tok_expire_789")
+                .build();
+
+        when(commandeRepository.findById(10L)).thenReturn(Optional.of(commande));
+        when(paiementRepository.findByCommandeId(10L)).thenReturn(Optional.of(existant));
+        // Token mort côté PayDunya
+        when(paydunyaClient.estEnAttente("tok_expire_789")).thenReturn(false);
+        when(paydunyaProperties.callbackUrlEffectif()).thenReturn("http://localhost:8080/api/paiements/webhook");
+        when(paydunyaClient.creerInvoice(eq(BigDecimal.valueOf(30000)), anyString(), eq("http://localhost:8080/api/paiements/webhook")))
+                .thenReturn(new PaydunyaClient.InvoiceCree("tok_nouveau_999", "https://paydunya.com/checkout/invoice/tok_nouveau_999"));
+
+        PaiementResponse response = paiementService.initier(10L, "client@example.com");
+
+        assertThat(response.urlPaiement()).isEqualTo("https://paydunya.com/checkout/invoice/tok_nouveau_999");
+        assertThat(response.statut()).isEqualTo(PaiementStatut.EN_ATTENTE);
+        // Le token sur l'entité existante doit avoir été mis à jour
+        assertThat(existant.getTokenPaydunya()).isEqualTo("tok_nouveau_999");
+        assertThat(existant.getStatut()).isEqualTo(PaiementStatut.EN_ATTENTE);
+        // L'enregistrement existant est mis à jour (pas un nouvel enregistrement)
+        verify(paiementRepository).save(existant);
+        verify(paydunyaClient).creerInvoice(any(), any(), any());
     }
 
     @Test
