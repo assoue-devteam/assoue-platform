@@ -1,7 +1,7 @@
 package bf.assoue.platform.commerce.controller;
 
 import bf.assoue.platform.commerce.dto.CategorieResponse;
-import bf.assoue.platform.commerce.repository.CategorieRepository;
+import bf.assoue.platform.commerce.service.CategorieService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,11 +14,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CategorieController {
 
-    private final CategorieRepository categorieRepository;
+    private final CategorieService categorieService;
 
     @GetMapping
     public List<CategorieResponse> lister() {
-        return categorieRepository.findAll().stream().map(CategorieResponse::depuis).toList();
+        return categorieService.lister();
     }
 
 }

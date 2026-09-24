@@ -40,7 +40,11 @@ public class CollecteService {
         // synchronisée avec cette référence renvoie son état actuel au lieu d'en recréer une.
         var dejaSynchronisee = collecteRepository.findByReferenceClient(requete.referenceClient());
         if (dejaSynchronisee.isPresent()) {
-            return CollecteResponse.depuis(dejaSynchronisee.get());
+            Collecte existante = dejaSynchronisee.get();
+            if (existante.getCollecteur() != null && !existante.getCollecteur().getEmail().equals(emailCollecteur)) {
+                throw new RequeteInvalideException("Cette référence de synchronisation appartient déjà à un autre collecteur");
+            }
+            return CollecteResponse.depuis(existante);
         }
 
         Utilisateur collecteur = utilisateurRepository.findByEmail(emailCollecteur)

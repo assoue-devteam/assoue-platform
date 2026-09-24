@@ -27,6 +27,10 @@ public class PaydunyaClient {
     public record InvoiceCree(String token, String urlPaiement) {
     }
 
+    public String urlPaiement(String token) {
+        return "https://paydunya.com/checkout/invoice/" + token;
+    }
+
     public InvoiceCree creerInvoice(BigDecimal montant, String description, String callbackUrl) {
         Map<String, Object> corps = Map.of(
                 "invoice", Map.of(
@@ -45,8 +49,11 @@ public class PaydunyaClient {
                 .retrieve()
                 .body(Map.class);
 
+        if (reponse == null) {
+            throw new IllegalStateException("Réponse null de PayDunya lors de la création de l'invoice");
+        }
         String token = (String) reponse.get("token");
-        return new InvoiceCree(token, "https://paydunya.com/checkout/invoice/" + token);
+        return new InvoiceCree(token, urlPaiement(token));
     }
 
     public boolean estConfirme(String token) {
@@ -56,7 +63,35 @@ public class PaydunyaClient {
                 .retrieve()
                 .body(Map.class);
 
+        if (reponse == null) {
+            return false;
+        }
         return "completed".equals(reponse.get("status"));
+    }
+
+    /**
+     * Vérifie si une invoice PayDunya est encore en attente de paiement (utilisable).
+     * Renvoie {@code false} si l'invoice est expirée, annulée ou introuvable —
+     * auquel cas il faudra en recréer une nouvelle.
+     */
+    public boolean estEnAttente(String token) {
+        try {
+            Map<?, ?> reponse = restClient.get()
+                    .uri(proprietes.urlBase() + "/checkout-invoice/confirm/" + token)
+                    .headers(this::ajouterEntetesAuth)
+                    .retrieve()
+                    .body(Map.class);
+
+            if (reponse == null) {
+                return false;
+            }
+            String statut = reponse.get("status") instanceof String s ? s : null;
+            // PayDunya renvoie "pending" tant que l'invoice est ouverte et payable
+            return "pending".equals(statut);
+        } catch (Exception e) {
+            // Invoice inconnue / réseau HS → on considère le token mort
+            return false;
+        }
     }
 
     private void ajouterEntetesAuth(org.springframework.http.HttpHeaders headers) {

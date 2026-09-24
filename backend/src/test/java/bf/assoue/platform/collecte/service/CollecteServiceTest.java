@@ -56,6 +56,7 @@ class CollecteServiceTest {
         Collecte existante = Collecte.builder()
                 .id(1L)
                 .referenceClient(referenceClient)
+                .collecteur(Utilisateur.builder().id(1L).email("collecteur@example.com").build())
                 .pointCollecte(PointCollecte.builder().latitude(12.3).longitude(-1.5).build())
                 .build();
 
@@ -69,6 +70,28 @@ class CollecteServiceTest {
         assertThat(reponse.id()).isEqualTo(1L);
         verify(collecteRepository, never()).save(any());
         verifyNoInteractions(materiauRepository, utilisateurRepository);
+    }
+
+    @Test
+    void declarer_refuseRenvoiCollecteExistante_siAppartientAUnAutreCollecteur() {
+        String referenceClient = "uuid-frontend-123";
+        Collecte existante = Collecte.builder()
+                .id(1L)
+                .referenceClient(referenceClient)
+                .collecteur(Utilisateur.builder().id(2L).email("autre@example.com").build())
+                .pointCollecte(PointCollecte.builder().latitude(12.3).longitude(-1.5).build())
+                .build();
+
+        when(collecteRepository.findByReferenceClient(referenceClient)).thenReturn(Optional.of(existante));
+
+        DeclarationCollecteRequest requete = new DeclarationCollecteRequest(
+                referenceClient, 1L, BigDecimal.TEN, new LocalisationRequest(12.3, -1.5));
+
+        assertThatThrownBy(() -> collecteService.declarer(requete, "collecteur@example.com"))
+                .isInstanceOf(RequeteInvalideException.class)
+                .hasMessageContaining("autre collecteur");
+
+        verify(collecteRepository, never()).save(any());
     }
 
     @Test

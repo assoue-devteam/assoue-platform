@@ -5,6 +5,7 @@ import bf.assoue.platform.auth.repository.UtilisateurRepository;
 import bf.assoue.platform.commerce.dto.CommandeAdminResponse;
 import bf.assoue.platform.commerce.dto.CommandeEnAttenteResponse;
 import bf.assoue.platform.commerce.dto.CommandeRequest;
+import bf.assoue.platform.commerce.dto.CommandeResponse;
 import bf.assoue.platform.commerce.dto.LigneCommandeRequest;
 import bf.assoue.platform.commerce.model.Categorie;
 import bf.assoue.platform.commerce.model.Commande;
@@ -31,7 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CommandeServiceTest {
@@ -121,6 +122,57 @@ class CommandeServiceTest {
             assertThat(vue.statut()).isEqualTo(CommandeStatut.EN_ATTENTE_PAIEMENT);
             assertThat(vue.total()).isEqualByComparingTo("30000");
         });
+    }
+
+    @Test
+    void listerPourClient_renvoieLesCommandesDuClient() {
+        when(commandeRepository.findByClientEmailOrderByDateCreationDesc("client@example.com"))
+                .thenReturn(List.of(commandeDe("client@example.com")));
+
+        List<CommandeResponse> commandes = commandeService.listerPourClient("client@example.com");
+
+        assertThat(commandes).singleElement().satisfies(vue -> {
+            assertThat(vue.id()).isEqualTo(10L);
+            assertThat(vue.statut()).isEqualTo(CommandeStatut.EN_ATTENTE_PAIEMENT);
+            assertThat(vue.total()).isEqualByComparingTo("30000");
+        });
+    }
+
+    @Test
+    void marquerPayee_metAJourStatutEtDecrementeStock_siEnAttentePaiement() {
+        Commande commande = commandeDe("client@example.com");
+        when(commandeRepository.findById(10L)).thenReturn(Optional.of(commande));
+
+        commandeService.marquerPayee(10L);
+
+        assertThat(commande.getStatut()).isEqualTo(CommandeStatut.PAYEE);
+        verify(stockService).decrementerStockProduit(1L, 2);
+        verify(commandeRepository).save(commande);
+    }
+
+    @Test
+    void marquerPayee_neFaitRien_siDejaPayee() {
+        Commande commande = commandeDe("client@example.com");
+        commande.setStatut(CommandeStatut.PAYEE);
+        when(commandeRepository.findById(10L)).thenReturn(Optional.of(commande));
+
+        commandeService.marquerPayee(10L);
+
+        verifyNoInteractions(stockService);
+        verify(commandeRepository, never()).save(commande);
+    }
+
+    @Test
+    void marquerPayee_refuse_siCommandeAnnulee() {
+        Commande commande = commandeDe("client@example.com");
+        commande.setStatut(CommandeStatut.ANNULEE);
+        when(commandeRepository.findById(10L)).thenReturn(Optional.of(commande));
+
+        assertThatThrownBy(() -> commandeService.marquerPayee(10L))
+                .isInstanceOf(RequeteInvalideException.class)
+                .hasMessageContaining("ANNULEE");
+
+        verifyNoInteractions(stockService);
     }
 
     private Commande commandeDe(String emailClient) {

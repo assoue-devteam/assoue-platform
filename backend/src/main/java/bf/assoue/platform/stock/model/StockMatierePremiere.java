@@ -31,4 +31,7 @@ public class StockMatierePremiere {
     @Builder.Default
     private BigDecimal quantite = BigDecimal.ZERO;
 
+    @Version
+    private Long version;
+
 }

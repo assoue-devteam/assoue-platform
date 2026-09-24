@@ -38,6 +38,7 @@ public class ProduitService {
                 produit.getNom(),
                 produit.getDescription(),
                 produit.getPrix(),
+                produit.getImageUrl(),
                 produit.getCategorie().getNom(),
                 enRupture
         );

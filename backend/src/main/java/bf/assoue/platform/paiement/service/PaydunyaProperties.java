@@ -3,12 +3,24 @@ package bf.assoue.platform.paiement.service;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "paydunya")
-public record PaydunyaProperties(String mode, String masterKey, String privateKey, String token) {
+public record PaydunyaProperties(
+        String mode,
+        String masterKey,
+        String privateKey,
+        String token,
+        String callbackUrl
+) {
 
     public String urlBase() {
         return "test".equals(mode)
                 ? "https://app.paydunya.com/sandbox-api/v1"
                 : "https://app.paydunya.com/api/v1";
+    }
+
+    public String callbackUrlEffectif() {
+        return callbackUrl != null && !callbackUrl.isBlank()
+                ? callbackUrl
+                : "http://localhost:8080/api/paiements/webhook";
     }
 
 }
