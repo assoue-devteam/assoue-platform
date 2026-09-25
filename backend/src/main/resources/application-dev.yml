@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/assoue_db
+    url: jdbc:postgresql://db:5432/assoue_db
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
   jpa:
