@@ -11,6 +11,11 @@ services:
       - "${POSTGRES_PORT}:5432"
     volumes:
       - assoue_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   adminer:
     image: adminer
@@ -19,7 +24,31 @@ services:
     ports:
       - "8081:8080"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: assoue-backend
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      JWT_SECRET: ${JWT_SECRET}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ~/.m2:/root/.m2 # cache Maven local
+      - ./backend/src:/app/src # hot reload du code source
+      - ./backend/pom.xml:/app/pom.xml # pom.xml pour Maven
 
 volumes:
   assoue_pg_data:
