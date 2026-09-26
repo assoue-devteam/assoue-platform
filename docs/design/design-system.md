@@ -182,7 +182,7 @@ Client et Collecteur sont conçus d'abord en 360 px ; la Gestion d'abord en 1366
 | Panier | lignes empilées, total + CTA collants en bas | idem | lignes / récapitulatif collant (8/4) |
 | Listes client/collecteur | cartes | cartes | table (client) |
 | Tables Gestion | **deviennent des cartes** ; filtres dans une modale « Filtrer » ; actions dans un menu « ⋯ » | colonnes secondaires masquées | complètes |
-| Navigation Gestion | bouton menu → panneau | sidebar repliée | sidebar fixe 240 px |
+| Navigation Gestion | bouton menu → panneau | comme mobile : barre haute avec « Menu » → panneau par-dessus le contenu (pas de bande latérale réduite) | sidebar fixe 240 px |
 | Formulaires modaux | plein écran | modale centrée | modale 480–560 px |
 
 Colonnes masquées en premier : coordonnées GPS, référence de synchronisation (UUID), dates de webhook, token PayDunya.
