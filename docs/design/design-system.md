@@ -461,6 +461,10 @@ Nominal = **comportement actuel du backend**. Les états qui dépendent d'une co
 
 La file locale **n'est jamais effacée** à la déconnexion tant qu'il reste des déclarations non envoyées. La session dure 24 h sans renouvellement ; au-delà, l'envoi exige une reconnexion.
 
+Chaque déclaration de la file est rattachée à l'email du collecteur qui l'a saisie. Le backend attribue une déclaration au compte connecté au moment de l'envoi. Si un **autre compte** se connecte sur le téléphone, la file n'est donc **pas envoyée** : message « 3 déclarations saisies par issa.sawadogo@example.com attendent sur ce téléphone. Reconnectez-vous avec ce compte pour les envoyer. »
+
+Bandeau « Connexion rétablie » (Client et Collecteur) : couleurs success, icône + texte, `aria-live="polite"`, visible au moins 5 s.
+
 ---
 
 ## 10. Backend gaps (liste à jour, remplace toute liste antérieure)
