@@ -481,6 +481,9 @@ La file locale **n'est jamais effacée** à la déconnexion tant qu'il reste des
 | GAP-10 | PUB-02, CLI-01 | quantité disponible | pas de plafond affiché |
 | GAP-11 | formulaires | erreurs serveur par champ | Alert en haut du formulaire |
 | GAP-12 | COL-A/B, GES-02 | unité du matériau | « kg » `[À CONFIRMER]` |
+| GAP-13 | COL-C | la réponse d'une collecte donne le **nom** du matériau, pas son `materiauId` ; le formulaire de correction ne peut pas être pré-rempli de façon fiable | pré-remplissage par correspondance de nom avec la liste des matériaux (dépend de GAP-01), annoté |
+
+**Hors périmètre V1 (volontaire)** : Dépôt fournisseur, Fournisseur, Compensation. Modélisés en base (`Collecte.depot`), mais la relation Dépôt ↔ Collecte n'est pas tranchée et aucun endpoint ne les expose. Aucun écran, champ ni mention dans la maquette.
 
 ---
 
@@ -496,6 +499,8 @@ La file locale **n'est jamais effacée** à la déconnexion tant qu'il reste des
 8. Paiement : nominal = backend actuel ; cible sur une planche annotée.
 9. Livraison : bloc désactivé annoté GAP-02.
 10. Photos : emplacements neutres en attendant le catalogue d'AS'SOUÉ.
+11. Graphie du nom : « AS'SOUÉ » dans l'interface. Le code et les docs techniques écrivent « AS'Soué » `[À CONFIRMER : graphie officielle]`.
+12. Livraison : c'est AS'SOUÉ qui contacte le client après le paiement ; canal et délai `[À CONFIRMER]` (lié à GAP-02).
 
 ---
 
