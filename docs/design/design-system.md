@@ -68,6 +68,7 @@ Palette retenue : **Forêt et terracotta** (vert forêt `#2D6A4F` + terracotta `
   --color-accent: #C1440E;          /* CTA d'achat uniquement, 1 par écran */
   --color-accent-soft: #C1622D;     /* décoratif ou texte >= 24px seulement */
   --color-accent-tint: #F7E7DE;
+  --color-accent-strong: #9E370B;   /* survol/pressé du CTA d'achat, 7:1 avec blanc */
 
   /* Neutres */
   --color-bg: #FAF8F4;
@@ -83,9 +84,13 @@ Palette retenue : **Forêt et terracotta** (vert forêt `#2D6A4F` + terracotta `
   --color-success: #1B4332;  --color-success-bg: #E3EFE8;
   --color-warning: #8A5A00;  --color-warning-bg: #FDF3DC;
   --color-error:   #A12622;  --color-error-bg:   #FBE9E7;
+  --color-error-strong: #7F1D1A;    /* survol/pressé du bouton danger */
   --color-info:    #1F5A7A;  --color-info-bg:    #E4EEF3;
 
   /* Focus */
+  /* Voile derrière les modales (fonctionnel, pas décoratif) */
+  --overlay: rgba(28, 31, 29, .48);
+
   --focus-ring: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-primary-strong);
 
   /* Typographie */
@@ -147,9 +152,9 @@ Prix, quantités, références et dates en chiffres tabulaires (`font-variant-nu
 |---|---|---|---|
 | `EN_ATTENTE_PAIEMENT` | En attente de paiement | warning + horloge | oui |
 | `PAYEE` | Payée | success + coche | oui |
-| `EN_PREPARATION` | En préparation | info | non `[BACKEND GAP]` GAP-03 |
-| `EXPEDIEE` | Expédiée | info | non `[BACKEND GAP]` |
-| `LIVREE` | Livrée | success | non `[BACKEND GAP]` |
+| `EN_PREPARATION` | En préparation | info + colis | non `[BACKEND GAP]` GAP-03 |
+| `EXPEDIEE` | Expédiée | info + camion | non `[BACKEND GAP]` |
+| `LIVREE` | Livrée | success + coche | non `[BACKEND GAP]` |
 | `ANNULEE` | Annulée | neutre + croix | non `[BACKEND GAP]` |
 | Paiement `EN_ATTENTE` / `CONFIRME` / `ECHOUE` | En attente / Confirmé / Échoué | warning / success / error | Gestion uniquement |
 | Collecte `DECLAREE` | Déclarée | neutre + crayon (modifiable) | oui |
