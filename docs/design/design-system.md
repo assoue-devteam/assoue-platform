@@ -440,7 +440,7 @@ Nominal = **comportement actuel du backend**. Les états qui dépendent d'une co
 | Redirection | « Redirection vers PayDunya… » |
 | Retour sur AS'SOUÉ | le client revient de lui-même (pas de retour automatique) ; bandeau « Paiement en cours pour la commande n°10 — Vérifier » sur Mes commandes et le catalogue |
 | Vérification | « Nous vérifions votre paiement auprès de PayDunya… » (vérification toutes les 5 s pendant 60 s) |
-| Non confirmé | « Paiement non encore confirmé. Si vous avez payé, la confirmation peut prendre quelques minutes. » + Vérifier à nouveau + Reprendre le paiement. **Jamais « Échoué » côté client.** |
+| Non confirmé | « Paiement non encore confirmé. Si vous avez payé, la confirmation peut prendre quelques minutes. » + Vérifier à nouveau + Reprendre le paiement. **Jamais « Échoué » côté client.** « Reprendre le paiement » vérifie **toujours** le statut (`GET /api/commandes/{id}`) avant d'appeler l'initiation : si la commande est payée entre-temps, on affiche « Réussi » au lieu de relancer. Le risque GAP-04 (facture remplacée) est une annotation `app-gap-note` pour l'équipe, **jamais un texte visible par le client**. |
 | Réussi | Alert success « Paiement confirmé. Commande n°10 payée. » |
 | Déjà payée | pas de bouton payer ; « Cette commande est déjà payée » |
 | Double initiation | bouton verrouillé ; en cas d'erreur serveur : « Vérifiez d'abord le statut de votre commande » + Vérifier |
