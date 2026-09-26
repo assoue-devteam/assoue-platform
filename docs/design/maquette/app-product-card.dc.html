@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<a href="#" style="display:flex;flex-direction:column;height:100%;border:1px solid #DDD7CC;border-radius:8px;background:#FFFFFF;overflow:hidden;text-decoration:none;color:#1C1F1D;box-sizing:border-box" style-hover="border-color:#8A8F89" style-focus="outline:none;box-shadow:0 0 0 2px #FFFFFF,0 0 0 4px #1B4332">
+  <div style="aspect-ratio:4/5;background:#F1EDE6;display:flex;align-items:center;justify-content:center">
+    <sc-if value="{{ sansPhoto }}" hint-placeholder-val="{{ false }}"><span style="font-size:13px;color:#5B615C">Photo à venir</span></sc-if>
+  </div>
+  <div style="padding:10px 12px 14px;display:flex;flex-direction:column;gap:2px">
+    <sc-if value="{{ desktop }}" hint-placeholder-val="{{ false }}"><span style="font-size:18px;font-weight:600;line-height:1.3;text-wrap:pretty">{{ nom }}</span></sc-if>
+    <sc-if value="{{ mobile }}" hint-placeholder-val="{{ true }}"><span style="font-size:17px;font-weight:600;line-height:1.3;text-wrap:pretty">{{ nom }}</span></sc-if>
+    <span style="font-size:13px;line-height:1.4;color:#5B615C">{{ categorie }}</span>
+    <span style="font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:2px">{{ prix }}</span>
+    <sc-if value="{{ rupture }}" hint-placeholder-val="{{ false }}"><span style="align-self:flex-start;margin-top:6px;display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;border-radius:4px;background:#F1EDE6;color:#1C1F1D;font-size:13px;font-weight:600;white-space:nowrap"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"></path></svg>Rupture de stock</span></sc-if>
+  </div>
+</a>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:180,&quot;height&quot;:340},&quot;nom&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Chaise en pneu recyclé&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;categorie&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Mobilier&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;prix&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;15 000 FCFA&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;sansPhoto&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;rupture&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;desktop&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    return { desktop: !!p.desktop, mobile: !p.desktop, sansPhoto: !!p.sansPhoto, rupture: !!p.rupture };
+  }
+}
+</script>
+</body>
+</html>
