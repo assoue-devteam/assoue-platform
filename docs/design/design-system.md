@@ -427,7 +427,7 @@ Sections, chacune avec son nombre d'éléments et un lien :
 | Accès refusé | route hors rôle | page dédiée + lien vers l'espace de l'utilisateur |
 | Introuvable | 404 | page dédiée |
 | Erreur serveur | 5xx | `app-error-state` + Réessayer |
-| Réseau / hors ligne | pas de connexion | Client : `app-offline-banner`, achats désactivés ; Collecteur : mode normal |
+| Réseau / hors ligne | pas de connexion | Client : `app-offline-banner`. « Ajouter au panier » reste actif (panier local) ; « Commander », « Payer », la connexion et l'inscription sont désactivés, avec la raison affichée. Collecteur : mode normal |
 
 ### Paiement
 
