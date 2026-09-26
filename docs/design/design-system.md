@@ -115,6 +115,8 @@ Palette retenue : **Forêt et terracotta** (vert forêt `#2D6A4F` + terracotta `
 Règles d'usage :
 - **La terracotta ne signale jamais un problème.** Les erreurs utilisent `--color-error` et sont toujours accompagnées d'une icône et d'un texte.
 - Un succès est vert comme la marque : il porte donc toujours une icône (coche) et un libellé.
+
+**Icônes** : jeu **Lucide** (licence ISC), au trait, épaisseur 1,5, tailles 16 et 20 px, `currentColor`. Seules les icônes réellement utilisées (~25) sont copiées en SVG dans le composant `app-icon` : **aucune dépendance npm**, et elles restent disponibles hors ligne pour la PWA collecteur. Toujours accompagnées d'un texte, sauf dans un bouton-icône qui porte alors un `aria-label`.
 - `--color-accent-soft` n'est pas assez contrasté (4,2:1) pour du texte courant.
 - Pas de dégradés, de transparences décoratives ni de mode sombre en V1.
 - Les cartes n'ont pas d'ombre : une bordure `--color-border` de 1 px suffit.
