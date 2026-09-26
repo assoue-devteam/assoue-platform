@@ -1,4 +1,5 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:8080/api'
+  // Relatif pour passer par proxy.conf.json en dev (sinon CORS vers :8080).
+  apiUrl: '/api'
 };
