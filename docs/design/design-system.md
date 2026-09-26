@@ -222,6 +222,18 @@ Noms = futurs composants Angular. **Aucun autre composant sans le signaler.**
 
 Pagination : non utilisée en V1 (aucune pagination backend).
 
+### Variantes ajoutées pendant la maquette (validées)
+
+| Variante | Composant de base | Usage |
+|---|---|---|
+| Feuille d'actions (bottom sheet) | `app-dropdown` | menu « ⋯ » des lignes de table en mobile |
+| Modale plein écran | `app-modal` | filtres, Traiter, ajustement de stock, création de compte, en mobile |
+| Bandeau sous l'en-tête | `app-alert` | paiement en cours, déclarations en attente, session expirée, autre compte connecté, connexion rétablie |
+| `app-filter-chips` | boutons | filtre par catégorie (PUB-01) ; `aria-pressed` sur le bouton actif, défilement horizontal en mobile |
+| Bouton « Copier » | `app-button` ghost | email ou position ; 40 px desktop, 44 px mobile ; toast de confirmation |
+
+Correspondance avec la maquette : `ShopHeader` = `app-header`, `ProductCard` = `app-product-card`.
+
 ---
 
 ## 7. Architecture des écrans et routes
@@ -567,3 +579,14 @@ Interdits : hero plein écran, chiffres d'impact inventés, KPI décoratifs, dé
 - **P1** : GES-01, COL-C, GES-03, GES-10, GES-11, filtre texte du catalogue.
 - **P2** : profil, pagination, gestion du catalogue.
 - **Exclu** : Formation, sous toutes ses formes.
+
+## 16. Textes d'interface validés pendant la maquette
+
+À réutiliser tels quels dans Angular. Ils s'ajoutent aux textes des §8 et §9.
+
+- **Boutique** : « Vous serez invité à vous connecter. » · « Retirez les produits indisponibles pour commander. » · « Connexion internet nécessaire pour commander. » (idem pour payer, se connecter, créer un compte) · « Connectez-vous pour passer votre commande. Votre panier est conservé. »
+- **Paiement** : « Ouvrir PayDunya si rien ne se passe » · « Nous vérifions votre commande avant le paiement… » · « Vérifiez le lien, ou retrouvez vos commandes dans Mes commandes. » (commande introuvable) · « Votre paiement avait bien été reçu : aucun nouveau paiement n'est nécessaire. »
+- **Collecte** : « Recherche de la position… » · « En attente de la position… » · « Position obligatoire pour enregistrer. » · « Réessayer la localisation » · « Elle sera envoyée automatiquement au retour de la connexion. » · sections « Sur ce téléphone » et « Envoyées » · « Se déconnecter et changer de compte » (ne vide pas la file locale).
+- **Gestion** : « Collecte traitée : 42 kg de Pneu ajoutés au stock » · « Email copié » · « Aucun compte bloqué. » · « Copier la position » · « Copier l'email » · « Le compte d'Aminata Kaboré est débloqué » · erreur 400 = message exact du backend + « La ligne a été rechargée. »
+- **Transverses** : « Votre panier est conservé. » · « Elle reste / Elles restent sur le téléphone : rien n'est effacé. » · « 3 déclarations attendent l'envoi sur ce téléphone. Elles seront envoyées après la connexion. » · « Envoi de 3 déclarations… » · « Connexion rétablie. »
+- **Accord** : tous les compteurs s'accordent au pluriel (« 1 déclaration », « 3 déclarations »).
