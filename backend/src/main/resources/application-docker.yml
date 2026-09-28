@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://db:5432/${POSTGRES_DB:assoue_db}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
+paydunya:
+  mode: ${PAYDUNYA_MODE:test}
+  master-key: ${PAYDUNYA_MASTER_KEY:}
+  private-key: ${PAYDUNYA_PRIVATE_KEY:}
+  token: ${PAYDUNYA_TOKEN:}
+  callback-url: ${PAYDUNYA_CALLBACK_URL:}
+  return-url: ${PAYDUNYA_RETURN_URL:}
+  cancel-url: ${PAYDUNYA_CANCEL_URL:}
+  store-name: ${PAYDUNYA_STORE_NAME:}

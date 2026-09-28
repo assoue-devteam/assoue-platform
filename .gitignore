@@ -4,6 +4,8 @@
 /tmp/
 /coverage/
 /e2e/test-output/
+/frontend/playwright-report/
+/frontend/test-results/
 /.angular/
 .angular/
 
@@ -48,3 +50,6 @@ frontend/.angular/
 
 # OS
 .DS_Store
+
+# Graphify generated workspace output
+graphify-out/

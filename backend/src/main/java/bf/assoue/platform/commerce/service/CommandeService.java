@@ -15,6 +15,7 @@ import bf.assoue.platform.commerce.repository.ProduitRepository;
 import bf.assoue.platform.common.exception.RequeteInvalideException;
 import bf.assoue.platform.common.exception.RessourceIntrouvableException;
 import bf.assoue.platform.stock.service.StockService;
+import bf.assoue.platform.stock.service.ReservationStockService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,7 @@ public class CommandeService {
     private final ProduitRepository produitRepository;
     private final UtilisateurRepository utilisateurRepository;
     private final StockService stockService;
+    private final ReservationStockService reservationStockService;
 
     @Transactional
     public CommandeResponse creer(CommandeRequest requete, String emailClient) {
@@ -46,10 +48,6 @@ public class CommandeService {
             Produit produit = produitRepository.findById(ligneRequete.produitId())
                     .orElseThrow(() -> new RessourceIntrouvableException("Produit introuvable : " + ligneRequete.produitId()));
 
-            if (stockService.estEnRupture(produit.getId())) {
-                throw new RequeteInvalideException("Produit en rupture de stock : " + produit.getNom());
-            }
-
             LigneCommande ligne = LigneCommande.builder()
                     .commande(commande)
                     .produit(produit)
@@ -59,7 +57,9 @@ public class CommandeService {
             commande.getLignes().add(ligne);
         });
 
-        return CommandeResponse.depuis(commandeRepository.save(commande));
+        Commande commandeEnregistree = commandeRepository.saveAndFlush(commande);
+        reservationStockService.reserver(commandeEnregistree);
+        return CommandeResponse.depuis(commandeEnregistree);
     }
 
     /**
@@ -116,7 +116,8 @@ public class CommandeService {
      */
     @Transactional
     public void marquerPayee(Long commandeId) {
-        Commande commande = trouver(commandeId);
+        Commande commande = commandeRepository.findByIdForUpdate(commandeId)
+                .orElseThrow(() -> new RessourceIntrouvableException("Commande introuvable : " + commandeId));
 
         if (commande.getStatut() == CommandeStatut.PAYEE) {
             return;
@@ -127,9 +128,7 @@ public class CommandeService {
                     "Impossible de marquer comme payée une commande au statut : " + commande.getStatut());
         }
 
-        commande.getLignes().forEach(ligne ->
-                stockService.decrementerStockProduit(ligne.getProduit().getId(), ligne.getQuantite()));
-
+        reservationStockService.consommer(commandeId);
         commande.setStatut(CommandeStatut.PAYEE);
         commandeRepository.save(commande);
     }

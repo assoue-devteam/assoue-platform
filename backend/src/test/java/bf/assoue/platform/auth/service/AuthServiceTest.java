@@ -37,6 +37,8 @@ class AuthServiceTest {
     private UtilisateurDetailsService utilisateurDetailsService;
     @Mock
     private JwtService jwtService;
+    @Mock
+    private EchecConnexionService echecConnexionService;
 
     @InjectMocks
     private AuthService authService;
@@ -58,12 +60,14 @@ class AuthServiceTest {
     void connecter_incrementeLesTentativesEchoueesSurMauvaisMotDePasse() {
         when(utilisateurRepository.findByEmail("client@example.com")).thenReturn(Optional.of(utilisateur));
         when(passwordEncoder.matches("mauvais", "hash")).thenReturn(false);
+        when(echecConnexionService.enregistrer("client@example.com", AuthService.TENTATIVES_MAX_AVANT_BLOCAGE))
+                .thenReturn(true);
 
         assertThatThrownBy(() -> authService.connecter(new LoginRequest("client@example.com", "mauvais")))
                 .isInstanceOf(IdentifiantsInvalidesException.class);
 
-        assertThat(utilisateur.getTentativesEchouees()).isEqualTo(1);
-        verify(utilisateurRepository).save(utilisateur);
+        verify(echecConnexionService).enregistrer("client@example.com", AuthService.TENTATIVES_MAX_AVANT_BLOCAGE);
+        verify(utilisateurRepository, never()).save(utilisateur);
     }
 
     @Test

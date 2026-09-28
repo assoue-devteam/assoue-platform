@@ -31,6 +31,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final UtilisateurDetailsService utilisateurDetailsService;
     private final JwtService jwtService;
+    private final EchecConnexionService echecConnexionService;
 
     @Transactional
     public AuthResponse inscrire(RegisterRequest requete) {
@@ -64,8 +65,11 @@ public class AuthService {
         }
 
         if (!passwordEncoder.matches(requete.motDePasse(), utilisateur.getMotDePasse())) {
-            utilisateur.setTentativesEchouees(utilisateur.getTentativesEchouees() + 1);
-            utilisateurRepository.save(utilisateur);
+            boolean echecEnregistre = echecConnexionService.enregistrer(
+                    utilisateur.getEmail(), TENTATIVES_MAX_AVANT_BLOCAGE);
+            if (!echecEnregistre) {
+                throw new CompteBloqueException();
+            }
             throw new IdentifiantsInvalidesException();
         }
 

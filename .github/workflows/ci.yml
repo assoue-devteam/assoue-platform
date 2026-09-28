@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop, 'codex/**']
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: assoue_db
+          POSTGRES_USER: assoue
+          POSTGRES_PASSWORD: assoue
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd="pg_isready -U assoue -d assoue_db"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Tests backend
+        working-directory: backend
+        env:
+          POSTGRES_URL: jdbc:postgresql://localhost:5432/assoue_db
+          POSTGRES_USER: assoue
+          POSTGRES_PASSWORD: assoue
+          JWT_SECRET: ci-only-secret-with-at-least-32-characters
+          PAYDUNYA_MASTER_KEY: ci
+          PAYDUNYA_PRIVATE_KEY: ci
+          PAYDUNYA_TOKEN: ci
+        run: ./mvnw -B test
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Installer les dépendances
+        working-directory: frontend
+        run: npm ci
+      - name: Vérifier TypeScript et build production
+        working-directory: frontend
+        run: npm run build -- --configuration production
+      - name: Tests unitaires
+        working-directory: frontend
+        run: npm run test:ci
+      - name: Installer Chromium Playwright
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Tests E2E
+        working-directory: frontend
+        run: npm run e2e

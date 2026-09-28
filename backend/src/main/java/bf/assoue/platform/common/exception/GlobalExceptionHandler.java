@@ -37,6 +37,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ErreurApi.de(400, ex.getMessage()));
     }
 
+    @ExceptionHandler(FournisseurPaiementIndisponibleException.class)
+    public ResponseEntity<ErreurApi> gererFournisseurPaiementIndisponible(FournisseurPaiementIndisponibleException ex) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(ErreurApi.de(503, ex.getMessage()));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErreurApi> gererValidationInvalide(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getFieldErrors().stream()

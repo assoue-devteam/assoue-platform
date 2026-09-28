@@ -9,6 +9,7 @@ import bf.assoue.platform.common.exception.RequeteInvalideException;
 import bf.assoue.platform.common.exception.RessourceIntrouvableException;
 import bf.assoue.platform.paiement.dto.PaiementResponse;
 import bf.assoue.platform.paiement.dto.PaiementSuperviseResponse;
+import bf.assoue.platform.paiement.dto.PaydunyaWebhook;
 import bf.assoue.platform.paiement.model.Paiement;
 import bf.assoue.platform.paiement.model.PaiementStatut;
 import bf.assoue.platform.paiement.repository.PaiementRepository;
@@ -28,11 +29,11 @@ public class PaiementService {
 
     private final PaiementRepository paiementRepository;
     private final CommandeRepository commandeRepository;
-    private final CommandeService commandeService;
     private final PaydunyaClient paydunyaClient;
     private final PaydunyaProperties paydunyaProperties;
+    private final PaydunyaSignatureVerifier paydunyaSignatureVerifier;
+    private final PaiementFinalisationService paiementFinalisationService;
 
-    @Transactional
     public PaiementResponse initier(Long commandeId, String emailClient) {
         Commande commande = commandeRepository.findById(commandeId)
                 .orElseThrow(() -> new RessourceIntrouvableException("Commande introuvable : " + commandeId));
@@ -47,7 +48,7 @@ public class PaiementService {
         }
 
         BigDecimal total = CommandeResponse.depuis(commande).total();
-        String callbackUrl = paydunyaProperties.callbackUrlEffectif();
+        String callbackUrl = paydunyaProperties.callbackUrl();
 
         Optional<Paiement> existant = paiementRepository.findByCommandeId(commandeId);
         if (existant.isPresent()) {
@@ -58,7 +59,7 @@ public class PaiementService {
             if (paiementExistant.getStatut() == PaiementStatut.CONFIRME) {
                 return PaiementResponse.depuis(
                         paiementExistant,
-                        paydunyaClient.urlPaiement(paiementExistant.getTokenPaydunya())
+                        urlPaiement(paiementExistant)
                 );
             }
 
@@ -68,7 +69,7 @@ public class PaiementService {
             if (paydunyaClient.estEnAttente(paiementExistant.getTokenPaydunya())) {
                 return PaiementResponse.depuis(
                         paiementExistant,
-                        paydunyaClient.urlPaiement(paiementExistant.getTokenPaydunya())
+                        urlPaiement(paiementExistant)
                 );
             }
 
@@ -76,6 +77,7 @@ public class PaiementService {
             PaydunyaClient.InvoiceCree nouvelleInvoice = paydunyaClient.creerInvoice(
                     total, "Commande AS'Soué n°" + commande.getId(), callbackUrl);
             paiementExistant.setTokenPaydunya(nouvelleInvoice.token());
+            paiementExistant.setUrlPaydunya(nouvelleInvoice.urlPaiement());
             paiementExistant.setStatut(PaiementStatut.EN_ATTENTE);
             paiementRepository.save(paiementExistant);
             return PaiementResponse.depuis(paiementExistant, nouvelleInvoice.urlPaiement());
@@ -88,6 +90,7 @@ public class PaiementService {
                 .commande(commande)
                 .montant(total)
                 .tokenPaydunya(invoice.token())
+                .urlPaydunya(invoice.urlPaiement())
                 .build();
         paiementRepository.save(paiement);
 
@@ -102,35 +105,10 @@ public class PaiementService {
      * On enregistre également le statut prétendu par le webhook et l'heure de réception
      * pour permettre au super admin de détecter toute tentative de fraude ou divergence.
      */
-    @Transactional
-    public void traiterWebhook(Map<String, Object> payload) {
-        String token = extraireToken(payload);
-        String statutDeclare = extraireStatutDeclare(payload);
-
-        Paiement paiement = paiementRepository.findByTokenPaydunya(token)
-                .orElseThrow(() -> new RessourceIntrouvableException("Paiement introuvable pour le token " + token));
-
-        paiement.setStatutAnnonceWebhook(statutDeclare);
-        paiement.setDateDernierWebhook(LocalDateTime.now());
-
-        if (paiement.getStatut() == PaiementStatut.CONFIRME) {
-            paiementRepository.save(paiement);
-            return;
-        }
-
-        boolean confirme = paydunyaClient.estConfirme(token);
-
-        if (!confirme) {
-            paiement.setStatut(PaiementStatut.ECHOUE);
-            paiementRepository.save(paiement);
-            return;
-        }
-
-        paiement.setStatut(PaiementStatut.CONFIRME);
-        paiement.setDateConfirmation(LocalDateTime.now());
-        paiementRepository.save(paiement);
-
-        commandeService.marquerPayee(paiement.getCommande().getId());
+    public void traiterWebhook(PaydunyaWebhook webhook) {
+        paydunyaSignatureVerifier.verifier(webhook);
+        PaydunyaClient.Confirmation confirmation = paydunyaClient.confirmer(webhook.token());
+        paiementFinalisationService.appliquer(webhook.token(), webhook, confirmation);
     }
 
     @Transactional(readOnly = true)
@@ -140,25 +118,9 @@ public class PaiementService {
                 .toList();
     }
 
-    private String extraireToken(Map<String, Object> payload) {
-        Object token = payload.get("token");
-        if (token == null && payload.get("data") instanceof Map<?, ?> data) {
-            token = data.get("token");
-        }
-
-        if (token == null) {
-            throw new RequeteInvalideException("Webhook PayDunya sans token exploitable");
-        }
-
-        return token.toString();
-    }
-
-    private String extraireStatutDeclare(Map<String, Object> payload) {
-        Object status = payload.get("status");
-        if (status == null && payload.get("data") instanceof Map<?, ?> data) {
-            status = data.get("status");
-        }
-        return status != null ? status.toString() : null;
+    private String urlPaiement(Paiement paiement) {
+        return paiement.getUrlPaydunya() != null ? paiement.getUrlPaydunya()
+                : paydunyaClient.urlPaiement(paiement.getTokenPaydunya());
     }
 
 }

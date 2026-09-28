@@ -4,7 +4,7 @@ Plateforme numérique pour AS'Soué, entreprise sociale burkinabè qui transform
 
 ![Build](https://img.shields.io/badge/build-en%20d%C3%A9veloppement-yellow)
 ![Backend](https://img.shields.io/badge/backend-Spring%20Boot%203.3-brightgreen)
-![Frontend](https://img.shields.io/badge/frontend-Angular%2018-red)
+![Frontend](https://img.shields.io/badge/frontend-Angular%2020-red)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 ## Description
@@ -41,10 +41,26 @@ Vérifier : `http://localhost:8080/swagger-ui.html`
 Frontend :
 ```bash
 cd frontend
-npm install
+npm ci
 ng serve --proxy-config proxy.conf.json
 ```
 Vérifier : `http://localhost:4200`
+
+## Vérifications qualité
+
+Depuis `frontend` :
+
+```bash
+npm run test:ci
+npm run build -- --configuration production
+npx playwright install --with-deps chromium
+npm run e2e
+npm audit --omit=dev --audit-level=high
+```
+
+Le frontend utilise Angular 20 et Playwright pour les E2E. Le contrôle d'audit de production ne signale aucune vulnérabilité haute ou critique; les vulnérabilités restantes concernent uniquement l'outillage de développement et sont suivies lors des mises à jour Angular.
+
+Le backend utilise `SPRING_PROFILES_ACTIVE=prod` en production. Ce profil impose la validation du schéma par Flyway, désactive Swagger et masque les valeurs SQL. Les secrets `JWT_SECRET` et PayDunya doivent être fournis par l'environnement de déploiement. La checklist complète est dans [`docs/release-checklist.md`](./docs/release-checklist.md).
 
 ## Utilisation et exemples
 

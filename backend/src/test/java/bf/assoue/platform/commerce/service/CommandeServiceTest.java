@@ -16,7 +16,7 @@ import bf.assoue.platform.commerce.repository.CommandeRepository;
 import bf.assoue.platform.commerce.repository.ProduitRepository;
 import bf.assoue.platform.common.exception.RequeteInvalideException;
 import bf.assoue.platform.common.exception.RessourceIntrouvableException;
-import bf.assoue.platform.stock.service.StockService;
+import bf.assoue.platform.stock.service.ReservationStockService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -44,13 +44,13 @@ class CommandeServiceTest {
     @Mock
     private UtilisateurRepository utilisateurRepository;
     @Mock
-    private StockService stockService;
+    private ReservationStockService reservationStockService;
 
     @InjectMocks
     private CommandeService commandeService;
 
     @Test
-    void creer_refuseLaCommande_siUnProduitEstEnRupture() {
+    void creer_creeUneReservationAuLieuDeSeFierAuSimpleEtatDeRupture() {
         Produit produit = Produit.builder()
                 .id(1L).nom("Chaise").prix(BigDecimal.valueOf(15000))
                 .categorie(Categorie.builder().id(1L).nom("Mobilier").build())
@@ -59,12 +59,16 @@ class CommandeServiceTest {
         when(utilisateurRepository.findByEmail("client@example.com"))
                 .thenReturn(Optional.of(Utilisateur.builder().id(1L).email("client@example.com").build()));
         when(produitRepository.findById(1L)).thenReturn(Optional.of(produit));
-        when(stockService.estEnRupture(1L)).thenReturn(true);
+        when(commandeRepository.saveAndFlush(any(Commande.class))).thenAnswer(invocation -> {
+            Commande commande = invocation.getArgument(0);
+            commande.setId(10L);
+            return commande;
+        });
 
         CommandeRequest requete = new CommandeRequest(List.of(new LigneCommandeRequest(1L, 2)));
 
-        assertThatThrownBy(() -> commandeService.creer(requete, "client@example.com"))
-                .isInstanceOf(RequeteInvalideException.class);
+        assertThat(commandeService.creer(requete, "client@example.com").id()).isEqualTo(10L);
+        verify(reservationStockService).reserver(any(Commande.class));
     }
 
     @Test
@@ -139,14 +143,14 @@ class CommandeServiceTest {
     }
 
     @Test
-    void marquerPayee_metAJourStatutEtDecrementeStock_siEnAttentePaiement() {
+    void marquerPayee_metAJourStatutEtConsommeReservation_siEnAttentePaiement() {
         Commande commande = commandeDe("client@example.com");
-        when(commandeRepository.findById(10L)).thenReturn(Optional.of(commande));
+        when(commandeRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(commande));
 
         commandeService.marquerPayee(10L);
 
         assertThat(commande.getStatut()).isEqualTo(CommandeStatut.PAYEE);
-        verify(stockService).decrementerStockProduit(1L, 2);
+        verify(reservationStockService).consommer(10L);
         verify(commandeRepository).save(commande);
     }
 
@@ -154,11 +158,11 @@ class CommandeServiceTest {
     void marquerPayee_neFaitRien_siDejaPayee() {
         Commande commande = commandeDe("client@example.com");
         commande.setStatut(CommandeStatut.PAYEE);
-        when(commandeRepository.findById(10L)).thenReturn(Optional.of(commande));
+        when(commandeRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(commande));
 
         commandeService.marquerPayee(10L);
 
-        verifyNoInteractions(stockService);
+        verifyNoInteractions(reservationStockService);
         verify(commandeRepository, never()).save(commande);
     }
 
@@ -166,13 +170,13 @@ class CommandeServiceTest {
     void marquerPayee_refuse_siCommandeAnnulee() {
         Commande commande = commandeDe("client@example.com");
         commande.setStatut(CommandeStatut.ANNULEE);
-        when(commandeRepository.findById(10L)).thenReturn(Optional.of(commande));
+        when(commandeRepository.findByIdForUpdate(10L)).thenReturn(Optional.of(commande));
 
         assertThatThrownBy(() -> commandeService.marquerPayee(10L))
                 .isInstanceOf(RequeteInvalideException.class)
                 .hasMessageContaining("ANNULEE");
 
-        verifyNoInteractions(stockService);
+        verifyNoInteractions(reservationStockService);
     }
 
     private Commande commandeDe(String emailClient) {

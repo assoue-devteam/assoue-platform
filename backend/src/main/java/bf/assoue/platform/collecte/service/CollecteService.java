@@ -6,6 +6,7 @@ import bf.assoue.platform.collecte.dto.CollecteAdminResponse;
 import bf.assoue.platform.collecte.dto.CollecteResponse;
 import bf.assoue.platform.collecte.dto.DeclarationCollecteRequest;
 import bf.assoue.platform.collecte.dto.LocalisationRequest;
+import bf.assoue.platform.collecte.dto.MateriauResponse;
 import bf.assoue.platform.collecte.dto.ModificationCollecteRequest;
 import bf.assoue.platform.collecte.dto.VolumeCollecteResponse;
 import bf.assoue.platform.collecte.model.*;
@@ -104,6 +105,12 @@ public class CollecteService {
     public List<CollecteResponse> mesCollectes(String emailCollecteur) {
         return collecteRepository.findByCollecteurEmailOrderByDateDeclarationDesc(emailCollecteur).stream()
                 .map(CollecteResponse::depuis)
+                .toList();
+    }
+
+    public List<MateriauResponse> materiaux() {
+        return materiauRepository.findAll().stream()
+                .map(MateriauResponse::depuis)
                 .toList();
     }
 

@@ -8,19 +8,16 @@ public record PaydunyaProperties(
         String masterKey,
         String privateKey,
         String token,
-        String callbackUrl
+        String callbackUrl,
+        String returnUrl,
+        String cancelUrl,
+        String storeName
 ) {
 
     public String urlBase() {
         return "test".equals(mode)
                 ? "https://app.paydunya.com/sandbox-api/v1"
                 : "https://app.paydunya.com/api/v1";
-    }
-
-    public String callbackUrlEffectif() {
-        return callbackUrl != null && !callbackUrl.isBlank()
-                ? callbackUrl
-                : "http://localhost:8080/api/paiements/webhook";
     }
 
 }
