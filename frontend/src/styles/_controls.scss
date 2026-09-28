@@ -1,0 +1,113 @@
+@use 'tokens' as *;
+
+// Styles globaux des éléments natifs : boutons (directive appButton), champs, tables.
+// Globaux plutôt qu'encapsulés pour que <button>, <input>, <select> natifs restent utilisables partout.
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--control-height);
+  padding: 0 var(--space-5);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  font: 600 16px/1 var(--font-text);
+  text-decoration: none;
+  cursor: pointer;
+  background: var(--color-primary);
+  color: var(--color-text-on-dark);
+
+  &:hover { background: var(--color-primary-strong); color: var(--color-text-on-dark); }
+  &:disabled, &[aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
+
+  &--purchase { background: var(--color-accent); }
+  &--purchase:hover { background: var(--color-accent-strong); }
+
+  &--secondary { background: var(--color-surface); color: var(--color-primary); border-color: var(--color-primary); }
+  &--secondary:hover { background: var(--color-primary-tint); color: var(--color-primary-strong); }
+
+  &--ghost { background: transparent; color: var(--color-primary); }
+  &--ghost:hover { background: var(--color-primary-tint); color: var(--color-primary-strong); }
+
+  &--danger { background: var(--color-error); }
+  &--danger:hover { background: var(--color-error-strong); }
+
+  &--block { width: 100%; }
+  &--small { min-height: 40px; padding: 0 var(--space-4); font-size: 15px; }
+
+  &--loading { cursor: progress; }
+  &--loading::before {
+    content: '';
+    width: 16px; height: 16px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: var(--radius-full);
+    animation: btn-spin .7s linear infinite;
+  }
+}
+
+@keyframes btn-spin { to { transform: rotate(360deg); } }
+
+.input, .select {
+  width: 100%;
+  min-height: var(--control-height);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: 400 16px/1.5 var(--font-text); // 16px : évite le zoom auto des navigateurs mobiles
+
+  &:focus-visible { border-color: var(--color-primary-strong); }
+  &[aria-invalid="true"] { border-color: var(--color-error); }
+  &:disabled { background: var(--color-surface-alt); color: var(--color-text-muted); }
+}
+
+.label { display: block; margin-bottom: var(--space-1); font-size: 14px; font-weight: 600; }
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  font-size: 16px;
+
+  input { width: 20px; height: 20px; margin: 0; accent-color: var(--color-primary); }
+}
+
+// Table : devient une liste de cartes sous 600px. Chaque <td> porte data-label="Colonne".
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-surface);
+  font-size: 14px;
+
+  th {
+    text-align: left;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    padding: var(--space-3);
+    border-bottom: 1px solid var(--color-border);
+  }
+  td { padding: var(--space-3); border-bottom: 1px solid var(--color-border); vertical-align: middle; }
+  .num { text-align: right; }
+
+  @media (max-width: $bp-tablet - 1) {
+    thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+    tr {
+      display: block;
+      padding: var(--space-3) var(--space-4);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-3);
+    }
+    td { display: flex; justify-content: space-between; gap: var(--space-4); padding: var(--space-1) 0; border: 0; }
+    td::before { content: attr(data-label); color: var(--color-text-muted); }
+    td[data-label=""]::before { content: none; }
+    .num { text-align: left; }
+  }
+}
+
+.space-gestion { --control-height: 40px; }
+.space-collecteur .btn { min-height: 48px; }

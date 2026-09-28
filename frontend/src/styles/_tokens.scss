@@ -1,0 +1,48 @@
+// Tokens du design system (docs/design/design-system.md §3). Ne pas ajouter de couleur hors de cette liste.
+:root {
+  --color-primary: #2D6A4F;
+  --color-primary-strong: #1B4332;
+  --color-primary-muted: #3C5A40;
+  --color-primary-tint: #E6EFEA;
+  --color-accent: #C1440E;          // CTA d'achat uniquement, 1 par écran
+  --color-accent-strong: #9E370B;
+  --color-accent-soft: #C1622D;     // décoratif ou texte >= 24px seulement
+  --color-accent-tint: #F7E7DE;
+
+  --color-bg: #FAF8F4;
+  --color-surface: #FFFFFF;
+  --color-surface-alt: #F1EDE6;
+  --color-text: #1C1F1D;
+  --color-text-muted: #5B615C;
+  --color-text-on-dark: #FFFFFF;
+  --color-border: #DDD7CC;
+  --color-border-strong: #8A8F89;
+
+  --color-success: #1B4332;  --color-success-bg: #E3EFE8;
+  --color-warning: #8A5A00;  --color-warning-bg: #FDF3DC;
+  --color-error:   #A12622;  --color-error-bg:   #FBE9E7;
+  --color-error-strong: #7F1D1A;
+  --color-info:    #1F5A7A;  --color-info-bg:    #E4EEF3;
+
+  --overlay: rgba(28, 31, 29, .48);
+  --focus-ring: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-primary-strong);
+
+  --font-display: "Source Serif 4", Georgia, serif;
+  --font-text: "Source Sans 3", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-full: 999px;
+
+  --shadow-1: 0 1px 2px rgba(28, 31, 29, .08);
+  --shadow-2: 0 8px 24px rgba(28, 31, 29, .14);
+
+  --control-height: 48px;           // Client et Collecteur ; la Gestion le redéfinit à 40px
+}
+
+$bp-tablet: 600px;
+$bp-desktop: 1024px;
+$bp-wide: 1280px;
