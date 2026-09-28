@@ -58,7 +58,9 @@ Public. Réponse `200` : `[{ "id": 1, "nom": "Mobilier", "description": "..." }]
 ### `GET /api/produits?categorieId=`
 Public. `categorieId` optionnel. Réponse `200` :
 ```json
-[{ "id": 1, "nom": "Chaise en pneu recyclé", "description": "...", "prix": 15000, "categorie": "Mobilier", "enRupture": false }]\n```
+[{ "id": 1, "nom": "Chaise en pneu recyclé", "description": "...", "prix": 15000, "imageUrl": "https://.../chaise.jpg", "categorie": "Mobilier", "enRupture": false }]
+```
+`imageUrl` peut être `null` (CL-03, migration V9). Aucun endpoint ne permet encore de le renseigner.
 
 ### `GET /api/produits/{id}`
 Public. Réponse `200` : un objet au même format qu'un élément de la liste ci-dessus. `404` si introuvable.
@@ -74,8 +76,13 @@ Réponse `201` :
 ```
 Erreurs : `400` produit en rupture ou requête sans ligne, `404` produit introuvable.
 
+Statuts de commande (`CommandeStatut`) : `EN_ATTENTE_PAIEMENT`, `PAYEE`, `EN_PREPARATION`, `EXPEDIEE`, `LIVREE`, `ANNULEE`. Seule la transition `EN_ATTENTE_PAIEMENT → PAYEE` (webhook revalidé) est implémentée : aucun endpoint ne fait passer une commande aux statuts suivants.
+
+### `GET /api/commandes/mes-commandes`
+Rôle CLIENT (CL-05). Commandes du client connecté, les plus récentes d'abord. Réponse `200` : liste au même format que la création.
+
 ### `GET /api/commandes?statut=`
-Rôle ADMIN (vue manager, MG-02). `statut` est optionnel (`EN_ATTENTE_PAIEMENT` ou `PAYEE`), les plus récentes d'abord. Réponse `200` :
+Rôle ADMIN (vue manager, MG-02). `statut` est optionnel (une valeur de `CommandeStatut` ; en pratique `EN_ATTENTE_PAIEMENT` ou `PAYEE`), les plus récentes d'abord. Réponse `200` :
 ```json
 [{ "id": 10, "clientEmail": "client@example.com", "statut": "PAYEE", "dateCreation": "...", "total": 30000, "lignes": [{ "produitId": 1, "produitNom": "...", "quantite": 2, "prixUnitaire": 15000 }] }]
 ```
@@ -93,7 +100,7 @@ Authentifié (rôle CLIENT ou ADMIN). Le client n'accède qu'à ses propres comm
 ## Paiement
 
 ### `POST /api/paiements/commandes/{commandeId}`
-Authentifié. Initie le paiement PayDunya pour la commande. Réponse `200` :
+Rôle CLIENT, propriétaire de la commande uniquement (`404` sinon, comme pour `GET /api/commandes/{id}`). Initie le paiement PayDunya pour la commande. `400` si la commande est `PAYEE` ou `ANNULEE`. Si un paiement existe déjà et que son invoice PayDunya est encore ouverte, le même lien est renvoyé ; sinon une nouvelle invoice est créée. Réponse `200` :
 ```json
 { "commandeId": 10, "montant": 30000, "statut": "EN_ATTENTE", "urlPaiement": "https://paydunya.com/checkout/invoice/<token>" }
 ```
@@ -184,7 +191,7 @@ Réponse `200` : `[{ "produitId": 1, "produitNom": "...", "quantite": 12 }]`
 Réponse `200` : `[{ "materiauId": 1, "materiauNom": "Plastique", "quantite": 42.5 }]`
 
 ### `PUT /api/stocks/produits/{produitId}`
-Requête : `{ "quantite": 20 }`. Ajuste manuellement le stock d'un produit fini.
+Requête : `{ "quantite": 20 }` (≥ 0, remplace la valeur). Ajuste manuellement le stock d'un produit fini. `404` si le produit n'a pas de ligne de stock. Verrou optimiste (`@Version`, migration V10) : en cas de modification concurrente, l'exception n'est pas gérée par `GlobalExceptionHandler` et sort en `500`.
 
 ## Codes d'erreur communs
 
@@ -192,7 +199,9 @@ Toute erreur renvoie :
 ```json
 { "horodatage": "2026-01-01T12:00:00Z", "statut": 404, "message": "..." }
 ```
-`400` requête invalide, `401` non authentifié / identifiants invalides, `404` ressource introuvable, `409` conflit (ex. email déjà utilisé), `423` compte bloqué.
+`400` requête invalide, `401` identifiants invalides (login), `403` accès refusé, `404` ressource introuvable, `409` conflit (ex. email déjà utilisé), `423` compte bloqué.
+
+`403` est renvoyé par Spring Security quand le rôle ne correspond pas (`@PreAuthorize`). Aucun `AuthenticationEntryPoint` n'est configuré : un appel sans token ou avec un token expiré renvoie probablement aussi `403` plutôt que `401`, et hors du format `ErreurApi` (à confirmer par un test). Le frontend doit donc détecter l'expiration de session en lisant `exp` dans le JWT.
 
 ## Ce qui n'est pas encore couvert
 

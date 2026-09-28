@@ -47,6 +47,7 @@ Le pilier Formation (`Formation`, `ModuleFormation`, `Inscription`, `Certificati
 - `docs/domaine-metier.md` — glossaire et modèle de classes. À lire avec l'outil Read avant de créer ou nommer une entité, un champ, une relation.
 - `docs/user-stories.md` — critères d'acceptation Gherkin US-01 à US-05. Une fonctionnalité n'est finie que quand ces critères passent, pas juste quand le code compile.
 - `docs/api-contract.md` — contrat d'API de référence entre frontend et backend.
+- `docs/design/design-system.md` — design system validé (tokens, composants, écrans, contrat par écran, états, backend gaps). Source de vérité pour tout écran Angular.
 
 ## Comportement attendu
 
