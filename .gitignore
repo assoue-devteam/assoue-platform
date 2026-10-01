@@ -48,6 +48,10 @@ frontend/.angular/
 .env
 *.env.local
 
+# Scripts SQL locaux de dépannage (dev uniquement, jamais de migration Flyway)
+fix_users.sql
+seed_demo_dev.sql
+
 # OS
 .DS_Store
 
