@@ -6,6 +6,7 @@ import bf.assoue.platform.commerce.model.CommandeStatut;
 import bf.assoue.platform.commerce.model.LigneCommande;
 import bf.assoue.platform.commerce.model.Produit;
 import bf.assoue.platform.commerce.repository.CommandeRepository;
+import bf.assoue.platform.common.exception.PaiementDejaInitieException;
 import bf.assoue.platform.common.exception.RequeteInvalideException;
 import bf.assoue.platform.common.exception.RessourceIntrouvableException;
 import bf.assoue.platform.paiement.dto.PaiementResponse;
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -116,6 +118,21 @@ class PaiementServiceTest {
         when(commandeRepository.findById(10L)).thenReturn(Optional.of(commandeDe(10L, "autre@example.com", CommandeStatut.EN_ATTENTE_PAIEMENT)));
         assertThatThrownBy(() -> paiementService.initier(10L, "client@example.com"))
                 .isInstanceOf(RessourceIntrouvableException.class);
+    }
+
+    @Test
+    void initier_conflitEcritureConcurrente_remontePaiementDejaInitie() {
+        Commande commande = commandeAvecLigne(10L, "client@example.com", CommandeStatut.EN_ATTENTE_PAIEMENT, BigDecimal.valueOf(30000));
+        when(commandeRepository.findById(10L)).thenReturn(Optional.of(commande));
+        when(paiementRepository.findByCommandeId(10L)).thenReturn(Optional.empty());
+        when(paydunyaProperties.callbackUrl()).thenReturn("https://example.test/webhook");
+        when(paydunyaClient.creerInvoice(eq(BigDecimal.valueOf(30000)), anyString(), eq("https://example.test/webhook")))
+                .thenReturn(new PaydunyaClient.InvoiceCree("tok_new", "https://paydunya.test/invoice/tok_new"));
+        when(paiementRepository.save(any(Paiement.class)))
+                .thenThrow(new DataIntegrityViolationException("contrainte unique paiement.commande_id"));
+
+        assertThatThrownBy(() -> paiementService.initier(10L, "client@example.com"))
+                .isInstanceOf(PaiementDejaInitieException.class);
     }
 
     @Test

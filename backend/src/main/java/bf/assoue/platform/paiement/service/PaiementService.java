@@ -5,6 +5,7 @@ import bf.assoue.platform.commerce.model.Commande;
 import bf.assoue.platform.commerce.model.CommandeStatut;
 import bf.assoue.platform.commerce.repository.CommandeRepository;
 import bf.assoue.platform.commerce.service.CommandeService;
+import bf.assoue.platform.common.exception.PaiementDejaInitieException;
 import bf.assoue.platform.common.exception.RequeteInvalideException;
 import bf.assoue.platform.common.exception.RessourceIntrouvableException;
 import bf.assoue.platform.paiement.dto.PaiementResponse;
@@ -14,6 +15,7 @@ import bf.assoue.platform.paiement.model.Paiement;
 import bf.assoue.platform.paiement.model.PaiementStatut;
 import bf.assoue.platform.paiement.repository.PaiementRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,7 +52,18 @@ public class PaiementService {
         BigDecimal total = CommandeResponse.depuis(commande).total();
         String callbackUrl = paydunyaProperties.callbackUrl();
 
-        Optional<Paiement> existant = paiementRepository.findByCommandeId(commandeId);
+        // Hors transaction volontairement : l'appel PayDunya prend un temps réseau
+        // indéterminé. L'unicité commande_id (V6) protège des doubles initiations
+        // concurrentes, converties en 409 ci-dessous.
+        try {
+            return initierOuReprendre(commande, total, callbackUrl);
+        } catch (DataIntegrityViolationException ex) {
+            throw new PaiementDejaInitieException(commandeId);
+        }
+    }
+
+    private PaiementResponse initierOuReprendre(Commande commande, BigDecimal total, String callbackUrl) {
+        Optional<Paiement> existant = paiementRepository.findByCommandeId(commande.getId());
         if (existant.isPresent()) {
             Paiement paiementExistant = existant.get();
 

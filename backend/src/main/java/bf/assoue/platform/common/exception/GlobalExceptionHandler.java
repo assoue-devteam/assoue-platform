@@ -42,6 +42,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(ErreurApi.de(503, ex.getMessage()));
     }
 
+    @ExceptionHandler(PaiementDejaInitieException.class)
+    public ResponseEntity<ErreurApi> gererPaiementDejaInitie(PaiementDejaInitieException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ErreurApi.de(409, ex.getMessage()));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErreurApi> gererValidationInvalide(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getFieldErrors().stream()
