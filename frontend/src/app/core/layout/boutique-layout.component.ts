@@ -5,6 +5,7 @@ import { NetworkService } from '../network.service';
 import { CompteMenuComponent } from './compte-menu.component';
 import { AlertComponent } from '../../shared/ui/alert.component';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
+import { PanierService } from '../../features/catalogue/panier.service';
 
 @Component({
   selector: 'app-boutique-layout',
@@ -29,6 +30,7 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
         <div class="entete__actions">
           <a routerLink="/panier" routerLinkActive="actif" class="entete__panier">
             <app-icon name="shopping-bag" /> Panier
+            @if (panier.nombreArticles()) { <span class="entete__compteur">{{ panier.nombreArticles() }}</span> }
           </a>
           @if (auth.connecte()) {
             <app-compte-menu />
@@ -61,6 +63,7 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
     }
     .entete__nav a.actif, .entete__panier.actif { color: var(--color-primary); box-shadow: inset 0 -2px var(--color-primary); }
     .entete__actions { display: flex; align-items: center; gap: var(--space-3); margin-left: auto; }
+    .entete__compteur { display:inline-grid; place-items:center; min-width:20px; height:20px; padding-inline:4px; border-radius:var(--radius-sm); background:var(--color-primary-strong); color:var(--color-text-on-dark); font-size:13px; font-variant-numeric:tabular-nums; }
     .entete__menu {
       display: none; align-items: center; gap: var(--space-1); min-height: 44px; padding: 0 var(--space-2);
       border: 0; background: none; color: var(--color-text); font: 600 15px var(--font-text); cursor: pointer;
@@ -80,5 +83,6 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
 export class BoutiqueLayoutComponent {
   protected auth = inject(AuthService);
   protected reseau = inject(NetworkService);
+  protected panier = inject(PanierService);
   protected menuOuvert = signal(false);
 }

@@ -2,7 +2,10 @@ package bf.assoue.platform.paiement.controller;
 
 import bf.assoue.platform.paiement.dto.PaiementResponse;
 import bf.assoue.platform.paiement.dto.PaiementSuperviseResponse;
+import bf.assoue.platform.paiement.dto.PaydunyaWebhook;
 import bf.assoue.platform.paiement.service.PaiementService;
+import bf.assoue.platform.common.exception.RequeteInvalideException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -10,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/paiements")
@@ -18,6 +20,7 @@ import java.util.Map;
 public class PaiementController {
 
     private final PaiementService paiementService;
+    private final ObjectMapper objectMapper;
 
     @PostMapping("/commandes/{commandeId}")
     @PreAuthorize("hasRole('CLIENT')")
@@ -25,9 +28,13 @@ public class PaiementController {
         return paiementService.initier(commandeId, principal.getName());
     }
 
-    @PostMapping("/webhook")
-    public ResponseEntity<Void> webhook(@RequestBody Map<String, Object> payload) {
-        paiementService.traiterWebhook(payload);
+    @PostMapping(value = "/webhook", consumes = "application/x-www-form-urlencoded")
+    public ResponseEntity<Void> webhook(@RequestParam("data") String data) {
+        try {
+            paiementService.traiterWebhook(objectMapper.readValue(data, PaydunyaWebhook.class));
+        } catch (com.fasterxml.jackson.core.JsonProcessingException ex) {
+            throw new RequeteInvalideException("Webhook PayDunya invalide");
+        }
         return ResponseEntity.ok().build();
     }
 

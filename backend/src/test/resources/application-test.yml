@@ -1,0 +1,21 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+
+jwt:
+  secret: test-secret-that-is-long-enough-for-the-hmac-signing-key-123456789
+  expiration-ms: 86400000
+
+paydunya:
+  mode: test
+  master-key: test-master-key
+  private-key: test-private-key
+  token: test-token
+  callback-url: https://example.test/api/paiements/webhook
+  return-url: https://example.test/paiement/retour
+  cancel-url: https://example.test/paiement/annule
+  store-name: AS'Soué test

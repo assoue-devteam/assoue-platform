@@ -4,6 +4,8 @@
 /tmp/
 /coverage/
 /e2e/test-output/
+/frontend/playwright-report/
+/frontend/test-results/
 /.angular/
 .angular/
 
@@ -46,5 +48,12 @@ frontend/.angular/
 .env
 *.env.local
 
+# Scripts SQL locaux de dépannage (dev uniquement, jamais de migration Flyway)
+fix_users.sql
+seed_demo_dev.sql
+
 # OS
 .DS_Store
+
+# Graphify generated workspace output
+graphify-out/

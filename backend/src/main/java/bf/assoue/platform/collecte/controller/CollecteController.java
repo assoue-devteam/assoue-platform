@@ -4,6 +4,7 @@ import bf.assoue.platform.collecte.dto.CollecteAdminResponse;
 import bf.assoue.platform.collecte.dto.CollecteResponse;
 import bf.assoue.platform.collecte.dto.DeclarationCollecteRequest;
 import bf.assoue.platform.collecte.dto.ModificationCollecteRequest;
+import bf.assoue.platform.collecte.dto.MateriauResponse;
 import bf.assoue.platform.collecte.dto.VolumeCollecteResponse;
 import bf.assoue.platform.collecte.model.CollecteStatut;
 import bf.assoue.platform.collecte.service.CollecteService;
@@ -42,6 +43,12 @@ public class CollecteController {
     @PreAuthorize("hasRole('COLLECTEUR')")
     public List<CollecteResponse> mesCollectes(Principal principal) {
         return collecteService.mesCollectes(principal.getName());
+    }
+
+    @GetMapping("/materiaux")
+    @PreAuthorize("hasRole('COLLECTEUR')")
+    public List<MateriauResponse> materiaux() {
+        return collecteService.materiaux();
     }
 
     @GetMapping

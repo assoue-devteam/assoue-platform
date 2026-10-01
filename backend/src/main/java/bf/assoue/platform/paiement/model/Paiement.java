@@ -43,6 +43,9 @@ public class Paiement {
     @Column(name = "token_paydunya", unique = true)
     private String tokenPaydunya;
 
+    @Column(name = "url_paydunya")
+    private String urlPaydunya;
+
     @Column(name = "statut_annonce_webhook")
     private String statutAnnonceWebhook;
 
@@ -55,5 +58,8 @@ public class Paiement {
 
     @Column(name = "date_confirmation")
     private LocalDateTime dateConfirmation;
+
+    @Version
+    private Long version;
 
 }
