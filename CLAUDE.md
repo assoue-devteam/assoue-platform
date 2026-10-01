@@ -2,7 +2,7 @@
 
 ## Contexte du projet
 
-AS'Soué est une plateforme réelle pour une entreprise sociale burkinabè, construite autour de trois piliers : collecte tracée de déchets (plastique/pneus), formation aux métiers verts, et vente de produits valorisés (mobilier, bijoux, chaussures, accessoires). Stack : Spring Boot 3.3.x (Java 21) en monolithe modulaire côté backend, Angular 18 côté frontend, PostgreSQL, JWT pour l'auth.
+AS'Soué est une plateforme réelle pour une entreprise sociale burkinabè, construite autour de trois piliers : collecte tracée de déchets (plastique/pneus), formation aux métiers verts, et vente de produits valorisés (mobilier, bijoux, chaussures, accessoires). Stack : Spring Boot 3.3.5 (Java 21) en monolithe modulaire côté backend, Angular 20 côté frontend, PostgreSQL, JWT pour l'auth.
 
 **Portée pour la livraison actuelle (4 semaines, 4 développeurs) :** Auth, Commerce (catalogue + commande + paiement via PayDunya), Collecte (y compris mode hors-ligne), Stock. Le pilier Formation est **explicitement hors scope de code** pour cette itération — modélisé (entités JPA, UML) mais pas implémenté. Si une tâche semble en avoir besoin, signale-le au lieu de l'implémenter silencieusement ; l'équipe a peut-être tranché différemment depuis.
 
@@ -33,7 +33,7 @@ ng build
 
 ## Architecture
 
-Backend : monolithe modulaire `bf.assoue.platform`, un package par pilier — `auth/`, `commerce/`, `paiement/`, `collecte/`, `stock/`, plus `common/` pour la config transverse, les exceptions et la sécurité (JWT). Chaque module suit `controller/` → `service/` → `repository/`, avec `model/` (entités JPA) et `dto/`. À ce stade, la plupart des modules ne contiennent que des `package-info.java` (squelette) ; seuls `auth/model` (`Utilisateur`, `Role`) et `common/security/SecurityConfig` ont du code réel — la config de sécurité est encore un squelette ouvert (`/api/auth/**` et Swagger en accès public, pas encore de filtre JWT branché).
+Backend : monolithe modulaire `bf.assoue.platform`, un package par pilier — `auth/`, `commerce/`, `paiement/`, `collecte/`, `stock/`, plus `common/` pour la config transverse, les exceptions et la sécurité (JWT). Chaque module suit `controller/` → `service/` → `repository/`, avec `model/` (entités JPA) et `dto/`. Tous les modules sont implémentés (`auth`, `commerce`, `paiement`, `collecte`, `stock`) avec tests ; la sécurité est branchée (`JwtAuthFilter`, BCrypt, blocage après 3 échecs, `/api/auth/**` + webhook PayDunya + `GET /api/produits/**` en accès public, le reste authentifié).
 
 Le schéma de base est piloté uniquement par Flyway (`backend/src/main/resources/db/migration/V*__*.sql`, ex. `V1__init_schema.sql`) — `ddl-auto: validate`, jamais `update`/`create`. Chaque évolution de schéma est une nouvelle migration `V{n+1}__...`, jamais une modification d'un fichier déjà mergé.
 
