@@ -41,7 +41,7 @@ export class ConnexionPageComponent {
     if (this.formulaire.invalid || this.envoi() || !this.reseau.enLigne()) { this.formulaire.markAllAsTouched(); return; }
     this.envoi.set(true); this.erreur.set(null);
     this.auth.connecter(this.formulaire.getRawValue()).subscribe({
-      next: () => this.router.navigateByUrl(retourSecurise(this.route.snapshot.queryParamMap.get('retour'), this.auth.espaceParDefaut())),
+      next: () => { this.envoi.set(false); this.router.navigateByUrl(retourSecurise(this.route.snapshot.queryParamMap.get('retour'), this.auth.espaceParDefaut())); },
       error: err => { this.erreur.set(messageErreur(err)); this.envoi.set(false); },
     });
   }
@@ -54,5 +54,10 @@ export class ConnexionPageComponent {
 }
 
 export function retourSecurise(retour: string | null, defaut: string): string {
-  return retour?.startsWith('/') && !retour.startsWith('//') ? retour : defaut;
+  if (!retour?.startsWith('/') || retour.startsWith('//')) return defaut;
+  // Les pages d'auth ne sont jamais une destination : naviguer vers l'URL
+  // courante est un no-op Angular qui laisse le bouton en chargement infini.
+  const page = retour.split('?', 1)[0];
+  if (page === '/connexion' || page === '/inscription') return defaut;
+  return retour;
 }
