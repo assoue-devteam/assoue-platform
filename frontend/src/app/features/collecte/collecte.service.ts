@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { Observable, catchError, from, of, switchMap, tap, finalize, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -45,11 +45,15 @@ export class CollecteService {
   }
 
   synchroniser(): Observable<number> {
-    if (!this.reseau.enLigne() || this.synchronisationEnCours()) return of(0);
+    if (this.synchronisationEnCours()) return of(0);
+    // Le niveau navigateur suffit pour tenter : la panne API constatée ne doit pas
+    // bloquer une resynchronisation manuelle une fois le backend de retour.
+    if (!this.reseau.navigateurEnLigne()) return of(0);
     this.synchronisationEnCours.set(true);
     return from(this.store.enAttente()).pipe(
       switchMap(file => from(this.envoyer(file))),
       tap(() => void this.actualiserFile()),
+      catchError((error: unknown) => (error instanceof HttpErrorResponse) && error.status === 0 ? of(0) : throwError(() => error)),
       finalize(() => this.synchronisationEnCours.set(false)),
     );
   }
