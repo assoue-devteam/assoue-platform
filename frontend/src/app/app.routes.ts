@@ -1,9 +1,12 @@
 import { Routes } from '@angular/router';
 import { roleGuard } from './core/auth/guards';
 import { BoutiqueLayoutComponent } from './core/layout/boutique-layout.component';
+import { GestionLayoutComponent } from './core/layout/gestion-layout.component';
+import { CollecteurLayoutComponent } from './core/layout/collecteur-layout.component';
 
-// Routes du design system §7. Les écrans non réalisés restent provisoires jusqu'à leur phase.
-const provisoire = () => import('./shared/pages/pages').then(m => m.PageProvisoireComponent);
+// Routes du design system §7.
+// IMPORTANT: Les layouts (GestionLayoutComponent, CollecteurLayoutComponent) sont en eager
+// car loadComponent + RouterOutlet déclenche NG0203 dans Angular 20.
 
 export const routes: Routes = [
   {
@@ -40,7 +43,7 @@ export const routes: Routes = [
   {
     path: 'collecte',
     canActivate: [roleGuard('COLLECTEUR')],
-    loadComponent: () => import('./core/layout/collecteur-layout.component').then(m => m.CollecteurLayoutComponent),
+    component: CollecteurLayoutComponent,
     children: [
       { path: '', loadComponent: () => import('./features/collecte/mes-collectes-page.component').then(m => m.MesCollectesPageComponent), title: "Mes collectes — AS'SOUÉ" },
       { path: 'nouvelle', loadComponent: () => import('./features/collecte/collecte-form-page.component').then(m => m.CollecteFormPageComponent), title: "Déclarer — AS'SOUÉ" },
@@ -52,7 +55,7 @@ export const routes: Routes = [
   {
     path: 'gestion',
     canActivate: [roleGuard('ADMIN')],
-    loadComponent: () => import('./core/layout/gestion-layout.component').then(m => m.GestionLayoutComponent),
+    component: GestionLayoutComponent,
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'collectes' },
       { path: 'collectes', loadComponent: () => import('./features/admin/gestion-collectes-page.component').then(m => m.GestionCollectesPageComponent), title: "Collectes — Gestion" },
