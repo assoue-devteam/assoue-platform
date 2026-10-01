@@ -1,0 +1,21 @@
+# Mises à jour automatiques des dépendances (correctif plutôt que curatif).
+# Les montées majeures Angular restent manuelles (ligne 20.3 verrouillée, cf. docs/quality-baseline.md).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels: [deps, security]
+    ignore:
+      - dependency-name: "@angular/*"
+        update-types: ["version-update:semver-major"]
+  - package-ecosystem: maven
+    directory: /backend
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels: [deps, security]
