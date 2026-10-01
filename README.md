@@ -4,7 +4,7 @@ Plateforme numérique pour AS'Soué, entreprise sociale burkinabè qui transform
 
 ![Build](https://img.shields.io/badge/build-en%20d%C3%A9veloppement-yellow)
 ![Backend](https://img.shields.io/badge/backend-Spring%20Boot%203.3-brightgreen)
-![Frontend](https://img.shields.io/badge/frontend-Angular%2018-red)
+![Frontend](https://img.shields.io/badge/frontend-Angular%2020-red)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 ## Description
@@ -17,34 +17,55 @@ AS'Soué connecte trois activités : la collecte tracée de déchets plastiques 
 
 Prérequis :
 - Java 21 (JDK)
-- Node.js 20 LTS
-- Docker Desktop
+- Node.js 20+
+- Docker Desktop **démarré**
 - PostgreSQL 16 (fourni via Docker Compose, pas d'installation séparée nécessaire)
 
-Installation :
+Installation et démarrage au quotidien : voir [`docs/demarrage-local.md`](./docs/demarrage-local.md) (procédure complète, antisèche CMD, comptes de test, dépannage).
 
+Résumé :
 ```bash
-git clone <url-du-repo>
-cd assoue-platform
-cp .env.example .env
-# éditer .env avec les vraies valeurs (demander à l'équipe)
+copy .env.example .env   # puis renseigner les vraies valeurs (demander à l'équipe)
 docker compose up -d
+docker exec -i assoue-db psql -U assoue -d assoue_db < seed_demo_dev.sql   # données de démo (dev uniquement)
 ```
 
-Backend :
+Backend (`cd backend`, en CMD `mvnw.cmd` sans `./`) :
 ```bash
-cd backend
 ./mvnw spring-boot:run
 ```
-Vérifier : `http://localhost:8080/swagger-ui.html`
+Vérifier : `http://localhost:8080/swagger-ui.html` et `http://localhost:8080/api/produits`
 
-Frontend :
+Frontend (`cd frontend`) :
 ```bash
-cd frontend
-npm install
+npm ci
 ng serve --proxy-config proxy.conf.json
 ```
 Vérifier : `http://localhost:4200`
+
+Comptes de démo (base seedée, mot de passe dans `docs/demarrage-local.md`) : `admin@assoue.bf` (ADMIN → `/gestion`), `client@assoue.bf` (CLIENT → boutique), `collecteur@assoue.bf` (COLLECTEUR → `/collecte`). L'inscription publique crée toujours un CLIENT ; les rôles COLLECTEUR/ADMIN se créent via **Gestion → Utilisateurs**.
+
+## Vérifications qualité
+
+Depuis `backend` :
+
+```bash
+./mvnw -B test   # 46 unitaires ; les *IT s'exécutent via -Dtest="...IT" (Docker requis)
+```
+
+Depuis `frontend` :
+
+```bash
+npm run test:ci
+npm run build -- --configuration production
+npx playwright install --with-deps chromium
+npm run e2e
+npm audit --omit=dev --audit-level=high
+```
+
+Le frontend utilise Angular 20 et Playwright pour les E2E. `npm audit` (prod comme dev) est à 0 vulnérabilité : les failles de l'outillage (webpack-dev-middleware, uuid) sont neutralisées par `overrides` ciblés dans `package.json`, sans monter de version majeure. Le backend suit la ligne Spring Boot 3.3.x en patch à jour.
+
+Le backend utilise `SPRING_PROFILES_ACTIVE=prod` en production. Ce profil impose la validation du schéma par Flyway, désactive Swagger et masque les valeurs SQL. Les secrets `JWT_SECRET` et PayDunya doivent être fournis par l'environnement de déploiement. La checklist complète est dans [`docs/release-checklist.md`](./docs/release-checklist.md).
 
 ## Utilisation et exemples
 

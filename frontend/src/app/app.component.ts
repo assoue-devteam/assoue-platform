@@ -24,7 +24,11 @@ export class AppComponent {
   private router = inject(Router);
 
   protected seReconnecter() {
-    const retour = this.router.url;
+    const url = this.router.url;
+    // Déjà sur /connexion : garder le retour d'origine au lieu de boucler sur la page elle-même.
+    const retour = url.startsWith('/connexion')
+      ? this.router.parseUrl(url).queryParams['retour'] ?? this.auth.espaceParDefaut()
+      : url;
     this.auth.deconnecter();
     this.router.navigate(['/connexion'], { queryParams: { retour, raison: 'expiree' } });
   }

@@ -3,6 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { Router, UrlTree, provideRouter } from '@angular/router';
 import { AuthService, lireExpiration } from './auth/auth.service';
+import { NetworkService } from './network.service';
 import { apiInterceptor } from './http/api.interceptor';
 import { roleGuard } from './auth/guards';
 import { messageErreur } from './http/erreurs';
@@ -74,6 +75,21 @@ describe('socle core', () => {
     expect(req.request.headers.has('Authorization')).toBeFalse();
     req.flush(null, { status: 403, statusText: 'Forbidden' });
     expect(auth.sessionExpiree()).toBeTrue();
+  });
+
+  it('passe hors ligne sur panne API et revient au prochain succès', () => {
+    seConnecter(['CLIENT']);
+    const reseau = TestBed.inject(NetworkService);
+    const client = TestBed.inject(HttpClient);
+    expect(reseau.enLigne()).toBeTrue();
+
+    client.get('/api/commandes/mes-commandes').subscribe({ error: () => {} });
+    http.expectOne('/api/commandes/mes-commandes').error(new ProgressEvent('panne'));
+    expect(reseau.enLigne()).toBeFalse();
+
+    client.get('/api/commandes/mes-commandes').subscribe();
+    http.expectOne('/api/commandes/mes-commandes').flush([]);
+    expect(reseau.enLigne()).toBeTrue();
   });
 
   it('un 403 avec une session valide n\'est pas une expiration (mauvais rôle)', () => {
