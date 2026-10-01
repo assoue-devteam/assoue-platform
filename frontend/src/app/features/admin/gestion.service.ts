@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CollecteAdmin, CollecteStatut, CommandeAdmin, CommandeEnAttente, StockMatiere, StockProduit, UtilisateurAdmin, VolumeCollecte } from '../../shared/models/api';
+import { CollecteAdmin, CollecteStatut, CommandeAdmin, CommandeEnAttente, Role, StockMatiere, StockProduit, UtilisateurAdmin, VolumeCollecte } from '../../shared/models/api';
 
 @Injectable({ providedIn: 'root' })
 export class GestionService {
@@ -23,4 +23,6 @@ export class GestionService {
   ajusterStock(produitId: number, quantite: number): Observable<StockProduit> { return this.http.put<StockProduit>(`${environment.apiUrl}/stocks/produits/${produitId}`, { quantite }); }
   utilisateurs(verrouilles?: boolean): Observable<UtilisateurAdmin[]> { const params = verrouilles === undefined ? undefined : new HttpParams().set('verrouilles', verrouilles); return this.http.get<UtilisateurAdmin[]>(`${environment.apiUrl}/utilisateurs`, { params }); }
   debloquerUtilisateur(id: number): Observable<UtilisateurAdmin> { return this.http.post<UtilisateurAdmin>(`${environment.apiUrl}/utilisateurs/${id}/debloquer`, {}); }
+  creerUtilisateur(requete: { email: string; motDePasse: string; nom?: string; prenom?: string; roles: Role[] }): Observable<UtilisateurAdmin> { return this.http.post<UtilisateurAdmin>(`${environment.apiUrl}/utilisateurs`, requete); }
+  remplacerRoles(id: number, roles: Role[]): Observable<UtilisateurAdmin> { return this.http.put<UtilisateurAdmin>(`${environment.apiUrl}/utilisateurs/${id}/roles`, { roles }); }
 }
