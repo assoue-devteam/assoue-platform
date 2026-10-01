@@ -28,6 +28,10 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
+      # Filet de sécurité si le bit exécutable de mvnw saute à nouveau depuis Windows.
+      - name: Rendre mvnw exécutable
+        working-directory: backend
+        run: chmod +x mvnw
       - name: Tests backend
         working-directory: backend
         env:
