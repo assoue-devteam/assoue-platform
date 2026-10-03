@@ -52,6 +52,11 @@ export interface CommandeRequest {
   lignes: LigneCommandeRequest[];
 }
 
+export interface Panier {
+  lignes: { produit: Produit; quantite: number }[];
+  total: number;
+}
+
 export interface LigneCommande {
   produitId: number;
   produitNom: string;
