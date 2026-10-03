@@ -5,6 +5,7 @@ Guide d'exécution au quotidien. La conception du projet vit dans `docs/` (`guid
 ## 1. Prérequis (une fois)
 
 - Java 21 (JDK) · Node.js 20+ (`node --version`) · Docker Desktop **démarré** · Git
+- `JAVA_HOME` défini (sinon `mvnw.cmd` échoue avec « JAVA_HOME not found ») : `setx JAVA_HOME "C:\Program Files\Java\jdk-21.0.10"` (adapter au chemin réel), puis rouvrir le terminal
 - Une fois à la racine du repo :
   ```cmd
   copy .env.example .env
@@ -30,8 +31,11 @@ Contenu : 3 comptes (mot de passe `Password123!`), 7 produits + stocks, 2 matér
 Terminal 1 — backend (tourne aussi dans Docker, mais en local on garde le hot-reload) :
 ```cmd
 cd backend
+for /f "usebackq eol=# tokens=1,* delims==" %a in ("..\.env") do @set "%a=%b"
+set SPRING_PROFILES_ACTIVE=dev
 mvnw.cmd spring-boot:run
 ```
+Aucun profil n'est actif par défaut : sans `SPRING_PROFILES_ACTIVE=dev`, le démarrage échoue sur `Could not resolve placeholder 'jwt.expiration-ms'`. La ligne `for /f` charge les variables du `.env` (`POSTGRES_USER`, `JWT_SECRET`…) dans le terminal courant, `mvnw.cmd` ne lit pas `.env` seul.
 Vérifier : `http://localhost:8080/swagger-ui.html` et `curl http://localhost:8080/api/produits` (ou `http://localhost:8080/api/produits` dans le navigateur).
 
 > Si le port 8080 est pris par le conteneur `assoue-backend` : `docker stop assoue-backend` (ou travaille directement contre le conteneur, mais rebuild après chaque modif Java : `docker compose up -d --build backend`).
@@ -109,4 +113,6 @@ git push origin --delete ancien-nom
 | Badge « En ligne » alors que l'API est coupée | corrigé : l'intercepteur constate la panne (statut 0) | mettre à jour (`git pull`) |
 | `package-lock.json` modifié après `npm install` | utiliser `npm ci` | `git checkout -- frontend/package-lock.json` puis `npm ci` |
 | Conteneur backend sans tes derniers changements Java | image construite avant | `docker compose up -d --build backend` |
+| `JAVA_HOME not found in your environment` | `JAVA_HOME` non défini | §1 `setx JAVA_HOME ...` puis rouvrir le terminal |
+| `Could not resolve placeholder 'jwt.expiration-ms'` | aucun profil Spring actif | `set SPRING_PROFILES_ACTIVE=dev` avant `mvnw.cmd spring-boot:run` (§3) |
 | Docker `npipe ... daemon is running` | Docker Desktop éteint | le démarrer, puis `docker compose up -d` |
