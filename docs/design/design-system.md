@@ -375,6 +375,7 @@ Format : **Données** · **Endpoint(s)** · **Actions** · **États** · **Permi
 ### COL-B Mes collectes — P0 (mobile)
 - Données : file locale non envoyée (en premier) + `GET /api/collectes/mes-collectes` (dernière réponse mise en cache).
 - Chaque élément : matériau, quantité, date, statut local ou serveur (§4), position abrégée.
+- En tête (tableau de bord, inspiré de l'écran « Collecter » de la maquette) : grand bouton vert « Déclarer une collecte » (sous-titre « Matériau, quantité et position »), puis 3 compteurs calculés sur la liste serveur : déclarées (total), validées (`VALIDEE` + `TRAITEE`), en attente de validation (`DECLAREE`). Chiffres en `--color-chiffre` 28 px. Titre de liste « Collectes récentes ».
 - Actions : « Envoyer maintenant » (s'il y a des éléments en attente), Réessayer (en cas d'échec), Corriger (si `DECLAREE` et en ligne, P1).
 - États : vide « Aucune déclaration pour le moment » + bouton Déclarer · hors ligne → liste en cache + « Dernière mise à jour à 09:42 ».
 - Pas de statut « Rejetée » (GAP-08).
