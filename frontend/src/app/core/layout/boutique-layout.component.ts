@@ -3,6 +3,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { NetworkService } from '../network.service';
 import { CompteMenuComponent } from './compte-menu.component';
+import { SiteFooterComponent } from './site-footer.component';
 import { AlertComponent } from '../../shared/ui/alert.component';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { PanierService } from '../../features/catalogue/panier.service';
@@ -10,12 +11,12 @@ import { PanierService } from '../../features/catalogue/panier.service';
 @Component({
   selector: 'app-boutique-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CompteMenuComponent, AlertComponent, IconComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CompteMenuComponent, AlertComponent, IconComponent, SiteFooterComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <header class="entete">
       <div class="container entete__ligne">
-        <a routerLink="/" class="wordmark">AS'SOUÉ</a>
+        <a routerLink="/" class="logo"><img src="logo-assoue.png" alt="AS'SOUÉ, accueil de la boutique" width="119" height="44" /></a>
 
         <nav class="entete__nav" aria-label="Navigation principale" [class.entete__nav--ouverte]="menuOuvert()">
           <a routerLink="/" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }" (click)="menuOuvert.set(false)">Catalogue</a>
@@ -49,13 +50,13 @@ import { PanierService } from '../../features/catalogue/panier.service';
     }
 
     <main id="contenu"><router-outlet /></main>
+    <app-site-footer />
   `,
   styles: `
     .entete { background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
     .entete__ligne { display: flex; align-items: center; gap: var(--space-5); min-height: 64px; flex-wrap: wrap; }
-    .wordmark {
-      font: 600 22px var(--font-display); color: var(--color-primary-strong); text-decoration: none;
-    }
+    .logo { display: inline-flex; align-items: center; min-height: 44px; }
+    .logo img { height: 44px; width: auto; }
     .entete__nav { display: flex; gap: var(--space-4); }
     .entete__nav a, .entete__panier, .entete__connexion {
       display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px;
@@ -71,6 +72,7 @@ import { PanierService } from '../../features/catalogue/panier.service';
     .mobile-seul { display: none !important; }
     @media (max-width: 767px) {
       .entete__ligne { gap: var(--space-3); }
+      .logo img { height: 36px; }
       .entete__actions { gap: var(--space-1); }
       .entete__connexion { display: none; }
       .mobile-seul { display: inline-flex !important; }
