@@ -148,6 +148,31 @@ describe('catalogue et panier', () => {
       expect(localStorage.getItem('assoue.panier.awa@assoue.bf.aEnvoyer')).toBeNull();
     });
 
+    it('rejoue sur le panier serveur un ajout fait pendant son chargement', () => {
+      localStorage.setItem('assoue.session', JSON.stringify(sessionClient));
+      const panier = TestBed.inject(PanierService);
+      TestBed.tick();
+      const chargement = http.expectOne({ method: 'GET', url: '/api/panier' });
+      panier.ajouter(produit);
+      http.expectNone({ method: 'PUT', url: '/api/panier' });
+      chargement.flush(reponse(2));
+      expect(panier.nombreArticles()).toBe(3);
+      const envoi = http.expectOne({ method: 'PUT', url: '/api/panier' });
+      expect(envoi.request.body).toEqual({ lignes: [{ produitId: 7, quantite: 3 }] });
+      envoi.flush(reponse(3));
+    });
+
+    it('garde un ajout fait pendant un chargement qui échoue et le marque à envoyer', () => {
+      localStorage.setItem('assoue.session', JSON.stringify(sessionClient));
+      const panier = TestBed.inject(PanierService);
+      TestBed.tick();
+      const chargement = http.expectOne({ method: 'GET', url: '/api/panier' });
+      panier.ajouter(produit);
+      chargement.error(new ProgressEvent('error'));
+      expect(panier.nombreArticles()).toBe(1);
+      expect(localStorage.getItem('assoue.panier.awa@assoue.bf.aEnvoyer')).toBe('1');
+    });
+
     it('envoie les modifications restées en attente plutôt que d\'écraser avec le serveur', () => {
       localStorage.setItem('assoue.session', JSON.stringify(sessionClient));
       localStorage.setItem('assoue.panier.awa@assoue.bf', JSON.stringify([{ produit, quantite: 4 }]));

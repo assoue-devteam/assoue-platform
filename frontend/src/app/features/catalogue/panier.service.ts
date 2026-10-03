@@ -13,6 +13,8 @@ export interface LignePanier {
   quantite: number;
 }
 
+type Operation = (lignes: LignePanier[]) => LignePanier[];
+
 interface Envoi {
   cle: string;
   lignes: LignePanier[];
@@ -39,6 +41,7 @@ export class PanierService {
   private toasts = inject(ToastService);
   private cle = cleDuPanier(this.auth.email());
   private initialise = false;
+  private operationsPendantSynchro: Operation[] | null = null;
   private envois = new Subject<Envoi>();
 
   readonly lignes = signal<LignePanier[]>(lirePanier(this.cle));
@@ -88,11 +91,13 @@ export class PanierService {
     this.modifier(() => []);
   }
 
-  private modifier(operation: (lignes: LignePanier[]) => LignePanier[]): void {
+  private modifier(operation: Operation): void {
     const precedent = this.lignes();
     const prochain = operation(precedent);
     this.enregistrer(prochain);
-    if (this.auth.aRole('CLIENT')) this.envoyer(prochain, precedent);
+    // Panier serveur pas encore reçu : on rejouera l'opération dessus, l'envoyer maintenant l'écraserait.
+    if (this.operationsPendantSynchro) this.operationsPendantSynchro.push(operation);
+    else if (this.auth.aRole('CLIENT')) this.envoyer(prochain, precedent);
   }
 
   // Le panier rempli en visiteur rejoint celui du compte à la connexion (DS : « Votre panier est conservé »).
@@ -102,6 +107,7 @@ export class PanierService {
     const panierVisiteur = this.initialise && this.cle === CLE_PANIER_VISITEUR ? this.lignes() : [];
     this.initialise = true;
     this.cle = cle;
+    this.operationsPendantSynchro = null;
     this.lignes.set(lirePanier(cle));
     if (panierVisiteur.length > 0) {
       localStorage.removeItem(CLE_PANIER_VISITEUR);
@@ -117,15 +123,22 @@ export class PanierService {
       return;
     }
     const cle = this.cle;
+    const operations: Operation[] = [];
+    this.operationsPendantSynchro = operations;
     this.http.get<Panier>(URL_PANIER).subscribe({
       next: panier => {
-        if (cle !== this.cle) return;
-        const lignes = fusionner(versLignes(panier), panierVisiteur);
+        if (this.operationsPendantSynchro !== operations) return;
+        this.operationsPendantSynchro = null;
+        const base = fusionner(versLignes(panier), panierVisiteur);
+        const lignes = operations.reduce((resultat, operation) => operation(resultat), base);
         this.enregistrer(lignes);
-        if (panierVisiteur.length > 0) this.envoyer(lignes, lignes);
+        if (panierVisiteur.length > 0 || operations.length > 0) this.envoyer(lignes, base);
       },
-      // Hors ligne : la copie locale (déjà fusionnée) sera envoyée au retour du réseau.
-      error: () => { if (panierVisiteur.length > 0) localStorage.setItem(cleEnAttente(cle), '1'); },
+      // Hors ligne : la copie locale (déjà fusionnée et modifiée) sera envoyée au retour du réseau.
+      error: () => {
+        if (this.operationsPendantSynchro === operations) this.operationsPendantSynchro = null;
+        if (panierVisiteur.length > 0 || operations.length > 0) localStorage.setItem(cleEnAttente(cle), '1');
+      },
     });
   }
 
