@@ -323,11 +323,12 @@ Format : **Données** · **Endpoint(s)** · **Actions** · **États** · **Permi
 - Pas de champs entreprise (raison sociale, IFU) : non modélisés.
 
 ### CLI-01 Panier — P0
-- Données : panier local (id produit, nom, prix, quantité, photo), sans endpoint. À la validation : `POST /api/commandes` `{ lignes: [{ produitId, quantite }] }`.
+- Données : visiteur → panier local (id produit, nom, prix, quantité, photo). Client connecté → panier serveur `GET /api/panier` / `PUT /api/panier` (remplacement complet), retrouvé sur tous ses appareils, avec une copie locale pour ajouter hors ligne. À la connexion, le panier visiteur s'additionne au panier serveur (« Votre panier est conservé »). À la validation : `POST /api/commandes` `{ lignes: [{ produitId, quantite }] }`.
+- Synchronisation : chaque ajout, quantité ou retrait d'un client part aussitôt au serveur. Sans réseau, la modification est gardée sur l'appareil et renvoyée au retour de la connexion (ou à la connexion suivante), sans écraser le serveur par une version plus ancienne.
 - Affiche : lignes, stepper, Retirer, total (calculé en local, confirmé par la réponse serveur), bloc « Livraison ».
 - **Bloc Livraison** : champs prévus (téléphone, quartier, ville, instructions) **désactivés** + `app-gap-note` « [BACKEND GAP] GAP-02 : la commande n'enregistre pas encore d'adresse. AS'SOUÉ vous contactera. `[À CONFIRMER]` ».
 - Actions : « Commander » (bouton purchase). Visiteur → connexion, puis retour au panier.
-- États : vide « Votre panier est vide » + lien catalogue · création en cours (bouton en loading) · 400 rupture → ligne marquée « N'est plus disponible », commande bloquée tant qu'elle est présente · hors ligne → bouton désactivé + raison.
+- États : vide « Votre panier est vide » + lien catalogue · stock insuffisant à l'ajout (400 de `PUT /api/panier`, client connecté) → la quantité revient à sa valeur précédente + toast d'erreur avec le message serveur « Stock insuffisant pour « <nom> » : <n> disponible(s) » · création en cours (bouton en loading) · 400 rupture → ligne marquée « N'est plus disponible », commande bloquée tant qu'elle est présente · hors ligne → bouton désactivé + raison.
 - Succès → CLI-03.
 
 ### CLI-03 Paiement — P0
