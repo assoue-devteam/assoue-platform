@@ -113,6 +113,15 @@ Réponse `200` au format de `GET /api/panier`. Le stock disponible est vérifié
 ### `PUT /api/produits/{id}/vedette`
 Rôle ADMIN. Met un produit en avant (ou le retire) en tête du catalogue. Requête : `{ "vedette": true }`. Réponse `200` au format produit. `404` produit introuvable. Tous les formats produit portent désormais `vedette` (booléen).
 
+### `GET /api/produits/{id}/avis`
+Public. Réponse `200` : `{ "moyenne": 4.5, "nombre": 2, "avis": [{ "note": 5, "commentaire": "...", "auteur": "Awa O.", "date": "..." }] }` (`moyenne` à `null` sans avis ; les plus récents d'abord ; l'auteur est le prénom et l'initiale du nom, jamais l'email). `404` produit introuvable. Tous les formats produit portent désormais `noteMoyenne` (ou `null`) et `nombreAvis`.
+
+### `GET /api/produits/{id}/avis/moi`
+Rôle CLIENT. Réponse `200` : `{ "peutDonnerAvis": true, "monAvis": null }`. `peutDonnerAvis` est vrai si le client a une commande `PAYEE`, `EN_PREPARATION`, `EXPEDIEE` ou `LIVREE` contenant ce produit.
+
+### `PUT /api/produits/{id}/avis`
+Rôle CLIENT. Crée l'avis du client ou remplace le sien (un seul par client et par produit). Requête : `{ "note": 4, "commentaire": "..." }` (note 1 à 5, commentaire facultatif, 1000 caractères au plus). Réponse `200` au format d'un avis. Erreurs : `400` note invalide ou client sans achat payé de ce produit (« Vous pourrez donner votre avis après avoir acheté et payé ce produit. »), `404` produit introuvable.
+
 ### `GET /api/favoris`
 Rôle CLIENT. Produits mis en favori par le client connecté, du plus récent au plus ancien, au format de `GET /api/produits/{id}` (prix et `enRupture` à jour). Réponse `200` : liste, vide si aucun favori.
 

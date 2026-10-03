@@ -10,10 +10,11 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { CatalogueService } from './catalogue.service';
 import { PanierService } from './panier.service';
 import { FavoriBoutonComponent } from './favori-bouton.component';
+import { EtoilesComponent } from '../../shared/ui/etoiles.component';
 
 @Component({
   standalone: true,
-  imports: [RouterLink, NgTemplateOutlet, FcfaPipe, AlertComponent, ButtonDirective, EmptyStateComponent, ErrorStateComponent, SkeletonComponent, IconComponent, FavoriBoutonComponent],
+  imports: [RouterLink, NgTemplateOutlet, FcfaPipe, AlertComponent, ButtonDirective, EmptyStateComponent, ErrorStateComponent, SkeletonComponent, IconComponent, FavoriBoutonComponent, EtoilesComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="catalogue container">
@@ -79,6 +80,7 @@ import { FavoriBoutonComponent } from './favori-bouton.component';
       <div class="carte__contenu">
         <p class="carte__categorie">{{ produit.categorie }}</p>
         <h2><a [routerLink]="['/produits', produit.id]">{{ produit.nom }}</a></h2>
+        <app-etoiles [note]="produit.noteMoyenne" [nombre]="produit.nombreAvis" />
         <p class="carte__prix">{{ produit.prix | fcfa }}</p>
         @if (produit.enRupture) { <span class="rupture">Indisponible</span> }
         @else { <button type="button" appButton="purchase" [block]="true" (click)="panier.ajouter(produit)">Ajouter au panier</button> }

@@ -39,6 +39,26 @@ export interface Produit {
   categorie: string;
   enRupture: boolean;
   vedette: boolean;
+  noteMoyenne: number | null;
+  nombreAvis: number;
+}
+
+export interface Avis {
+  note: number;
+  commentaire: string | null;
+  auteur: string;
+  date: string;
+}
+
+export interface AvisProduit {
+  moyenne: number | null;
+  nombre: number;
+  avis: Avis[];
+}
+
+export interface MonAvis {
+  peutDonnerAvis: boolean;
+  monAvis: Avis | null;
 }
 
 export type CommandeStatut = 'EN_ATTENTE_PAIEMENT' | 'PAYEE' | 'EN_PREPARATION' | 'EXPEDIEE' | 'LIVREE' | 'ANNULEE';
