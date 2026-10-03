@@ -36,6 +36,13 @@ public class StockService {
                 .orElse(true);
     }
 
+    /** Unités encore vendables : les commandes en attente de paiement les ont déjà retirées. */
+    public int quantiteDisponible(Long produitId) {
+        return stockProduitRepository.findByProduitId(produitId)
+                .map(StockProduit::getQuantite)
+                .orElse(0);
+    }
+
     @Transactional
     public void decrementerStockProduit(Long produitId, int quantite) {
         StockProduit stock = stockProduitRepository.findByProduitId(produitId)
