@@ -7,27 +7,37 @@ export interface LignePanier {
   quantite: number;
 }
 
-const CLE_PANIER = 'assoue.panier';
-const CLE_PROPRIETAIRE = 'assoue.panier.proprietaire';
+const CLE_PANIER_VISITEUR = 'assoue.panier';
+
+// Un panier par compte, conservé dans ce navigateur d'une connexion à l'autre.
+const cleDuPanier = (email: string | null) => email ? `${CLE_PANIER_VISITEUR}.${email}` : CLE_PANIER_VISITEUR;
 
 @Injectable({ providedIn: 'root' })
 export class PanierService {
   private auth = inject(AuthService);
+  private cle = cleDuPanier(this.auth.email());
 
-  readonly lignes = signal<LignePanier[]>(lirePanier());
+  readonly lignes = signal<LignePanier[]>(lirePanier(this.cle));
   readonly nombreArticles = computed(() => this.lignes().reduce((total, ligne) => total + ligne.quantite, 0));
   readonly total = computed(() => this.lignes().reduce((total, ligne) => total + ligne.produit.prix * ligne.quantite, 0));
 
   constructor() {
-    // Le panier d'un visiteur est repris à sa connexion (DS : « Votre panier est conservé »),
-    // mais celui d'un compte ne doit jamais apparaître après sa déconnexion ni pour un autre compte.
     effect(() => {
-      const email = this.auth.email();
-      const proprietaire = localStorage.getItem(CLE_PROPRIETAIRE);
-      if (proprietaire !== null && proprietaire !== email) untracked(() => this.vider());
-      if (email) localStorage.setItem(CLE_PROPRIETAIRE, email);
-      else localStorage.removeItem(CLE_PROPRIETAIRE);
+      const cle = cleDuPanier(this.auth.email());
+      untracked(() => this.changerDePanier(cle));
     });
+  }
+
+  // Le panier rempli en visiteur rejoint celui du compte à la connexion (DS : « Votre panier est conservé »).
+  private changerDePanier(cle: string): void {
+    if (cle === this.cle) return;
+    const panierVisiteur = this.cle === CLE_PANIER_VISITEUR ? this.lignes() : [];
+    this.cle = cle;
+    this.lignes.set(lirePanier(cle));
+    if (panierVisiteur.length > 0) {
+      localStorage.removeItem(CLE_PANIER_VISITEUR);
+      this.modifier(lignes => fusionner(lignes, panierVisiteur));
+    }
   }
 
   ajouter(produit: Produit): void {
@@ -56,8 +66,17 @@ export class PanierService {
   private modifier(operation: (lignes: LignePanier[]) => LignePanier[]): void {
     const prochain = operation(this.lignes());
     this.lignes.set(prochain);
-    localStorage.setItem(CLE_PANIER, JSON.stringify(prochain));
+    localStorage.setItem(this.cle, JSON.stringify(prochain));
   }
+}
+
+function fusionner(lignes: LignePanier[], ajouts: LignePanier[]): LignePanier[] {
+  return ajouts.reduce((resultat, ajout) => {
+    const existante = resultat.find(ligne => ligne.produit.id === ajout.produit.id);
+    return existante
+      ? resultat.map(ligne => ligne === existante ? { ...ligne, quantite: ligne.quantite + ajout.quantite } : ligne)
+      : [...resultat, ajout];
+  }, lignes);
 }
 
 function produitSnapshot(produit: Produit): LignePanier['produit'] {
@@ -65,9 +84,9 @@ function produitSnapshot(produit: Produit): LignePanier['produit'] {
   return { id, nom, prix, imageUrl, categorie, enRupture };
 }
 
-function lirePanier(): LignePanier[] {
+function lirePanier(cle: string): LignePanier[] {
   try {
-    const valeur = JSON.parse(localStorage.getItem(CLE_PANIER) ?? '[]') as unknown;
+    const valeur = JSON.parse(localStorage.getItem(cle) ?? '[]') as unknown;
     return Array.isArray(valeur) ? valeur.filter(estLignePanier) : [];
   } catch {
     return [];

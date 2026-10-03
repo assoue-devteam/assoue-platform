@@ -71,14 +71,15 @@ describe('catalogue et panier', () => {
       expect(panier.nombreArticles()).toBe(1);
     });
 
-    it('vide le panier à la déconnexion', () => {
+    it('masque le panier à la déconnexion et le rend à la reconnexion', () => {
       const panier = TestBed.inject(PanierService);
       connecter('awa@assoue.bf');
       panier.ajouter(produit);
       TestBed.inject(AuthService).deconnecter();
       TestBed.tick();
       expect(panier.lignes()).toEqual([]);
-      expect(localStorage.getItem('assoue.panier')).toBe('[]');
+      connecter('awa@assoue.bf');
+      expect(panier.nombreArticles()).toBe(1);
     });
 
     it('ne montre pas le panier d\'un compte à un autre compte', () => {
@@ -89,12 +90,22 @@ describe('catalogue et panier', () => {
       expect(panier.lignes()).toEqual([]);
     });
 
-    it('vide au démarrage un panier laissé par un compte qui n\'est plus connecté', () => {
-      localStorage.setItem('assoue.panier', JSON.stringify([{ produit, quantite: 2 }]));
-      localStorage.setItem('assoue.panier.proprietaire', 'awa@assoue.bf');
+    it('additionne le panier visiteur à celui du compte', () => {
+      localStorage.setItem('assoue.panier.awa@assoue.bf', JSON.stringify([{ produit, quantite: 2 }]));
       const panier = TestBed.inject(PanierService);
       TestBed.tick();
-      expect(panier.lignes()).toEqual([]);
+      panier.ajouter(produit);
+      connecter('awa@assoue.bf');
+      expect(panier.nombreArticles()).toBe(3);
+      expect(localStorage.getItem('assoue.panier')).toBeNull();
+    });
+
+    it('lit le panier du compte déjà connecté au démarrage', () => {
+      localStorage.setItem('assoue.session', JSON.stringify({ token: 't', email: 'awa@assoue.bf', roles: ['CLIENT'], expiration: Date.now() + 60_000 }));
+      localStorage.setItem('assoue.panier.awa@assoue.bf', JSON.stringify([{ produit, quantite: 2 }]));
+      const panier = TestBed.inject(PanierService);
+      TestBed.tick();
+      expect(panier.nombreArticles()).toBe(2);
     });
   });
 });
