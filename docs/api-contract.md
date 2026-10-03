@@ -97,6 +97,19 @@ Pas de notification poussée tant que l'infra temps réel (US-04) n'existe pas :
 ### `GET /api/commandes/{id}`
 Authentifié (rôle CLIENT ou ADMIN). Le client n'accède qu'à ses propres commandes ; le manager (rôle ADMIN) accède à n'importe laquelle pour en connaître le statut réel sans dépendre du webhook (MG-02). Réponse `200` au même format que la création. `404` si introuvable ou, pour un client, si elle n'est pas la sienne (pour ne pas révéler l'existence d'une commande d'un tiers).
 
+### `GET /api/panier`
+Rôle CLIENT (CL-02 : retrouver son panier à la connexion, sur tout appareil). Panier du client connecté, avec les infos produit **à jour** (prix actuel, `enRupture`) — le prix n'est jamais repris d'une valeur gardée côté navigateur. Réponse `200` (panier vide : `{ "lignes": [], "total": 0 }`) :
+```json
+{ "lignes": [{ "produit": { "id": 4, "nom": "...", "description": "...", "prix": 25000, "imageUrl": null, "categorie": "Mobilier", "enRupture": false }, "quantite": 2 }], "total": 50000 }
+```
+
+### `PUT /api/panier`
+Rôle CLIENT. Remplace **tout** le panier par le contenu envoyé (rejouable sans risque après une coupure réseau) ; `lignes: []` le vide. Deux lignes du même produit sont additionnées. Requête :
+```json
+{ "lignes": [{ "produitId": 4, "quantite": 2 }] }
+```
+Réponse `200` au format de `GET /api/panier`. Le stock disponible est vérifié dès cet appel, mais **rien n'est réservé** : la réservation n'a lieu qu'à `POST /api/commandes`. Erreurs (le panier existant reste alors inchangé) : `400` quantité < 1 ou supérieure au stock disponible (message : `Stock insuffisant pour « <nom> » : <n> disponible(s)`), `404` produit introuvable.
+
 ## Paiement
 
 ### `POST /api/paiements/commandes/{commandeId}`
