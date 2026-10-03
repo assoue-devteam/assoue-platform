@@ -2,7 +2,7 @@
 
 ## Contexte du projet
 
-AS'Soué est une plateforme réelle pour une entreprise sociale burkinabè, construite autour de trois piliers : collecte tracée de déchets (plastique/pneus), formation aux métiers verts, et vente de produits valorisés (mobilier, bijoux, chaussures, accessoires). Stack : Spring Boot 3.3.5 (Java 21) en monolithe modulaire côté backend, Angular 20 côté frontend, PostgreSQL, JWT pour l'auth.
+AS'Soué est une plateforme réelle pour une entreprise sociale burkinabè, construite autour de trois piliers : collecte tracée de déchets (plastique/pneus), formation aux métiers verts, et vente de produits valorisés (mobilier, bijoux, chaussures, accessoires). Stack : Spring Boot 3.3.13 (Java 21) en monolithe modulaire côté backend, Angular 20 côté frontend, PostgreSQL, JWT pour l'auth.
 
 **Portée pour la livraison actuelle (4 semaines, 4 développeurs) :** Auth, Commerce (catalogue + commande + paiement via PayDunya), Collecte (y compris mode hors-ligne), Stock. Le pilier Formation est **explicitement hors scope de code** pour cette itération — modélisé (entités JPA, UML) mais pas implémenté. Si une tâche semble en avoir besoin, signale-le au lieu de l'implémenter silencieusement ; l'équipe a peut-être tranché différemment depuis.
 
@@ -25,7 +25,7 @@ Backend (`cd backend`) :
 Frontend (`cd frontend`) :
 ```bash
 npm install
-ng serve --proxy-config proxy.conf.json                 # démarre sur :4200, proxy /api vers :8080
+ng serve                                                 # démarre sur :4200, proxy /api vers :8080 (proxyConfig dans angular.json)
 ng test                                                  # toute la suite (Karma/Jasmine)
 ng test --include='**/nom.component.spec.ts'             # un seul fichier de test
 ng build
@@ -33,11 +33,11 @@ ng build
 
 ## Architecture
 
-Backend : monolithe modulaire `bf.assoue.platform`, un package par pilier — `auth/`, `commerce/`, `paiement/`, `collecte/`, `stock/`, plus `common/` pour la config transverse, les exceptions et la sécurité (JWT). Chaque module suit `controller/` → `service/` → `repository/`, avec `model/` (entités JPA) et `dto/`. Tous les modules sont implémentés (`auth`, `commerce`, `paiement`, `collecte`, `stock`) avec tests ; la sécurité est branchée (`JwtAuthFilter`, BCrypt, blocage après 3 échecs, `/api/auth/**` + webhook PayDunya + `GET /api/produits/**` en accès public, le reste authentifié).
+Backend : monolithe modulaire `bf.assoue.platform`, un package par pilier — `auth/`, `commerce/`, `paiement/`, `collecte/`, `stock/`, `communaute/` (vitrine : événements et chiffres de la page Communauté, sans inscription), plus `common/` pour la config transverse, les exceptions et la sécurité (JWT). Chaque module suit `controller/` → `service/` → `repository/`, avec `model/` (entités JPA) et `dto/`. Tous les modules sont implémentés (`auth`, `commerce`, `paiement`, `collecte`, `stock`) avec tests ; la sécurité est branchée (`JwtAuthFilter`, BCrypt, blocage après 3 échecs, `/api/auth/**` + webhook PayDunya + `GET` sur `/api/produits/**`, `/api/categories/**`, `/api/evenements/**`, `/api/communaute/**` en accès public, le reste authentifié).
 
 Le schéma de base est piloté uniquement par Flyway (`backend/src/main/resources/db/migration/V*__*.sql`, ex. `V1__init_schema.sql`) — `ddl-auto: validate`, jamais `update`/`create`. Chaque évolution de schéma est une nouvelle migration `V{n+1}__...`, jamais une modification d'un fichier déjà mergé.
 
-Frontend : Angular 18 en standalone components (pas de `NgModule`, voir `app.config.ts`/`app.routes.ts`), structure feature-based sous `src/app/` — `core/` (services singleton, guards, intercepteurs HTTP), `shared/` (composants/pipes réutilisables), `features/{auth,catalogue,commande,collecte,admin}/`. L'URL de l'API vient de `src/environments/environment.ts` (`apiUrl`), et `proxy.conf.json` évite CORS en dev.
+Frontend : Angular 20 en standalone components (pas de `NgModule`, voir `app.config.ts`/`app.routes.ts`), structure feature-based sous `src/app/` — `core/` (services singleton, guards, intercepteurs HTTP), `shared/` (composants/pipes réutilisables), `features/{auth,catalogue,commande,collecte,admin,impact,communaute}/`. L'URL de l'API vient de `src/environments/environment.ts` (`apiUrl`), et `proxy.conf.json` évite CORS en dev.
 
 Le pilier Formation (`Formation`, `ModuleFormation`, `Inscription`, `Certification`, `Equipement`) est modélisé dans `docs/domaine-metier.md` mais n'a aucun package/dossier correspondant en code — normal, voir portée ci-dessus.
 
@@ -47,6 +47,7 @@ Le pilier Formation (`Formation`, `ModuleFormation`, `Inscription`, `Certificati
 - `docs/domaine-metier.md` — glossaire et modèle de classes. À lire avec l'outil Read avant de créer ou nommer une entité, un champ, une relation.
 - `docs/user-stories.md` — critères d'acceptation Gherkin US-01 à US-05. Une fonctionnalité n'est finie que quand ces critères passent, pas juste quand le code compile.
 - `docs/api-contract.md` — contrat d'API de référence entre frontend et backend.
+- `docs/demarrage-local.md` — guide de démarrage local pas à pas (comptes démo, antisèche CMD Windows).
 - `docs/design/design-system.md` — design system validé (tokens, composants, écrans, contrat par écran, états, backend gaps). Source de vérité pour tout écran Angular.
 
 ## Comportement attendu

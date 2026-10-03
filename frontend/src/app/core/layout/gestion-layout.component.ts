@@ -24,7 +24,7 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
 
     <nav id="nav-gestion" class="sidebar" [class.sidebar--ouverte]="menuOuvert()" aria-label="Navigation gestion">
       <div class="sidebar__entete">
-        <span class="sidebar__marque">AS'SOUÉ</span>
+        <span class="sidebar__marque"><img src="logo-assoue.png" alt="AS'SOUÉ" width="108" height="40" /></span>
         <button type="button" class="sidebar__fermer" aria-label="Fermer le menu" (click)="menuOuvert.set(false)">
           <app-icon name="x" />
         </button>
@@ -62,7 +62,8 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
     }
     .sidebar--ouverte { display: flex; }
     .sidebar__entete { display: flex; align-items: center; justify-content: space-between; padding: var(--space-4); }
-    .sidebar__marque { font: 600 20px var(--font-display); }
+    .sidebar__marque { padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); background: var(--color-surface); }
+    .sidebar__marque img { height: 32px; width: auto; }
     .sidebar__fermer {
       display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px;
       border: 0; background: none; color: inherit; cursor: pointer;
@@ -95,6 +96,7 @@ export class GestionLayoutComponent {
     { url: '/gestion/collectes', libelle: 'Collectes' },
     { url: '/gestion/commandes', libelle: 'Commandes' },
     { url: '/gestion/stocks', libelle: 'Stocks' },
+    { url: '/gestion/communaute', libelle: 'Communauté' },
     { url: '/gestion/utilisateurs', libelle: 'Utilisateurs' },
   ];
 

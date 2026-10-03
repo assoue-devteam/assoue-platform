@@ -42,4 +42,8 @@ public class Produit {
     @JoinColumn(name = "createur_id")
     private Createur createur;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean vedette = false;
+
 }

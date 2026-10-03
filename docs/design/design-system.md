@@ -1,6 +1,6 @@
 # AS'SOUÉ — Design System et référentiel validés (V1)
 
-**Statut : VALIDÉ — source de vérité pour la maquette.** Palette retenue : **Forêt et terracotta**.
+**Statut : VALIDÉ — source de vérité pour la maquette.** Palette retenue : **Vert vif** (03/10/2026, inspirée de la maquette mobile POESAM ; remplace « Forêt et terracotta », récupérable par `git revert` du commit de palette). Aperçu comparatif : `docs/design/apercu-palettes.html`.
 Établi à partir du code backend `assoue-devteam/assoue-platform`, branche `main`, commit `f07b4d4` (25/09/2026).
 Tout ce qui n'est pas dans ce document n'existe pas pour la maquette. Toute contradiction doit être signalée, pas tranchée.
 
@@ -43,58 +43,61 @@ Paiement : **PayDunya** uniquement ; le client choisit Orange Money ou Moov Mone
 | Densité | aérée, photo dominante | minimale, 1 action par écran | normale à dense, tables |
 | Navigation | en-tête (wordmark à gauche), menu tiroir sur mobile | barre haute + bottom nav 2 entrées | sidebar fond `--color-primary-strong` |
 | Cartes | carte produit à image dominante, légende **sous** l'image | cartes de liste simples | quasi aucune, tables |
-| Boutons | 48 px, CTA d'achat terracotta plein | 48 px pleine largeur | 40 px |
-| Titres | serif (Display, H1) | sans-serif uniquement | serif pour H1 de page seulement |
+| Boutons | 48 px, CTA d'achat orange plein | 48 px pleine largeur | 40 px |
+| Titres | sans-serif 600 | sans-serif uniquement | sans-serif |
 
 **Photos produit** : les vraies photos seront fournies par AS'SOUÉ. D'ici là, on utilise un **emplacement neutre** : ratio 4:5, fond `--color-surface-alt`, libellé discret « Photo à venir » en `caption` `--color-text-muted`. **Pas** de photos stock génériques, pas d'illustrations générées, pas de feuilles ni de planète. Le même emplacement sert en production quand `imageUrl` est null.
 
-**Logo** : wordmark typographique « AS'SOUÉ » en Source Serif 4 600, couleur `--color-primary-strong`. Aucun pictogramme inventé. `[À CONFIRMER]` : à remplacer par le logo officiel quand il sera fourni.
+**Logo** : logo officiel « AS'SOUE African Style » (noir et rouge sur fond blanc), fichier `frontend/public/logo-assoue.png`. En-tête boutique 44 px de haut (36 px sur mobile) ; sur fond sombre (footer, sidebar Gestion), toujours posé sur une plaque blanche `--color-surface`. Les barres compactes Collecteur et Gestion mobile gardent le libellé texte.
+
+**Footer** (boutique, toutes pages publiques et client) : fond `--color-surface-dark`, filet haut 4 px `--color-logo`. Colonnes : logo + accroche « L'art du recyclage pour un avenir durable » · Boutique (Catalogue, Panier, Mes commandes) · Nous trouver (siège Ouagadougou Zone 1 ; boutique vitrine ZAD, avenue de la Jeunesse) · Contact (+226 72 48 00 02, WhatsApp 54 95 82 82 via `wa.me`, assouegroup@gmail.com) · Suivez-nous (Facebook, Instagram, TikTok, LinkedIn, nouvel onglet). Source : plaquette AS'SOUÉ 2026.
 
 ---
 
 ## 3. Tokens
 
-Palette retenue : **Forêt et terracotta** (vert forêt `#2D6A4F` + terracotta `#C1440E`).
+Palette retenue : **Vert vif** (vert de la maquette `#22C55E` en décor, `#15803D` pour le texte et les boutons, orange `#B45309` pour l'achat, rouge du logo `#E4002B` en touches). Valeurs de référence : `frontend/src/styles/_tokens.scss`.
 
 À reprendre tels quels (futur `styles.scss` Angular).
 
 ```css
 :root {
-  /* Marque (palette imposée) */
-  --color-primary: #2D6A4F;
-  --color-primary-strong: #1B4332;
-  --color-primary-muted: #3C5A40;
-  --color-primary-tint: #E6EFEA;
-  --color-accent: #C1440E;          /* CTA d'achat uniquement, 1 par écran */
-  --color-accent-soft: #C1622D;     /* décoratif ou texte >= 24px seulement */
-  --color-accent-tint: #F7E7DE;
-  --color-accent-strong: #9E370B;   /* survol/pressé du CTA d'achat, 7:1 avec blanc */
+  /* Marque : vert vif de la maquette, rendu lisible */
+  --color-primary: #15803D;         /* boutons, liens, prix (5,0:1 avec blanc) */
+  --color-primary-strong: #166534;  /* survol, fonds sombres, sidebar Gestion (7,1:1) */
+  --color-primary-muted: #1F6F3D;
+  --color-primary-tint: #DCFCE7;
+  --color-vif: #22C55E;             /* icônes, puces, barres : jamais pour du texte (2,3:1) */
+  --color-chiffre: #16A34A;         /* gros chiffres >= 24px sur fond clair (3,3:1) */
+  --color-logo: #E4002B;            /* rouge du logo : filet du footer, cœur des favoris */
+  --color-accent: #B45309;          /* CTA d'achat uniquement, 1 par écran (5,0:1) */
+  --color-accent-strong: #92400E;   /* survol/pressé du CTA d'achat */
+  --color-accent-soft: #D97706;     /* décoratif ou texte >= 24px seulement */
+  --color-accent-tint: #FEF3C7;
 
   /* Neutres */
-  --color-bg: #FAF8F4;
+  --color-bg: #F8FAFC;
   --color-surface: #FFFFFF;
-  --color-surface-alt: #F1EDE6;
-  --color-text: #1C1F1D;
-  --color-text-muted: #5B615C;
+  --color-surface-alt: #EEF2F0;
+  --color-surface-dark: #14231B;    /* bandeaux sombres et footer */
+  --color-text: #0F172A;
+  --color-text-muted: #475569;
   --color-text-on-dark: #FFFFFF;
-  --color-border: #DDD7CC;          /* séparateurs */
-  --color-border-strong: #8A8F89;   /* bordures de champs */
+  --color-border: #E2E8F0;          /* séparateurs */
+  --color-border-strong: #64748B;   /* bordures de champs (4,8:1) */
 
   /* Sémantique : texte / fond */
-  --color-success: #1B4332;  --color-success-bg: #E3EFE8;
-  --color-warning: #8A5A00;  --color-warning-bg: #FDF3DC;
+  --color-success: #166534;  --color-success-bg: #DCFCE7;
+  --color-warning: #8A5A00;  --color-warning-bg: #FEF3C7;
   --color-error:   #A12622;  --color-error-bg:   #FBE9E7;
-  --color-error-strong: #7F1D1A;    /* survol/pressé du bouton danger */
+  --color-error-strong: #7F1D1A;
   --color-info:    #1F5A7A;  --color-info-bg:    #E4EEF3;
 
-  /* Focus */
-  /* Voile derrière les modales (fonctionnel, pas décoratif) */
-  --overlay: rgba(28, 31, 29, .48);
-
+  --overlay: rgba(15, 23, 42, .48);
   --focus-ring: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-primary-strong);
 
-  /* Typographie */
-  --font-display: "Source Serif 4", Georgia, serif;
+  /* Typographie : titres et texte en Source Sans 3 */
+  --font-display: "Source Sans 3", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-text: "Source Sans 3", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
   /* Espacements (base 4) */
@@ -102,22 +105,22 @@ Palette retenue : **Forêt et terracotta** (vert forêt `#2D6A4F` + terracotta `
   --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
 
   /* Rayons */
-  --radius-sm: 4px;    /* boutons, champs, badges */
-  --radius-md: 8px;    /* cartes, modales, toasts */
-  --radius-full: 999px;/* avatar et pastille de statut uniquement */
+  --radius-sm: 8px;    /* boutons, champs, badges */
+  --radius-md: 14px;   /* cartes, modales, toasts */
+  --radius-full: 999px;/* avatar, pastilles de statut et de catégorie */
 
   /* Ombres (2 niveaux seulement) */
-  --shadow-1: 0 1px 2px rgba(28, 31, 29, .08);   /* barres collantes, dropdown */
-  --shadow-2: 0 8px 24px rgba(28, 31, 29, .14);  /* modale, toast */
+  --shadow-1: 0 1px 2px rgba(15, 23, 42, .08);
+  --shadow-2: 0 8px 24px rgba(15, 23, 42, .14);
 }
 ```
 
 Règles d'usage :
-- **La terracotta ne signale jamais un problème.** Les erreurs utilisent `--color-error` et sont toujours accompagnées d'une icône et d'un texte.
+- **L'orange d'achat ne signale jamais un problème.** Les erreurs utilisent `--color-error` et sont toujours accompagnées d'une icône et d'un texte.
 - Un succès est vert comme la marque : il porte donc toujours une icône (coche) et un libellé.
 
 **Icônes** : jeu **Lucide** (licence ISC), au trait, épaisseur 1,5, tailles 16 et 20 px, `currentColor`. Seules les icônes réellement utilisées (~25) sont copiées en SVG dans le composant `app-icon` : **aucune dépendance npm**, et elles restent disponibles hors ligne pour la PWA collecteur. Toujours accompagnées d'un texte, sauf dans un bouton-icône qui porte alors un `aria-label`.
-- `--color-accent-soft` n'est pas assez contrasté (4,2:1) pour du texte courant.
+- `--color-vif` (2,3:1) et `--color-accent-soft` ne portent jamais de texte courant ; `--color-chiffre` seulement pour des chiffres de 24 px et plus.
 - Pas de dégradés, de transparences décoratives ni de mode sombre en V1.
 - Les cartes n'ont pas d'ombre : une bordure `--color-border` de 1 px suffit.
 
@@ -125,12 +128,12 @@ Règles d'usage :
 
 ## 4. Typographie
 
-Polices auto-hébergées, sous-ensemble latin, woff2 : Source Serif 4 (600) et Source Sans 3 (400 et 600), soit environ 60 Ko au total.
+Polices auto-hébergées, sous-ensemble latin, woff2 : Source Sans 3 (400 et 600) pour tout le texte, titres compris. Source Serif 4 reste déclarée mais n'est plus téléchargée (aucun texte ne l'utilise).
 
 | Style | Police | Mobile | Desktop | Graisse | Interlignage | Usage |
 |---|---|---|---|---|---|---|
-| Display | Serif | 28 | 36 | 600 | 1,15 | titre de la page catalogue, nom produit sur la fiche |
-| H1 | Serif (sans pour Collecteur) | 24 | 28 | 600 | 1,2 | titre de page |
+| Display | Sans | 28 | 36 | 600 | 1,15 | titre de la page catalogue, nom produit sur la fiche |
+| H1 | Sans | 24 | 28 | 600 | 1,2 | titre de page |
 | H2 | Sans | 20 | 22 | 600 | 1,25 | sections |
 | H3 | Sans | 17 | 18 | 600 | 1,3 | sous-sections, titres de carte |
 | Body | Sans | 16 | 16 | 400 | 1,5 | texte courant |
@@ -202,7 +205,7 @@ Noms = futurs composants Angular. **Aucun autre composant sans le signaler.**
 
 | Composant | Variantes | États | Règles |
 |---|---|---|---|
-| `app-button` | primary (vert), purchase (terracotta, 1 par écran max), secondary (contour vert), ghost, danger | défaut, hover, focus, pressed, disabled, loading | radius 4 ; 48 px Client/Collecteur, 40 px Gestion ; loading = spinner + libellé conservé + `aria-busy` ; jamais en pilule |
+| `app-button` | primary (vert), purchase (orange, 1 par écran max), secondary (contour vert), ghost, danger | défaut, hover, focus, pressed, disabled, loading | radius 8 ; 48 px Client/Collecteur, 40 px Gestion ; loading = spinner + libellé conservé + `aria-busy` ; jamais en pilule |
 | `app-input` | text, email, password (afficher/masquer), number décimal, search | défaut, focus, rempli, erreur, disabled, lecture seule | label toujours visible, aide sous le champ, erreur liée par `aria-describedby` avec icône |
 | `app-select` | select natif stylé | idem input | pas de select custom |
 | `app-checkbox` / `app-radio` | simple, groupe | coché, non coché, disabled, erreur de groupe | zone tactile 44 px, `fieldset` + `legend` |
@@ -249,6 +252,9 @@ Correspondance avec la maquette : `ShopHeader` = `app-header`, `ProductCard` = `
 PUBLIC
 ├── /                       PUB-01 Catalogue (= accueil)                       P0
 ├── /produits/:id           PUB-02 Fiche produit                               P0
+├── /notre-impact           PUB-05 Notre impact (chiffres, mission, valeurs)   P1
+├── /communaute             PUB-06 Communauté (chiffres, événements)           P1
+├── /favoris                CLI-04 Mes favoris (client)                        P1
 ├── /connexion              PUB-03 Connexion                                   P0
 ├── /inscription            PUB-04 Inscription                                 P0
 └── /panier                 CLI-01 Panier (visiteur autorisé)                  P0
@@ -269,7 +275,8 @@ GESTION (rôle ADMIN, espace unique)
 ├── /gestion/volumes        GES-03 Volumes par collecteur                      P1
 ├── /gestion/commandes      GES-04 Commandes (+ impayées > 24 h)               P0
 ├── /gestion/commandes/:id  GES-05 Détail commande                             P0
-├── /gestion/stocks         GES-06 Stocks (produits finis, matière première)   P0
+├── /gestion/stocks         GES-06 Stocks (produits finis, matière première, vedettes) P0
+├── /gestion/communaute     GES-12 Communauté (événements, chiffres)           P1
 ├── /gestion/utilisateurs   GES-08 Utilisateurs (+ créer, débloquer)           P0
 │                           GES-09 Créer un compte (modale)                    P0
 │                           GES-10 Modifier les rôles (modale)                 P1
@@ -295,11 +302,32 @@ Tant que GES-01 (P1) n'est pas maquetté, la Gestion arrive sur `/gestion/collec
 
 Format : **Données** · **Endpoint(s)** · **Actions** · **États** · **Permission** · **Validations** · **Gap**.
 
+### PUB-05 Notre impact — P1
+- Données : statiques, plaquette AS'SOUÉ 2026 (source affichée sous les chiffres). Aucun endpoint.
+- Affiche : surtitre « Depuis 8 ans au Burkina Faso », H1 « L'art du recyclage pour un avenir durable », bandeau sombre de 4 chiffres (400 670 pneus recyclés, 801 emplois directs, 1 857 emplois indirects, 5 régions), Notre mission (3 cartes : réduire la pollution, protéger la santé, créer des emplois), Nos valeurs (4), Distinctions (2022-2025), appel « Découvrir la boutique ».
+- Animation : les chiffres défilent de 0 à leur valeur (1,6 s, une fois) quand le bandeau devient visible ; valeur finale affichée sans animation si `prefers-reduced-motion` ou sans IntersectionObserver.
+- Accès : menu de l'en-tête et colonne Boutique du footer. Jamais sur l'accueil.
+
+### PUB-06 Communauté — P1
+- Endpoints : `GET /api/communaute/chiffres`, `GET /api/evenements` (publics).
+- Affiche : H1 « Communauté », chiffres saisis par l'admin (cartes, défilement animé comme PUB-05 ; section absente si aucun), « Événements à venir » (cartes : photo ou icône, titre, date longue, lieu, description, bouton vert « Participer » avec « (n places restantes) » si renseigné), « Événements passés » (liste compacte). Un événement du jour reste « à venir » jusqu'au soir.
+- « Participer » ouvre WhatsApp (54 95 82 82) avec un message prérempli (titre + date) : aucune inscription en base.
+- États : skeleton · erreur + Réessayer (l'échec des chiffres ne bloque pas les événements) · vide « Aucun événement prévu pour le moment. Suivez-nous sur les réseaux sociaux… ».
+
+### GES-12 Communauté — P1
+- Événements : liste (titre, date, lieu) avec Modifier et Supprimer (modale de confirmation) ; « Nouvel événement » ouvre une modale (titre, date et heure, lieu, description, adresse https d'une photo, places restantes).
+- Chiffres : 6 lignes au plus (libellé + valeur), Ajouter / Retirer, « Enregistrer les chiffres » remplace la liste. Consigne affichée : « Ne saisissez que des chiffres vérifiés. »
+
 ### PUB-01 Catalogue (accueil) — P0
 - Données : produits (`id, nom, description, prix, imageUrl, categorie, enRupture`), catégories (`id, nom, description`).
 - Endpoints : `GET /api/categories`, `GET /api/produits?categorieId=`.
-- En-tête de page : H1 Display « Objets fabriqués à partir de déchets collectés au Burkina Faso » + une ligne d'explication `[À CONFIRMER : formulation fournie par AS'SOUÉ]`. **Pas de hero, pas de chiffres d'impact.**
-- Actions : filtrer par catégorie (chips, « Tout » par défaut), filtre texte local sur le nom (P1, pas d'endpoint de recherche, GAP-09), ouvrir une fiche.
+- En-tête de page : H1 Display « Objets fabriqués à partir de déchets collectés au Burkina Faso » + une ligne d'explication `[À CONFIRMER : formulation fournie par AS'SOUÉ]`. **Pas de hero ni de chiffres d'impact sur l'accueil** : ils sont sur PUB-05 « Notre impact ».
+- Actions : rechercher (champ au-dessus des pastilles, filtre local sur nom et catégorie, sans accents ni majuscules, pas d'endpoint, GAP-09), filtrer par catégorie (pastilles arrondies, « Tout » par défaut), ouvrir une fiche.
+- Carte produit : badge « ÉCO » (feuille, fond `--color-primary-tint`) en haut à gauche de la photo ; bouton cœur (favori) en haut à droite, rempli en `--color-logo` quand actif, `aria-pressed`. Visiteur → connexion puis retour à la page. Même cœur sur la fiche produit.
+- Étoiles (`app-etoiles`, orange `--color-accent-soft`) sous le nom du produit sur les cartes et la fiche, avec « 4,5 (12 avis) » ; **rien sans avis** (pas d'étoiles vides).
+- Fiche produit, section « Avis clients » : moyenne, liste (auteur « Awa O. », étoiles, commentaire, date). Client avec achat payé : formulaire 5 étoiles (boutons radio) + commentaire, « Modifier votre avis » s'il en a déjà un. Client sans achat payé : « Vous pourrez donner votre avis après avoir acheté et payé ce produit. ». Visiteur : liste seule.
+- Section « Produits vedettes » (4 au plus, `vedette = true`) au-dessus de la grille, seulement sur le catalogue complet (ni recherche ni catégorie). L'admin les coche dans Gestion > Stocks, section « Produits vedettes ».
+- Page « Mes favoris » (`/favoris`, rôle CLIENT, lien dans l'en-tête) : liste avec photo, nom, catégorie, prix, « Ajouter au panier », cœur pour retirer ; vide « Touchez le cœur d'un produit pour le retrouver ici. ».
 - États : skeleton 6 cartes · vide « Aucun produit dans cette catégorie pour le moment » · erreur réseau + Réessayer · hors ligne (bandeau).
 - Permission : public.
 
@@ -323,11 +351,12 @@ Format : **Données** · **Endpoint(s)** · **Actions** · **États** · **Permi
 - Pas de champs entreprise (raison sociale, IFU) : non modélisés.
 
 ### CLI-01 Panier — P0
-- Données : panier local (id produit, nom, prix, quantité, photo), sans endpoint. À la validation : `POST /api/commandes` `{ lignes: [{ produitId, quantite }] }`.
+- Données : visiteur → panier local (id produit, nom, prix, quantité, photo). Client connecté → panier serveur `GET /api/panier` / `PUT /api/panier` (remplacement complet), retrouvé sur tous ses appareils, avec une copie locale pour ajouter hors ligne. À la connexion, le panier visiteur s'additionne au panier serveur (« Votre panier est conservé »). À la validation : `POST /api/commandes` `{ lignes: [{ produitId, quantite }] }`.
+- Synchronisation : chaque ajout, quantité ou retrait d'un client part aussitôt au serveur. Sans réseau, la modification est gardée sur l'appareil et renvoyée au retour de la connexion (ou à la connexion suivante), sans écraser le serveur par une version plus ancienne.
 - Affiche : lignes, stepper, Retirer, total (calculé en local, confirmé par la réponse serveur), bloc « Livraison ».
 - **Bloc Livraison** : champs prévus (téléphone, quartier, ville, instructions) **désactivés** + `app-gap-note` « [BACKEND GAP] GAP-02 : la commande n'enregistre pas encore d'adresse. AS'SOUÉ vous contactera. `[À CONFIRMER]` ».
 - Actions : « Commander » (bouton purchase). Visiteur → connexion, puis retour au panier.
-- États : vide « Votre panier est vide » + lien catalogue · création en cours (bouton en loading) · 400 rupture → ligne marquée « N'est plus disponible », commande bloquée tant qu'elle est présente · hors ligne → bouton désactivé + raison.
+- États : vide « Votre panier est vide » + lien catalogue · stock insuffisant à l'ajout (400 de `PUT /api/panier`, client connecté) → la quantité revient à sa valeur précédente + toast d'erreur avec le message serveur « Stock insuffisant pour « <nom> » : <n> disponible(s) » · création en cours (bouton en loading) · 400 rupture → ligne marquée « N'est plus disponible », commande bloquée tant qu'elle est présente · hors ligne → bouton désactivé + raison.
 - Succès → CLI-03.
 
 ### CLI-03 Paiement — P0
@@ -363,6 +392,7 @@ Format : **Données** · **Endpoint(s)** · **Actions** · **États** · **Permi
 ### COL-B Mes collectes — P0 (mobile)
 - Données : file locale non envoyée (en premier) + `GET /api/collectes/mes-collectes` (dernière réponse mise en cache).
 - Chaque élément : matériau, quantité, date, statut local ou serveur (§4), position abrégée.
+- En tête (tableau de bord, inspiré de l'écran « Collecter » de la maquette) : grand bouton vert « Déclarer une collecte » (sous-titre « Matériau, quantité et position »), puis 3 compteurs calculés sur la liste serveur : déclarées (total), validées (`VALIDEE` + `TRAITEE`), en attente de validation (`DECLAREE`). Chiffres en `--color-chiffre` 28 px. Titre de liste « Collectes récentes ».
 - Actions : « Envoyer maintenant » (s'il y a des éléments en attente), Réessayer (en cas d'échec), Corriger (si `DECLAREE` et en ligne, P1).
 - États : vide « Aucune déclaration pour le moment » + bouton Déclarer · hors ligne → liste en cache + « Dernière mise à jour à 09:42 ».
 - Pas de statut « Rejetée » (GAP-08).
@@ -577,7 +607,7 @@ Issa, Plastique 15,5 kg, Tampouy, Déclarée · Issa, Pneu 42 kg, Pissy, Validé
 
 ## 14. Anti-AI-slop (spécifique AS'SOUÉ)
 
-Interdits : hero plein écran, chiffres d'impact inventés, KPI décoratifs, dégradés, glassmorphism, boutons en pilule, radius > 8 px (hors avatar et pastille), ombres sur les cartes, icônes décoratives, emojis, illustrations génériques (feuilles, planète, mains qui tiennent une plante), photos stock, violet ou bleu SaaS, lorem ipsum, « John Doe », slogans.
+Interdits : hero plein écran, chiffres d'impact inventés (les chiffres de la plaquette, sourcés, vont sur la page « Notre impact »), KPI décoratifs, dégradés, glassmorphism, boutons en pilule, radius > 14 px (hors avatar et pastille), ombres lourdes sur les cartes, icônes décoratives, emojis, illustrations génériques (feuilles, planète, mains qui tiennent une plante), photos stock, violet ou bleu SaaS, lorem ipsum, « John Doe », slogans.
 Également interdits, car inexistants dans le backend : avis clients, notes, favoris, codes promo, chat, notifications, mot de passe oublié, page profil, carte interactive, exports.
 
 ## 15. Priorités

@@ -21,6 +21,14 @@ public interface CommandeRepository extends JpaRepository<Commande, Long> {
 
     List<Commande> findByStatutOrderByDateCreationDesc(CommandeStatut statut);
 
+    /** Le client a-t-il une commande dans l'un de ces statuts qui contient ce produit ? */
+    @Query("""
+            select count(commande) > 0 from Commande commande join commande.lignes ligne
+            where commande.client.email = :email and ligne.produit.id = :produitId and commande.statut in :statuts
+            """)
+    boolean aAchete(@Param("email") String email, @Param("produitId") Long produitId,
+                    @Param("statuts") java.util.Collection<CommandeStatut> statuts);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select commande from Commande commande where commande.id = :id")
     java.util.Optional<Commande> findByIdForUpdate(@Param("id") Long id);

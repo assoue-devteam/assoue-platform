@@ -97,6 +97,37 @@ Pas de notification poussée tant que l'infra temps réel (US-04) n'existe pas :
 ### `GET /api/commandes/{id}`
 Authentifié (rôle CLIENT ou ADMIN). Le client n'accède qu'à ses propres commandes ; le manager (rôle ADMIN) accède à n'importe laquelle pour en connaître le statut réel sans dépendre du webhook (MG-02). Réponse `200` au même format que la création. `404` si introuvable ou, pour un client, si elle n'est pas la sienne (pour ne pas révéler l'existence d'une commande d'un tiers).
 
+### `GET /api/panier`
+Rôle CLIENT (CL-02 : retrouver son panier à la connexion, sur tout appareil). Panier du client connecté, avec les infos produit **à jour** (prix actuel, `enRupture`) — le prix n'est jamais repris d'une valeur gardée côté navigateur. Réponse `200` (panier vide : `{ "lignes": [], "total": 0 }`) :
+```json
+{ "lignes": [{ "produit": { "id": 4, "nom": "...", "description": "...", "prix": 25000, "imageUrl": null, "categorie": "Mobilier", "enRupture": false }, "quantite": 2 }], "total": 50000 }
+```
+
+### `PUT /api/panier`
+Rôle CLIENT. Remplace **tout** le panier par le contenu envoyé (rejouable sans risque après une coupure réseau) ; `lignes: []` le vide. Deux lignes du même produit sont additionnées. Requête :
+```json
+{ "lignes": [{ "produitId": 4, "quantite": 2 }] }
+```
+Réponse `200` au format de `GET /api/panier`. Le stock disponible est vérifié dès cet appel, mais **rien n'est réservé** : la réservation n'a lieu qu'à `POST /api/commandes`. Erreurs (le panier existant reste alors inchangé) : `400` quantité < 1 ou supérieure au stock disponible (message : `Stock insuffisant pour « <nom> » : <n> disponible(s)`), `404` produit introuvable.
+
+### `PUT /api/produits/{id}/vedette`
+Rôle ADMIN. Met un produit en avant (ou le retire) en tête du catalogue. Requête : `{ "vedette": true }`. Réponse `200` au format produit. `404` produit introuvable. Tous les formats produit portent désormais `vedette` (booléen).
+
+### `GET /api/produits/{id}/avis`
+Public. Réponse `200` : `{ "moyenne": 4.5, "nombre": 2, "avis": [{ "note": 5, "commentaire": "...", "auteur": "Awa O.", "date": "..." }] }` (`moyenne` à `null` sans avis ; les plus récents d'abord ; l'auteur est le prénom et l'initiale du nom, jamais l'email). `404` produit introuvable. Tous les formats produit portent désormais `noteMoyenne` (ou `null`) et `nombreAvis`.
+
+### `GET /api/produits/{id}/avis/moi`
+Rôle CLIENT. Réponse `200` : `{ "peutDonnerAvis": true, "monAvis": null }`. `peutDonnerAvis` est vrai si le client a une commande `PAYEE`, `EN_PREPARATION`, `EXPEDIEE` ou `LIVREE` contenant ce produit.
+
+### `PUT /api/produits/{id}/avis`
+Rôle CLIENT. Crée l'avis du client ou remplace le sien (un seul par client et par produit). Requête : `{ "note": 4, "commentaire": "..." }` (note 1 à 5, commentaire facultatif, 1000 caractères au plus). Réponse `200` au format d'un avis. Erreurs : `400` note invalide ou client sans achat payé de ce produit (« Vous pourrez donner votre avis après avoir acheté et payé ce produit. »), `404` produit introuvable.
+
+### `GET /api/favoris`
+Rôle CLIENT. Produits mis en favori par le client connecté, du plus récent au plus ancien, au format de `GET /api/produits/{id}` (prix et `enRupture` à jour). Réponse `200` : liste, vide si aucun favori.
+
+### `PUT /api/favoris/{produitId}` · `DELETE /api/favoris/{produitId}`
+Rôle CLIENT. Ajoute ou retire un produit des favoris. Les deux sont idempotents (ajouter deux fois ou retirer un produit absent ne change rien). Réponse `204`. Erreur : `404` produit introuvable (ajout).
+
 ## Paiement
 
 ### `POST /api/paiements/commandes/{commandeId}`
@@ -132,6 +163,19 @@ Rôle ADMIN (supervision super admin, SA-06). Liste tous les paiements avec comp
 ]
 ```
 `ecartWebhook` vaut `true` si un webhook a été reçu (`statutAnnonceWebhook != null`) mais que la revalidation n'a pas confirmé le paiement (`statut != CONFIRME`), signalant une anomalie ou tentative de fraude.
+
+## Communauté
+
+Lecture publique (`GET` ouvert dans `SecurityConfig`), écriture réservée à l'ADMIN.
+
+### `GET /api/evenements`
+Public. Tous les événements, du plus ancien au plus récent (le frontend sépare « à venir » et « passés »). Réponse `200` : `[{ "id": 1, "titre": "...", "dateDebut": "2026-12-15T09:00:00", "lieu": "...", "description": null, "imageUrl": null, "placesRestantes": 15 }]`. `placesRestantes` est une information saisie par l'admin, pas un compteur d'inscriptions (aucune inscription n'est gérée : « Participer » ouvre WhatsApp).
+
+### `POST /api/evenements` · `PUT /api/evenements/{id}` · `DELETE /api/evenements/{id}`
+Rôle ADMIN. Requête : `{ "titre", "dateDebut", "lieu", "description"?, "imageUrl"?, "placesRestantes"? }` (titre 150 car., lieu 200, description 2000, `imageUrl` en `http(s)://` uniquement, places >= 0). Réponses : `201` (création), `200` (modification), `204` (suppression). Erreurs : `400` validation, `404` événement introuvable.
+
+### `GET /api/communaute/chiffres` · `PUT /api/communaute/chiffres`
+`GET` public : `[{ "libelle": "Artisans soutenus", "valeur": 245 }]`, dans l'ordre d'affichage, vide tant que l'admin n'a rien saisi. `PUT` (ADMIN) remplace toute la liste : `{ "chiffres": [{ "libelle", "valeur" }] }`, 6 au plus, libellé 80 car., valeur >= 0.
 
 ## Collecte
 

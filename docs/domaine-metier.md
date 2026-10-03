@@ -14,6 +14,7 @@ Extrait du CDC v1.0 (sections Diagramme de classes + Annexe Glossaire). Ce fichi
 | Compensation | Rétribution optionnelle liée à un Dépôt — optionnelle, ne pas la rendre obligatoire dans le modèle. |
 | Créateur | Conçoit les modèles de produits valorisés — à cheval entre Formation et Commerce, pas un simple attribut de Produit. |
 | Ligne Commande | Classe d'association entre Commande et Produit — porte la quantité achetée. Une Commande ne peut exister sans au moins une ligne : multiplicité **1..\*** et non 0..\*, ne pas autoriser une commande vide en base. |
+| Ligne Panier | Produit et quantité que le client connecté a mis dans son panier, conservés côté serveur. Le stock est vérifié à l'ajout mais réservé seulement à la commande. Le panier d'un visiteur reste dans le navigateur. |
 | Artisan | Apprenant suivant une ou plusieurs formations — distinct de Créateur et de Technicien. |
 | Offline-first | Approche où l'application reste fonctionnable sans connexion, stocke en local, puis synchronise au retour réseau — s'applique à Collecte, pas au reste de la plateforme. |
 | MOA / MOE | MOA = la direction d'AS'Soué (client, commanditaire) · MOE = l'équipe de dev (vous). |
@@ -29,6 +30,9 @@ Extrait du CDC v1.0 (sections Diagramme de classes + Annexe Glossaire). Ce fichi
 | Createur | Conçoit les modèles de produits valorisés. |
 | Commande | Achat B2B ou B2C. |
 | LigneCommande | Classe d'association Commande ↔ Produit, porte la quantité. Multiplicité 1..\* côté Commande. |
+| Avis | Note de 1 à 5 et commentaire facultatif d'un client sur un produit (Utilisateur ↔ Produit, un seul par produit, modifiable). Réservé à un client ayant une commande payée contenant ce produit. |
+| Favori | Produit marqué d'un cœur par un client (Utilisateur ↔ Produit, une fois par produit). Simple marque-page, sans effet sur le stock ni la commande. |
+| LignePanier | Classe d'association Client (Utilisateur) ↔ Produit, porte la quantité mise de côté avant commande. Un seul panier par client, donc pas de classe Panier ; 0..\* lignes, une par produit. Ne réserve pas de stock. |
 | Paiement | Transaction liée à une commande — **implémentée via PayDunya**, pas d'appel direct Orange Money/Moov (voir décision projet, section paiement de `AGENTS.md`). |
 
 ### Pilier Collecte (implémenté cette itération)
@@ -43,6 +47,13 @@ Extrait du CDC v1.0 (sections Diagramme de classes + Annexe Glossaire). Ce fichi
 | LigneCollecte | Classe d'association Collecte ↔ Materiau, porte la quantité. |
 
 Point encore ouvert (voir guide d'initialisation, section "ce qui reste à trancher") : la relation exacte Depot ↔ Collecte n'est pas encore figée. Ne fige pas ce point-là seul dans le code sans validation — demande.
+
+### Vitrine Communauté (module `communaute/`, implémenté cette itération)
+
+| Classe | Rôle |
+|---|---|
+| Evenement | Atelier, salon ou journée publiée par l'admin sur la page Communauté. Vitrine seulement : pas d'inscription en base (les inscriptions relèvent du pilier Formation, hors scope). `placesRestantes` est une information saisie, pas un compteur. |
+| ChiffreCommunaute | Chiffre affiché sur la page Communauté (libellé + valeur + ordre), saisi par l'admin. Jamais calculé ni inventé. |
 
 ### Pilier Formation — hors scope de code cette itération
 
