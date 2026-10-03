@@ -4,6 +4,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { CatalogueService } from './catalogue.service';
 import { PanierService } from './panier.service';
 import { Produit } from '../../shared/models/api';
+import { AuthService } from '../../core/auth/auth.service';
 
 const produit: Produit = {
   id: 7, nom: 'Bracelet recyclé', description: 'Un bracelet.', prix: 2500,
@@ -54,5 +55,46 @@ describe('catalogue et panier', () => {
     const panier = TestBed.inject(PanierService);
     panier.ajouter({ ...produit, enRupture: true });
     expect(panier.lignes()).toEqual([]);
+  });
+
+  describe('propriétaire du panier', () => {
+    const connecter = (email: string) => {
+      TestBed.inject(AuthService).session.set({ token: 't', email, roles: ['CLIENT'], expiration: Date.now() + 60_000 });
+      TestBed.tick();
+    };
+
+    it('conserve le panier du visiteur à sa connexion', () => {
+      const panier = TestBed.inject(PanierService);
+      TestBed.tick();
+      panier.ajouter(produit);
+      connecter('awa@assoue.bf');
+      expect(panier.nombreArticles()).toBe(1);
+    });
+
+    it('vide le panier à la déconnexion', () => {
+      const panier = TestBed.inject(PanierService);
+      connecter('awa@assoue.bf');
+      panier.ajouter(produit);
+      TestBed.inject(AuthService).deconnecter();
+      TestBed.tick();
+      expect(panier.lignes()).toEqual([]);
+      expect(localStorage.getItem('assoue.panier')).toBe('[]');
+    });
+
+    it('ne montre pas le panier d\'un compte à un autre compte', () => {
+      const panier = TestBed.inject(PanierService);
+      connecter('awa@assoue.bf');
+      panier.ajouter(produit);
+      connecter('issa@assoue.bf');
+      expect(panier.lignes()).toEqual([]);
+    });
+
+    it('vide au démarrage un panier laissé par un compte qui n\'est plus connecté', () => {
+      localStorage.setItem('assoue.panier', JSON.stringify([{ produit, quantite: 2 }]));
+      localStorage.setItem('assoue.panier.proprietaire', 'awa@assoue.bf');
+      const panier = TestBed.inject(PanierService);
+      TestBed.tick();
+      expect(panier.lignes()).toEqual([]);
+    });
   });
 });

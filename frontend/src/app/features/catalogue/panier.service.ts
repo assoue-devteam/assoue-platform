@@ -1,4 +1,5 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
+import { AuthService } from '../../core/auth/auth.service';
 import { Produit } from '../../shared/models/api';
 
 export interface LignePanier {
@@ -7,12 +8,27 @@ export interface LignePanier {
 }
 
 const CLE_PANIER = 'assoue.panier';
+const CLE_PROPRIETAIRE = 'assoue.panier.proprietaire';
 
 @Injectable({ providedIn: 'root' })
 export class PanierService {
+  private auth = inject(AuthService);
+
   readonly lignes = signal<LignePanier[]>(lirePanier());
   readonly nombreArticles = computed(() => this.lignes().reduce((total, ligne) => total + ligne.quantite, 0));
   readonly total = computed(() => this.lignes().reduce((total, ligne) => total + ligne.produit.prix * ligne.quantite, 0));
+
+  constructor() {
+    // Le panier d'un visiteur est repris à sa connexion (DS : « Votre panier est conservé »),
+    // mais celui d'un compte ne doit jamais apparaître après sa déconnexion ni pour un autre compte.
+    effect(() => {
+      const email = this.auth.email();
+      const proprietaire = localStorage.getItem(CLE_PROPRIETAIRE);
+      if (proprietaire !== null && proprietaire !== email) untracked(() => this.vider());
+      if (email) localStorage.setItem(CLE_PROPRIETAIRE, email);
+      else localStorage.removeItem(CLE_PROPRIETAIRE);
+    });
+  }
 
   ajouter(produit: Produit): void {
     if (produit.enRupture) return;
