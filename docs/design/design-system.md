@@ -252,6 +252,7 @@ Correspondance avec la maquette : `ShopHeader` = `app-header`, `ProductCard` = `
 PUBLIC
 ├── /                       PUB-01 Catalogue (= accueil)                       P0
 ├── /produits/:id           PUB-02 Fiche produit                               P0
+├── /notre-impact           PUB-05 Notre impact (chiffres, mission, valeurs)   P1
 ├── /connexion              PUB-03 Connexion                                   P0
 ├── /inscription            PUB-04 Inscription                                 P0
 └── /panier                 CLI-01 Panier (visiteur autorisé)                  P0
@@ -298,11 +299,18 @@ Tant que GES-01 (P1) n'est pas maquetté, la Gestion arrive sur `/gestion/collec
 
 Format : **Données** · **Endpoint(s)** · **Actions** · **États** · **Permission** · **Validations** · **Gap**.
 
+### PUB-05 Notre impact — P1
+- Données : statiques, plaquette AS'SOUÉ 2026 (source affichée sous les chiffres). Aucun endpoint.
+- Affiche : surtitre « Depuis 8 ans au Burkina Faso », H1 « L'art du recyclage pour un avenir durable », bandeau sombre de 4 chiffres (400 670 pneus recyclés, 801 emplois directs, 1 857 emplois indirects, 5 régions), Notre mission (3 cartes : réduire la pollution, protéger la santé, créer des emplois), Nos valeurs (4), Distinctions (2022-2025), appel « Découvrir la boutique ».
+- Animation : les chiffres défilent de 0 à leur valeur (1,6 s, une fois) quand le bandeau devient visible ; valeur finale affichée sans animation si `prefers-reduced-motion` ou sans IntersectionObserver.
+- Accès : menu de l'en-tête et colonne Boutique du footer. Jamais sur l'accueil.
+
 ### PUB-01 Catalogue (accueil) — P0
 - Données : produits (`id, nom, description, prix, imageUrl, categorie, enRupture`), catégories (`id, nom, description`).
 - Endpoints : `GET /api/categories`, `GET /api/produits?categorieId=`.
-- En-tête de page : H1 Display « Objets fabriqués à partir de déchets collectés au Burkina Faso » + une ligne d'explication `[À CONFIRMER : formulation fournie par AS'SOUÉ]`. **Pas de hero, pas de chiffres d'impact.**
-- Actions : filtrer par catégorie (chips, « Tout » par défaut), filtre texte local sur le nom (P1, pas d'endpoint de recherche, GAP-09), ouvrir une fiche.
+- En-tête de page : H1 Display « Objets fabriqués à partir de déchets collectés au Burkina Faso » + une ligne d'explication `[À CONFIRMER : formulation fournie par AS'SOUÉ]`. **Pas de hero ni de chiffres d'impact sur l'accueil** : ils sont sur PUB-05 « Notre impact ».
+- Actions : rechercher (champ au-dessus des pastilles, filtre local sur nom et catégorie, sans accents ni majuscules, pas d'endpoint, GAP-09), filtrer par catégorie (pastilles arrondies, « Tout » par défaut), ouvrir une fiche.
+- Carte produit : badge « ÉCO » (feuille, fond `--color-primary-tint`) en haut à gauche de la photo.
 - États : skeleton 6 cartes · vide « Aucun produit dans cette catégorie pour le moment » · erreur réseau + Réessayer · hors ligne (bandeau).
 - Permission : public.
 
