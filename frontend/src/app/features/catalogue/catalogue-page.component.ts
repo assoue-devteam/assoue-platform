@@ -8,10 +8,11 @@ import { EmptyStateComponent, ErrorStateComponent, SkeletonComponent } from '../
 import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { CatalogueService } from './catalogue.service';
 import { PanierService } from './panier.service';
+import { FavoriBoutonComponent } from './favori-bouton.component';
 
 @Component({
   standalone: true,
-  imports: [RouterLink, FcfaPipe, AlertComponent, ButtonDirective, EmptyStateComponent, ErrorStateComponent, SkeletonComponent, IconComponent],
+  imports: [RouterLink, FcfaPipe, AlertComponent, ButtonDirective, EmptyStateComponent, ErrorStateComponent, SkeletonComponent, IconComponent, FavoriBoutonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="catalogue container">
@@ -57,6 +58,7 @@ import { PanierService } from './panier.service';
                 @if (produit.imageUrl) { <img [src]="produit.imageUrl" [alt]="produit.nom" /> } @else { <span class="carte__vide" aria-hidden="true">AS'SOUÉ</span> }
                 <span class="badge-eco" title="Fabriqué à partir de déchets recyclés"><app-icon name="leaf" [size]="16" /> ÉCO</span>
               </a>
+              <app-favori-bouton class="carte__favori" [produit]="produit" />
               <div class="carte__contenu">
                 <p class="carte__categorie">{{ produit.categorie }}</p>
                 <h2><a [routerLink]="['/produits', produit.id]">{{ produit.nom }}</a></h2>
@@ -80,6 +82,7 @@ import { PanierService } from './panier.service';
     .filtres { display:flex; gap:var(--space-2); overflow-x:auto; padding-bottom:var(--space-3); margin-bottom:var(--space-4); }
     .filtres button { flex:none; min-height:44px; padding:0 var(--space-4); border:1px solid var(--color-border-strong); border-radius:var(--radius-full); background:var(--color-surface); color:var(--color-text); cursor:pointer; }
     .filtres .actif { border-color:var(--color-primary); background:var(--color-primary); color:var(--color-text-on-dark); font-weight:600; }
+    .carte { position:relative; } .carte__favori { position:absolute; top:var(--space-2); right:var(--space-2); }
     .grille { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--space-4); } .carte { overflow:hidden; border:1px solid var(--color-border); border-radius:var(--radius-md); background:var(--color-surface); }
     .carte__media { position:relative; display:block; aspect-ratio:4/5; background:var(--color-surface-alt); color:var(--color-primary-strong); text-decoration:none; } .carte__media img { width:100%; height:100%; object-fit:cover; } .carte__vide { display:grid; place-items:center; height:100%; font:600 20px var(--font-display); }
     .badge-eco { position:absolute; top:var(--space-2); left:var(--space-2); display:inline-flex; align-items:center; gap:var(--space-1); padding:2px var(--space-2); border-radius:var(--radius-full); background:var(--color-primary-tint); color:var(--color-primary-strong); font-size:13px; font-weight:600; }

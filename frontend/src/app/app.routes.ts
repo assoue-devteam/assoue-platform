@@ -32,6 +32,8 @@ export const routes: Routes = [
         ],
       },
 
+      { path: 'favoris', canActivate: [roleGuard('CLIENT')], loadComponent: () => import('./features/catalogue/favoris-page.component').then(m => m.FavorisPageComponent), title: "Mes favoris — AS'SOUÉ" },
+
       {
         path: 'acces-refuse',
         loadComponent: () => import('./shared/pages/pages').then(m => m.PageAccesRefuseComponent),

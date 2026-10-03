@@ -23,6 +23,7 @@ import { PanierService } from '../../features/catalogue/panier.service';
           <a routerLink="/notre-impact" routerLinkActive="actif" (click)="menuOuvert.set(false)">Notre impact</a>
           @if (auth.aRole('CLIENT')) {
             <a routerLink="/commandes" routerLinkActive="actif" (click)="menuOuvert.set(false)">Mes commandes</a>
+            <a routerLink="/favoris" routerLinkActive="actif" (click)="menuOuvert.set(false)">Mes favoris</a>
           }
           @if (!auth.connecte()) {
             <a routerLink="/connexion" class="mobile-seul" (click)="menuOuvert.set(false)">Se connecter</a>

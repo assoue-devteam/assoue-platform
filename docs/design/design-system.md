@@ -310,7 +310,8 @@ Format : **Données** · **Endpoint(s)** · **Actions** · **États** · **Permi
 - Endpoints : `GET /api/categories`, `GET /api/produits?categorieId=`.
 - En-tête de page : H1 Display « Objets fabriqués à partir de déchets collectés au Burkina Faso » + une ligne d'explication `[À CONFIRMER : formulation fournie par AS'SOUÉ]`. **Pas de hero ni de chiffres d'impact sur l'accueil** : ils sont sur PUB-05 « Notre impact ».
 - Actions : rechercher (champ au-dessus des pastilles, filtre local sur nom et catégorie, sans accents ni majuscules, pas d'endpoint, GAP-09), filtrer par catégorie (pastilles arrondies, « Tout » par défaut), ouvrir une fiche.
-- Carte produit : badge « ÉCO » (feuille, fond `--color-primary-tint`) en haut à gauche de la photo.
+- Carte produit : badge « ÉCO » (feuille, fond `--color-primary-tint`) en haut à gauche de la photo ; bouton cœur (favori) en haut à droite, rempli en `--color-logo` quand actif, `aria-pressed`. Visiteur → connexion puis retour à la page. Même cœur sur la fiche produit.
+- Page « Mes favoris » (`/favoris`, rôle CLIENT, lien dans l'en-tête) : liste avec photo, nom, catégorie, prix, « Ajouter au panier », cœur pour retirer ; vide « Touchez le cœur d'un produit pour le retrouver ici. ».
 - États : skeleton 6 cartes · vide « Aucun produit dans cette catégorie pour le moment » · erreur réseau + Réessayer · hors ligne (bandeau).
 - Permission : public.
 
