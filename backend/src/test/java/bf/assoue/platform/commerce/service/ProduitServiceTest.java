@@ -3,6 +3,7 @@ package bf.assoue.platform.commerce.service;
 import bf.assoue.platform.commerce.dto.ProduitResponse;
 import bf.assoue.platform.commerce.model.Categorie;
 import bf.assoue.platform.commerce.model.Produit;
+import bf.assoue.platform.commerce.repository.AvisRepository;
 import bf.assoue.platform.commerce.repository.ProduitRepository;
 import bf.assoue.platform.common.exception.RessourceIntrouvableException;
 import bf.assoue.platform.stock.service.StockService;
@@ -28,6 +29,8 @@ class ProduitServiceTest {
     private ProduitRepository produitRepository;
     @Mock
     private StockService stockService;
+    @Mock
+    private AvisRepository avisRepository;
 
     @InjectMocks
     private ProduitService produitService;

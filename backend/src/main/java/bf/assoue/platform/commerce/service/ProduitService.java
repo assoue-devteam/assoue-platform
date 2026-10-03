@@ -2,6 +2,7 @@ package bf.assoue.platform.commerce.service;
 
 import bf.assoue.platform.commerce.dto.ProduitResponse;
 import bf.assoue.platform.commerce.model.Produit;
+import bf.assoue.platform.commerce.repository.AvisRepository;
 import bf.assoue.platform.commerce.repository.ProduitRepository;
 import bf.assoue.platform.common.exception.RessourceIntrouvableException;
 import bf.assoue.platform.stock.service.StockService;
@@ -17,6 +18,7 @@ public class ProduitService {
 
     private final ProduitRepository produitRepository;
     private final StockService stockService;
+    private final AvisRepository avisRepository;
 
     public List<ProduitResponse> lister(Long categorieId) {
         List<Produit> produits = categorieId != null
@@ -50,7 +52,9 @@ public class ProduitService {
                 produit.getImageUrl(),
                 produit.getCategorie().getNom(),
                 enRupture,
-                produit.isVedette()
+                produit.isVedette(),
+                avisRepository.noteMoyenne(produit.getId()),
+                avisRepository.countByProduitId(produit.getId())
         );
     }
 
