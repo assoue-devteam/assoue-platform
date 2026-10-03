@@ -50,7 +50,9 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(PUBLIC_PATHS).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/produits/**", "/api/categories/**").permitAll()
+                        // Vitrine publique : catalogue et page Communauté lisibles sans compte ; toute écriture reste authentifiée.
+                        .requestMatchers(HttpMethod.GET, "/api/produits/**", "/api/categories/**",
+                                "/api/evenements/**", "/api/communaute/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
