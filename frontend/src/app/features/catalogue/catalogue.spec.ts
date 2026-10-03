@@ -9,7 +9,7 @@ import { ToastService } from '../../shared/ui/toast';
 
 const produit: Produit = {
   id: 7, nom: 'Bracelet recyclé', description: 'Un bracelet.', prix: 2500,
-  imageUrl: null, categorie: 'Bijoux', enRupture: false, vedette: false,
+  imageUrl: null, categorie: 'Bijoux', enRupture: false, vedette: false, noteMoyenne: null, nombreAvis: 0,
 };
 
 describe('catalogue et panier', () => {

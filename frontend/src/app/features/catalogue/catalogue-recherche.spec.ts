@@ -6,7 +6,7 @@ import { CataloguePageComponent } from './catalogue-page.component';
 import { Produit } from '../../shared/models/api';
 
 const produit = (id: number, nom: string, categorie: string): Produit =>
-  ({ id, nom, categorie, description: '', prix: 1000, imageUrl: null, enRupture: false, vedette: false });
+  ({ id, nom, categorie, description: '', prix: 1000, imageUrl: null, enRupture: false, vedette: false, noteMoyenne: null, nombreAvis: 0 });
 
 describe('recherche du catalogue', () => {
   beforeEach(() => {

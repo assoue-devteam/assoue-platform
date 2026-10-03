@@ -77,7 +77,7 @@ class FavoriServiceTest {
 
     @Test
     void lister_renvoieLesProduitsAvecLeurEtatActuel() {
-        ProduitResponse reponse = new ProduitResponse(5L, "Pouf", null, BigDecimal.valueOf(25000), null, "Mobilier", true, false);
+        ProduitResponse reponse = new ProduitResponse(5L, "Pouf", null, BigDecimal.valueOf(25000), null, "Mobilier", true, false, null, 0);
         when(favoriRepository.findByClientEmailOrderByDateAjoutDesc("client@example.com"))
                 .thenReturn(List.of(Favori.builder().client(client).produit(pouf).build()));
         when(produitService.versReponse(pouf)).thenReturn(reponse);

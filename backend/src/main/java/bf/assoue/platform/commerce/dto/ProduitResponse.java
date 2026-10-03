@@ -10,6 +10,8 @@ public record ProduitResponse(
         String imageUrl,
         String categorie,
         boolean enRupture,
-        boolean vedette
+        boolean vedette,
+        Double noteMoyenne,
+        long nombreAvis
 ) {
 }

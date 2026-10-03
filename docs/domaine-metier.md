@@ -30,6 +30,7 @@ Extrait du CDC v1.0 (sections Diagramme de classes + Annexe Glossaire). Ce fichi
 | Createur | Conçoit les modèles de produits valorisés. |
 | Commande | Achat B2B ou B2C. |
 | LigneCommande | Classe d'association Commande ↔ Produit, porte la quantité. Multiplicité 1..\* côté Commande. |
+| Avis | Note de 1 à 5 et commentaire facultatif d'un client sur un produit (Utilisateur ↔ Produit, un seul par produit, modifiable). Réservé à un client ayant une commande payée contenant ce produit. |
 | Favori | Produit marqué d'un cœur par un client (Utilisateur ↔ Produit, une fois par produit). Simple marque-page, sans effet sur le stock ni la commande. |
 | LignePanier | Classe d'association Client (Utilisateur) ↔ Produit, porte la quantité mise de côté avant commande. Un seul panier par client, donc pas de classe Panier ; 0..\* lignes, une par produit. Ne réserve pas de stock. |
 | Paiement | Transaction liée à une commande — **implémentée via PayDunya**, pas d'appel direct Orange Money/Moov (voir décision projet, section paiement de `AGENTS.md`). |
