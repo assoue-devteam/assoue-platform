@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { NgTemplateOutlet } from '@angular/common';
 import { Categorie, Produit } from '../../shared/models/api';
 import { FcfaPipe } from '../../shared/pipes/fcfa.pipe';
 import { AlertComponent } from '../../shared/ui/alert.component';
@@ -12,7 +13,7 @@ import { FavoriBoutonComponent } from './favori-bouton.component';
 
 @Component({
   standalone: true,
-  imports: [RouterLink, FcfaPipe, AlertComponent, ButtonDirective, EmptyStateComponent, ErrorStateComponent, SkeletonComponent, IconComponent, FavoriBoutonComponent],
+  imports: [RouterLink, NgTemplateOutlet, FcfaPipe, AlertComponent, ButtonDirective, EmptyStateComponent, ErrorStateComponent, SkeletonComponent, IconComponent, FavoriBoutonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="catalogue container">
@@ -50,27 +51,40 @@ import { FavoriBoutonComponent } from './favori-bouton.component';
           <app-empty-state message="Aucun produit ne correspond à cette catégorie."><a routerLink="/" appButton="secondary" (click)="choisirCategorie(null)">Afficher tout le catalogue</a></app-empty-state>
         }
       } @else {
+        @if (vedettes().length) {
+          <section class="vedettes" aria-labelledby="titre-vedettes">
+            <h2 id="titre-vedettes">Produits vedettes</h2>
+            <div class="grille">
+              @for (produit of vedettes(); track produit.id) {
+                <ng-container *ngTemplateOutlet="carte; context: { $implicit: produit }" />
+              }
+            </div>
+          </section>
+        }
         <p class="resultat" aria-live="polite">{{ produitsAffiches().length }} {{ produitsAffiches().length > 1 ? 'produits' : 'produit' }}</p>
         <div class="grille">
           @for (produit of produitsAffiches(); track produit.id) {
-            <article class="carte">
-              <a class="carte__media" [routerLink]="['/produits', produit.id]" [attr.aria-label]="'Voir ' + produit.nom">
-                @if (produit.imageUrl) { <img [src]="produit.imageUrl" [alt]="produit.nom" /> } @else { <span class="carte__vide" aria-hidden="true">AS'SOUÉ</span> }
-                <span class="badge-eco" title="Fabriqué à partir de déchets recyclés"><app-icon name="leaf" [size]="16" /> ÉCO</span>
-              </a>
-              <app-favori-bouton class="carte__favori" [produit]="produit" />
-              <div class="carte__contenu">
-                <p class="carte__categorie">{{ produit.categorie }}</p>
-                <h2><a [routerLink]="['/produits', produit.id]">{{ produit.nom }}</a></h2>
-                <p class="carte__prix">{{ produit.prix | fcfa }}</p>
-                @if (produit.enRupture) { <span class="rupture">Indisponible</span> }
-                @else { <button type="button" appButton="purchase" [block]="true" (click)="panier.ajouter(produit)">Ajouter au panier</button> }
-              </div>
-            </article>
+            <ng-container *ngTemplateOutlet="carte; context: { $implicit: produit }" />
           }
         </div>
       }
     </section>
+    <ng-template #carte let-produit>
+    <article class="carte">
+      <a class="carte__media" [routerLink]="['/produits', produit.id]" [attr.aria-label]="'Voir ' + produit.nom">
+        @if (produit.imageUrl) { <img [src]="produit.imageUrl" [alt]="produit.nom" /> } @else { <span class="carte__vide" aria-hidden="true">AS'SOUÉ</span> }
+        <span class="badge-eco" title="Fabriqué à partir de déchets recyclés"><app-icon name="leaf" [size]="16" /> ÉCO</span>
+      </a>
+      <app-favori-bouton class="carte__favori" [produit]="produit" />
+      <div class="carte__contenu">
+        <p class="carte__categorie">{{ produit.categorie }}</p>
+        <h2><a [routerLink]="['/produits', produit.id]">{{ produit.nom }}</a></h2>
+        <p class="carte__prix">{{ produit.prix | fcfa }}</p>
+        @if (produit.enRupture) { <span class="rupture">Indisponible</span> }
+        @else { <button type="button" appButton="purchase" [block]="true" (click)="panier.ajouter(produit)">Ajouter au panier</button> }
+      </div>
+    </article>
+    </ng-template>
   `,
   styles: `
     .catalogue { padding-block: var(--space-7); } .catalogue__intro { max-width: 700px; margin-bottom: var(--space-6); }
@@ -83,6 +97,7 @@ import { FavoriBoutonComponent } from './favori-bouton.component';
     .filtres button { flex:none; min-height:44px; padding:0 var(--space-4); border:1px solid var(--color-border-strong); border-radius:var(--radius-full); background:var(--color-surface); color:var(--color-text); cursor:pointer; }
     .filtres .actif { border-color:var(--color-primary); background:var(--color-primary); color:var(--color-text-on-dark); font-weight:600; }
     .carte { position:relative; } .carte__favori { position:absolute; top:var(--space-2); right:var(--space-2); }
+    .vedettes { display:grid; gap:var(--space-4); margin-bottom:var(--space-6); padding-bottom:var(--space-6); border-bottom:1px solid var(--color-border); } .vedettes h2 { font-size:22px; }
     .grille { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:var(--space-4); } .carte { overflow:hidden; border:1px solid var(--color-border); border-radius:var(--radius-md); background:var(--color-surface); }
     .carte__media { position:relative; display:block; aspect-ratio:4/5; background:var(--color-surface-alt); color:var(--color-primary-strong); text-decoration:none; } .carte__media img { width:100%; height:100%; object-fit:cover; } .carte__vide { display:grid; place-items:center; height:100%; font:600 20px var(--font-display); }
     .badge-eco { position:absolute; top:var(--space-2); left:var(--space-2); display:inline-flex; align-items:center; gap:var(--space-1); padding:2px var(--space-2); border-radius:var(--radius-full); background:var(--color-primary-tint); color:var(--color-primary-strong); font-size:13px; font-weight:600; }
@@ -101,6 +116,10 @@ export class CataloguePageComponent {
   protected erreurCategories = signal(false);
   protected readonly squelettes = Array.from({ length: 8 });
   protected recherche = signal('');
+  // En vitrine seulement sur le catalogue complet : sous une recherche ou un filtre, elle ferait doublon.
+  protected vedettes = computed(() => this.recherche().trim() || this.categorieSelectionnee() !== null
+    ? []
+    : this.produits().filter(produit => produit.vedette).slice(0, 4));
   protected produitsAffiches = computed(() => {
     const terme = normaliser(this.recherche().trim());
     if (!terme) return this.produits();

@@ -110,6 +110,9 @@ Rôle CLIENT. Remplace **tout** le panier par le contenu envoyé (rejouable sans
 ```
 Réponse `200` au format de `GET /api/panier`. Le stock disponible est vérifié dès cet appel, mais **rien n'est réservé** : la réservation n'a lieu qu'à `POST /api/commandes`. Erreurs (le panier existant reste alors inchangé) : `400` quantité < 1 ou supérieure au stock disponible (message : `Stock insuffisant pour « <nom> » : <n> disponible(s)`), `404` produit introuvable.
 
+### `PUT /api/produits/{id}/vedette`
+Rôle ADMIN. Met un produit en avant (ou le retire) en tête du catalogue. Requête : `{ "vedette": true }`. Réponse `200` au format produit. `404` produit introuvable. Tous les formats produit portent désormais `vedette` (booléen).
+
 ### `GET /api/favoris`
 Rôle CLIENT. Produits mis en favori par le client connecté, du plus récent au plus ancien, au format de `GET /api/produits/{id}` (prix et `enRupture` à jour). Réponse `200` : liste, vide si aucun favori.
 

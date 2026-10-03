@@ -18,6 +18,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -80,6 +81,29 @@ class ProduitServiceTest {
         when(produitRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> produitService.consulter(99L))
+                .isInstanceOf(RessourceIntrouvableException.class);
+    }
+
+    @Test
+    void definirVedette_metLeProduitEnAvantEtLeRenvoie() {
+        Produit produit = Produit.builder()
+                .id(4L).nom("Pouf").prix(BigDecimal.valueOf(25000))
+                .categorie(Categorie.builder().id(1L).nom("Mobilier").build())
+                .build();
+        when(produitRepository.findById(4L)).thenReturn(Optional.of(produit));
+        when(produitRepository.save(any(Produit.class))).thenAnswer(appel -> appel.getArgument(0));
+
+        ProduitResponse reponse = produitService.definirVedette(4L, true);
+
+        assertThat(reponse.vedette()).isTrue();
+        assertThat(produit.isVedette()).isTrue();
+    }
+
+    @Test
+    void definirVedette_refuseUnProduitInconnu() {
+        when(produitRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> produitService.definirVedette(99L, true))
                 .isInstanceOf(RessourceIntrouvableException.class);
     }
 

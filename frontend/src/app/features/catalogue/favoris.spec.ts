@@ -7,7 +7,7 @@ import { Produit } from '../../shared/models/api';
 import { ToastService } from '../../shared/ui/toast';
 import { FavorisService } from './favoris.service';
 
-const pouf: Produit = { id: 4, nom: 'Pouf', description: '', prix: 25000, imageUrl: null, categorie: 'Mobilier', enRupture: false };
+const pouf: Produit = { id: 4, nom: 'Pouf', description: '', prix: 25000, imageUrl: null, categorie: 'Mobilier', enRupture: false, vedette: false };
 
 describe('favoris', () => {
   let http: HttpTestingController;

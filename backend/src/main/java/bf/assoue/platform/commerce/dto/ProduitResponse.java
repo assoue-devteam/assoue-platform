@@ -9,6 +9,7 @@ public record ProduitResponse(
         BigDecimal prix,
         String imageUrl,
         String categorie,
-        boolean enRupture
+        boolean enRupture,
+        boolean vedette
 ) {
 }

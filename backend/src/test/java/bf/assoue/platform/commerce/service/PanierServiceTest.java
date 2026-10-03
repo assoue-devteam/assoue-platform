@@ -59,7 +59,7 @@ class PanierServiceTest {
         lenient().when(utilisateurRepository.findByEmail("client@example.com")).thenReturn(Optional.of(client));
         lenient().when(produitRepository.findById(5L)).thenReturn(Optional.of(pouf));
         lenient().when(produitService.versReponse(pouf))
-                .thenReturn(new ProduitResponse(5L, "Pouf", null, BigDecimal.valueOf(25000), null, "Mobilier", false));
+                .thenReturn(new ProduitResponse(5L, "Pouf", null, BigDecimal.valueOf(25000), null, "Mobilier", false, false));
         lenient().when(lignePanierRepository.saveAll(any())).thenAnswer(appel -> appel.getArgument(0));
     }
 

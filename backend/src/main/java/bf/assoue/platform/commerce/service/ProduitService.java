@@ -7,6 +7,7 @@ import bf.assoue.platform.common.exception.RessourceIntrouvableException;
 import bf.assoue.platform.stock.service.StockService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -31,6 +32,14 @@ public class ProduitService {
         return versReponse(produit);
     }
 
+    @Transactional
+    public ProduitResponse definirVedette(Long id, boolean vedette) {
+        Produit produit = produitRepository.findById(id)
+                .orElseThrow(() -> new RessourceIntrouvableException("Produit introuvable : " + id));
+        produit.setVedette(vedette);
+        return versReponse(produitRepository.save(produit));
+    }
+
     ProduitResponse versReponse(Produit produit) {
         boolean enRupture = stockService.estEnRupture(produit.getId());
         return new ProduitResponse(
@@ -40,7 +49,8 @@ public class ProduitService {
                 produit.getPrix(),
                 produit.getImageUrl(),
                 produit.getCategorie().getNom(),
-                enRupture
+                enRupture,
+                produit.isVedette()
         );
     }
 

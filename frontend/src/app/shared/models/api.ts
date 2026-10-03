@@ -38,6 +38,7 @@ export interface Produit {
   imageUrl: string | null;
   categorie: string;
   enRupture: boolean;
+  vedette: boolean;
 }
 
 export type CommandeStatut = 'EN_ATTENTE_PAIEMENT' | 'PAYEE' | 'EN_PREPARATION' | 'EXPEDIEE' | 'LIVREE' | 'ANNULEE';
