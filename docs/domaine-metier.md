@@ -14,6 +14,7 @@ Extrait du CDC v1.0 (sections Diagramme de classes + Annexe Glossaire). Ce fichi
 | Compensation | Rétribution optionnelle liée à un Dépôt — optionnelle, ne pas la rendre obligatoire dans le modèle. |
 | Créateur | Conçoit les modèles de produits valorisés — à cheval entre Formation et Commerce, pas un simple attribut de Produit. |
 | Ligne Commande | Classe d'association entre Commande et Produit — porte la quantité achetée. Une Commande ne peut exister sans au moins une ligne : multiplicité **1..\*** et non 0..\*, ne pas autoriser une commande vide en base. |
+| Ligne Panier | Produit et quantité que le client connecté a mis dans son panier, conservés côté serveur. Le stock est vérifié à l'ajout mais réservé seulement à la commande. Le panier d'un visiteur reste dans le navigateur. |
 | Artisan | Apprenant suivant une ou plusieurs formations — distinct de Créateur et de Technicien. |
 | Offline-first | Approche où l'application reste fonctionnable sans connexion, stocke en local, puis synchronise au retour réseau — s'applique à Collecte, pas au reste de la plateforme. |
 | MOA / MOE | MOA = la direction d'AS'Soué (client, commanditaire) · MOE = l'équipe de dev (vous). |
@@ -29,6 +30,7 @@ Extrait du CDC v1.0 (sections Diagramme de classes + Annexe Glossaire). Ce fichi
 | Createur | Conçoit les modèles de produits valorisés. |
 | Commande | Achat B2B ou B2C. |
 | LigneCommande | Classe d'association Commande ↔ Produit, porte la quantité. Multiplicité 1..\* côté Commande. |
+| LignePanier | Classe d'association Client (Utilisateur) ↔ Produit, porte la quantité mise de côté avant commande. Un seul panier par client, donc pas de classe Panier ; 0..\* lignes, une par produit. Ne réserve pas de stock. |
 | Paiement | Transaction liée à une commande — **implémentée via PayDunya**, pas d'appel direct Orange Money/Moov (voir décision projet, section paiement de `AGENTS.md`). |
 
 ### Pilier Collecte (implémenté cette itération)

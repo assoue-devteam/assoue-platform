@@ -31,7 +31,7 @@ public class ProduitService {
         return versReponse(produit);
     }
 
-    private ProduitResponse versReponse(Produit produit) {
+    ProduitResponse versReponse(Produit produit) {
         boolean enRupture = stockService.estEnRupture(produit.getId());
         return new ProduitResponse(
                 produit.getId(),
