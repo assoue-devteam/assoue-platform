@@ -48,6 +48,13 @@ Extrait du CDC v1.0 (sections Diagramme de classes + Annexe Glossaire). Ce fichi
 
 Point encore ouvert (voir guide d'initialisation, section "ce qui reste à trancher") : la relation exacte Depot ↔ Collecte n'est pas encore figée. Ne fige pas ce point-là seul dans le code sans validation — demande.
 
+### Vitrine Communauté (module `communaute/`, implémenté cette itération)
+
+| Classe | Rôle |
+|---|---|
+| Evenement | Atelier, salon ou journée publiée par l'admin sur la page Communauté. Vitrine seulement : pas d'inscription en base (les inscriptions relèvent du pilier Formation, hors scope). `placesRestantes` est une information saisie, pas un compteur. |
+| ChiffreCommunaute | Chiffre affiché sur la page Communauté (libellé + valeur + ordre), saisi par l'admin. Jamais calculé ni inventé. |
+
 ### Pilier Formation — hors scope de code cette itération
 
 | Classe | Rôle |

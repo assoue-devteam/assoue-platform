@@ -185,3 +185,20 @@ export interface UtilisateurAdmin {
   verrouille: boolean;
   roles: Role[];
 }
+
+export interface Evenement {
+  id: number;
+  titre: string;
+  dateDebut: string;
+  lieu: string;
+  description: string | null;
+  imageUrl: string | null;
+  placesRestantes: number | null;
+}
+
+export type EvenementRequest = Omit<Evenement, 'id'>;
+
+export interface ChiffreCommunaute {
+  libelle: string;
+  valeur: number;
+}

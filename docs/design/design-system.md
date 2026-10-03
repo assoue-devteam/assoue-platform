@@ -253,6 +253,8 @@ PUBLIC
 ├── /                       PUB-01 Catalogue (= accueil)                       P0
 ├── /produits/:id           PUB-02 Fiche produit                               P0
 ├── /notre-impact           PUB-05 Notre impact (chiffres, mission, valeurs)   P1
+├── /communaute             PUB-06 Communauté (chiffres, événements)           P1
+├── /favoris                CLI-04 Mes favoris (client)                        P1
 ├── /connexion              PUB-03 Connexion                                   P0
 ├── /inscription            PUB-04 Inscription                                 P0
 └── /panier                 CLI-01 Panier (visiteur autorisé)                  P0
@@ -273,7 +275,8 @@ GESTION (rôle ADMIN, espace unique)
 ├── /gestion/volumes        GES-03 Volumes par collecteur                      P1
 ├── /gestion/commandes      GES-04 Commandes (+ impayées > 24 h)               P0
 ├── /gestion/commandes/:id  GES-05 Détail commande                             P0
-├── /gestion/stocks         GES-06 Stocks (produits finis, matière première)   P0
+├── /gestion/stocks         GES-06 Stocks (produits finis, matière première, vedettes) P0
+├── /gestion/communaute     GES-12 Communauté (événements, chiffres)           P1
 ├── /gestion/utilisateurs   GES-08 Utilisateurs (+ créer, débloquer)           P0
 │                           GES-09 Créer un compte (modale)                    P0
 │                           GES-10 Modifier les rôles (modale)                 P1
@@ -304,6 +307,16 @@ Format : **Données** · **Endpoint(s)** · **Actions** · **États** · **Permi
 - Affiche : surtitre « Depuis 8 ans au Burkina Faso », H1 « L'art du recyclage pour un avenir durable », bandeau sombre de 4 chiffres (400 670 pneus recyclés, 801 emplois directs, 1 857 emplois indirects, 5 régions), Notre mission (3 cartes : réduire la pollution, protéger la santé, créer des emplois), Nos valeurs (4), Distinctions (2022-2025), appel « Découvrir la boutique ».
 - Animation : les chiffres défilent de 0 à leur valeur (1,6 s, une fois) quand le bandeau devient visible ; valeur finale affichée sans animation si `prefers-reduced-motion` ou sans IntersectionObserver.
 - Accès : menu de l'en-tête et colonne Boutique du footer. Jamais sur l'accueil.
+
+### PUB-06 Communauté — P1
+- Endpoints : `GET /api/communaute/chiffres`, `GET /api/evenements` (publics).
+- Affiche : H1 « Communauté », chiffres saisis par l'admin (cartes, défilement animé comme PUB-05 ; section absente si aucun), « Événements à venir » (cartes : photo ou icône, titre, date longue, lieu, description, bouton vert « Participer » avec « (n places restantes) » si renseigné), « Événements passés » (liste compacte). Un événement du jour reste « à venir » jusqu'au soir.
+- « Participer » ouvre WhatsApp (54 95 82 82) avec un message prérempli (titre + date) : aucune inscription en base.
+- États : skeleton · erreur + Réessayer (l'échec des chiffres ne bloque pas les événements) · vide « Aucun événement prévu pour le moment. Suivez-nous sur les réseaux sociaux… ».
+
+### GES-12 Communauté — P1
+- Événements : liste (titre, date, lieu) avec Modifier et Supprimer (modale de confirmation) ; « Nouvel événement » ouvre une modale (titre, date et heure, lieu, description, adresse https d'une photo, places restantes).
+- Chiffres : 6 lignes au plus (libellé + valeur), Ajouter / Retirer, « Enregistrer les chiffres » remplace la liste. Consigne affichée : « Ne saisissez que des chiffres vérifiés. »
 
 ### PUB-01 Catalogue (accueil) — P0
 - Données : produits (`id, nom, description, prix, imageUrl, categorie, enRupture`), catégories (`id, nom, description`).

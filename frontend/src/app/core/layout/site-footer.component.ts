@@ -28,6 +28,7 @@ const RESEAUX = [
           <ul>
             <li><a routerLink="/">Catalogue</a></li>
             <li><a routerLink="/notre-impact">Notre impact</a></li>
+            <li><a routerLink="/communaute">Communauté</a></li>
             <li><a routerLink="/panier">Panier</a></li>
             <li><a routerLink="/commandes">Mes commandes</a></li>
           </ul>
