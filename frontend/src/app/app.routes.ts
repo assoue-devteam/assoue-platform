@@ -16,6 +16,7 @@ export const routes: Routes = [
       // Piste A — Boutique (public)
       { path: '', loadComponent: () => import('./features/catalogue/catalogue-page.component').then(m => m.CataloguePageComponent), title: "AS'SOUÉ" },
       { path: 'produits/:id', loadComponent: () => import('./features/catalogue/produit-page.component').then(m => m.ProduitPageComponent), title: "Produit — AS'SOUÉ" },
+      { path: 'notre-impact', loadComponent: () => import('./features/impact/notre-impact-page.component').then(m => m.NotreImpactPageComponent), title: "Notre impact — AS'SOUÉ" },
       { path: 'panier', loadComponent: () => import('./features/catalogue/panier-page.component').then(m => m.PanierPageComponent), title: "Panier — AS'SOUÉ" },
       { path: 'connexion', loadComponent: () => import('./features/auth/connexion-page.component').then(m => m.ConnexionPageComponent), title: "Connexion — AS'SOUÉ" },
       { path: 'inscription', loadComponent: () => import('./features/auth/inscription-page.component').then(m => m.InscriptionPageComponent), title: "Inscription — AS'SOUÉ" },
