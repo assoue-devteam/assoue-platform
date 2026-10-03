@@ -110,6 +110,12 @@ Rôle CLIENT. Remplace **tout** le panier par le contenu envoyé (rejouable sans
 ```
 Réponse `200` au format de `GET /api/panier`. Le stock disponible est vérifié dès cet appel, mais **rien n'est réservé** : la réservation n'a lieu qu'à `POST /api/commandes`. Erreurs (le panier existant reste alors inchangé) : `400` quantité < 1 ou supérieure au stock disponible (message : `Stock insuffisant pour « <nom> » : <n> disponible(s)`), `404` produit introuvable.
 
+### `GET /api/favoris`
+Rôle CLIENT. Produits mis en favori par le client connecté, du plus récent au plus ancien, au format de `GET /api/produits/{id}` (prix et `enRupture` à jour). Réponse `200` : liste, vide si aucun favori.
+
+### `PUT /api/favoris/{produitId}` · `DELETE /api/favoris/{produitId}`
+Rôle CLIENT. Ajoute ou retire un produit des favoris. Les deux sont idempotents (ajouter deux fois ou retirer un produit absent ne change rien). Réponse `204`. Erreur : `404` produit introuvable (ajout).
+
 ## Paiement
 
 ### `POST /api/paiements/commandes/{commandeId}`
