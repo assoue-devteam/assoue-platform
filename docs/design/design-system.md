@@ -48,7 +48,9 @@ Paiement : **PayDunya** uniquement ; le client choisit Orange Money ou Moov Mone
 
 **Photos produit** : les vraies photos seront fournies par AS'SOUÉ. D'ici là, on utilise un **emplacement neutre** : ratio 4:5, fond `--color-surface-alt`, libellé discret « Photo à venir » en `caption` `--color-text-muted`. **Pas** de photos stock génériques, pas d'illustrations générées, pas de feuilles ni de planète. Le même emplacement sert en production quand `imageUrl` est null.
 
-**Logo** : wordmark typographique « AS'SOUÉ » en Source Serif 4 600, couleur `--color-primary-strong`. Aucun pictogramme inventé. `[À CONFIRMER]` : à remplacer par le logo officiel quand il sera fourni.
+**Logo** : logo officiel « AS'SOUE African Style » (noir et rouge sur fond blanc), fichier `frontend/public/logo-assoue.png`. En-tête boutique 44 px de haut (36 px sur mobile) ; sur fond sombre (footer, sidebar Gestion), toujours posé sur une plaque blanche `--color-surface`. Les barres compactes Collecteur et Gestion mobile gardent le libellé texte.
+
+**Footer** (boutique, toutes pages publiques et client) : fond `--color-surface-dark`, filet haut 4 px `--color-logo`. Colonnes : logo + accroche « L'art du recyclage pour un avenir durable » · Boutique (Catalogue, Panier, Mes commandes) · Nous trouver (siège Ouagadougou Zone 1 ; boutique vitrine ZAD, avenue de la Jeunesse) · Contact (+226 72 48 00 02, WhatsApp 54 95 82 82 via `wa.me`, assouegroup@gmail.com) · Suivez-nous (Facebook, Instagram, TikTok, LinkedIn, nouvel onglet). Source : plaquette AS'SOUÉ 2026.
 
 ---
 
