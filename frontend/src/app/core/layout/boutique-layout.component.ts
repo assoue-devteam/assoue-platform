@@ -21,6 +21,7 @@ import { PanierService } from '../../features/catalogue/panier.service';
         <nav class="entete__nav" aria-label="Navigation principale" [class.entete__nav--ouverte]="menuOuvert()">
           <a routerLink="/" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }" (click)="menuOuvert.set(false)">Catalogue</a>
           <a routerLink="/notre-impact" routerLinkActive="actif" (click)="menuOuvert.set(false)">Notre impact</a>
+          <a routerLink="/communaute" routerLinkActive="actif" (click)="menuOuvert.set(false)">Communauté</a>
           @if (auth.aRole('CLIENT')) {
             <a routerLink="/commandes" routerLinkActive="actif" (click)="menuOuvert.set(false)">Mes commandes</a>
             <a routerLink="/favoris" routerLinkActive="actif" (click)="menuOuvert.set(false)">Mes favoris</a>

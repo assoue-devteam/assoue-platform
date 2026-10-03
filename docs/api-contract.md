@@ -164,6 +164,19 @@ Rôle ADMIN (supervision super admin, SA-06). Liste tous les paiements avec comp
 ```
 `ecartWebhook` vaut `true` si un webhook a été reçu (`statutAnnonceWebhook != null`) mais que la revalidation n'a pas confirmé le paiement (`statut != CONFIRME`), signalant une anomalie ou tentative de fraude.
 
+## Communauté
+
+Lecture publique (`GET` ouvert dans `SecurityConfig`), écriture réservée à l'ADMIN.
+
+### `GET /api/evenements`
+Public. Tous les événements, du plus ancien au plus récent (le frontend sépare « à venir » et « passés »). Réponse `200` : `[{ "id": 1, "titre": "...", "dateDebut": "2026-12-15T09:00:00", "lieu": "...", "description": null, "imageUrl": null, "placesRestantes": 15 }]`. `placesRestantes` est une information saisie par l'admin, pas un compteur d'inscriptions (aucune inscription n'est gérée : « Participer » ouvre WhatsApp).
+
+### `POST /api/evenements` · `PUT /api/evenements/{id}` · `DELETE /api/evenements/{id}`
+Rôle ADMIN. Requête : `{ "titre", "dateDebut", "lieu", "description"?, "imageUrl"?, "placesRestantes"? }` (titre 150 car., lieu 200, description 2000, `imageUrl` en `http(s)://` uniquement, places >= 0). Réponses : `201` (création), `200` (modification), `204` (suppression). Erreurs : `400` validation, `404` événement introuvable.
+
+### `GET /api/communaute/chiffres` · `PUT /api/communaute/chiffres`
+`GET` public : `[{ "libelle": "Artisans soutenus", "valeur": 245 }]`, dans l'ordre d'affichage, vide tant que l'admin n'a rien saisi. `PUT` (ADMIN) remplace toute la liste : `{ "chiffres": [{ "libelle", "valeur" }] }`, 6 au plus, libellé 80 car., valeur >= 0.
+
 ## Collecte
 
 ### `POST /api/collectes`

@@ -96,6 +96,7 @@ export class GestionLayoutComponent {
     { url: '/gestion/collectes', libelle: 'Collectes' },
     { url: '/gestion/commandes', libelle: 'Commandes' },
     { url: '/gestion/stocks', libelle: 'Stocks' },
+    { url: '/gestion/communaute', libelle: 'Communauté' },
     { url: '/gestion/utilisateurs', libelle: 'Utilisateurs' },
   ];
 

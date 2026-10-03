@@ -33,11 +33,11 @@ ng build
 
 ## Architecture
 
-Backend : monolithe modulaire `bf.assoue.platform`, un package par pilier — `auth/`, `commerce/`, `paiement/`, `collecte/`, `stock/`, plus `common/` pour la config transverse, les exceptions et la sécurité (JWT). Chaque module suit `controller/` → `service/` → `repository/`, avec `model/` (entités JPA) et `dto/`. Tous les modules sont implémentés (`auth`, `commerce`, `paiement`, `collecte`, `stock`) avec tests ; la sécurité est branchée (`JwtAuthFilter`, BCrypt, blocage après 3 échecs, `/api/auth/**` + webhook PayDunya + `GET /api/produits/**` en accès public, le reste authentifié).
+Backend : monolithe modulaire `bf.assoue.platform`, un package par pilier — `auth/`, `commerce/`, `paiement/`, `collecte/`, `stock/`, `communaute/` (vitrine : événements et chiffres de la page Communauté, sans inscription), plus `common/` pour la config transverse, les exceptions et la sécurité (JWT). Chaque module suit `controller/` → `service/` → `repository/`, avec `model/` (entités JPA) et `dto/`. Tous les modules sont implémentés (`auth`, `commerce`, `paiement`, `collecte`, `stock`) avec tests ; la sécurité est branchée (`JwtAuthFilter`, BCrypt, blocage après 3 échecs, `/api/auth/**` + webhook PayDunya + `GET` sur `/api/produits/**`, `/api/categories/**`, `/api/evenements/**`, `/api/communaute/**` en accès public, le reste authentifié).
 
 Le schéma de base est piloté uniquement par Flyway (`backend/src/main/resources/db/migration/V*__*.sql`, ex. `V1__init_schema.sql`) — `ddl-auto: validate`, jamais `update`/`create`. Chaque évolution de schéma est une nouvelle migration `V{n+1}__...`, jamais une modification d'un fichier déjà mergé.
 
-Frontend : Angular 20 en standalone components (pas de `NgModule`, voir `app.config.ts`/`app.routes.ts`), structure feature-based sous `src/app/` — `core/` (services singleton, guards, intercepteurs HTTP), `shared/` (composants/pipes réutilisables), `features/{auth,catalogue,commande,collecte,admin}/`. L'URL de l'API vient de `src/environments/environment.ts` (`apiUrl`), et `proxy.conf.json` évite CORS en dev.
+Frontend : Angular 20 en standalone components (pas de `NgModule`, voir `app.config.ts`/`app.routes.ts`), structure feature-based sous `src/app/` — `core/` (services singleton, guards, intercepteurs HTTP), `shared/` (composants/pipes réutilisables), `features/{auth,catalogue,commande,collecte,admin,impact,communaute}/`. L'URL de l'API vient de `src/environments/environment.ts` (`apiUrl`), et `proxy.conf.json` évite CORS en dev.
 
 Le pilier Formation (`Formation`, `ModuleFormation`, `Inscription`, `Certification`, `Equipement`) est modélisé dans `docs/domaine-metier.md` mais n'a aucun package/dossier correspondant en code — normal, voir portée ci-dessus.
 
