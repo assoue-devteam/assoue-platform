@@ -38,6 +38,27 @@ export interface Produit {
   imageUrl: string | null;
   categorie: string;
   enRupture: boolean;
+  vedette: boolean;
+  noteMoyenne: number | null;
+  nombreAvis: number;
+}
+
+export interface Avis {
+  note: number;
+  commentaire: string | null;
+  auteur: string;
+  date: string;
+}
+
+export interface AvisProduit {
+  moyenne: number | null;
+  nombre: number;
+  avis: Avis[];
+}
+
+export interface MonAvis {
+  peutDonnerAvis: boolean;
+  monAvis: Avis | null;
 }
 
 export type CommandeStatut = 'EN_ATTENTE_PAIEMENT' | 'PAYEE' | 'EN_PREPARATION' | 'EXPEDIEE' | 'LIVREE' | 'ANNULEE';
@@ -50,6 +71,11 @@ export interface LigneCommandeRequest {
 
 export interface CommandeRequest {
   lignes: LigneCommandeRequest[];
+}
+
+export interface Panier {
+  lignes: { produit: Produit; quantite: number }[];
+  total: number;
 }
 
 export interface LigneCommande {
@@ -158,4 +184,21 @@ export interface UtilisateurAdmin {
   prenom: string;
   verrouille: boolean;
   roles: Role[];
+}
+
+export interface Evenement {
+  id: number;
+  titre: string;
+  dateDebut: string;
+  lieu: string;
+  description: string | null;
+  imageUrl: string | null;
+  placesRestantes: number | null;
+}
+
+export type EvenementRequest = Omit<Evenement, 'id'>;
+
+export interface ChiffreCommunaute {
+  libelle: string;
+  valeur: number;
 }

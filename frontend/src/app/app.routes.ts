@@ -16,6 +16,8 @@ export const routes: Routes = [
       // Piste A — Boutique (public)
       { path: '', loadComponent: () => import('./features/catalogue/catalogue-page.component').then(m => m.CataloguePageComponent), title: "AS'SOUÉ" },
       { path: 'produits/:id', loadComponent: () => import('./features/catalogue/produit-page.component').then(m => m.ProduitPageComponent), title: "Produit — AS'SOUÉ" },
+      { path: 'communaute', loadComponent: () => import('./features/communaute/communaute-page.component').then(m => m.CommunautePageComponent), title: "Communauté — AS'SOUÉ" },
+      { path: 'notre-impact', loadComponent: () => import('./features/impact/notre-impact-page.component').then(m => m.NotreImpactPageComponent), title: "Notre impact — AS'SOUÉ" },
       { path: 'panier', loadComponent: () => import('./features/catalogue/panier-page.component').then(m => m.PanierPageComponent), title: "Panier — AS'SOUÉ" },
       { path: 'connexion', loadComponent: () => import('./features/auth/connexion-page.component').then(m => m.ConnexionPageComponent), title: "Connexion — AS'SOUÉ" },
       { path: 'inscription', loadComponent: () => import('./features/auth/inscription-page.component').then(m => m.InscriptionPageComponent), title: "Inscription — AS'SOUÉ" },
@@ -30,6 +32,8 @@ export const routes: Routes = [
           { path: ':id/paiement', loadComponent: () => import('./features/commande/paiement-page.component').then(m => m.PaiementPageComponent), title: "Paiement — AS'SOUÉ" },
         ],
       },
+
+      { path: 'favoris', canActivate: [roleGuard('CLIENT')], loadComponent: () => import('./features/catalogue/favoris-page.component').then(m => m.FavorisPageComponent), title: "Mes favoris — AS'SOUÉ" },
 
       {
         path: 'acces-refuse',
@@ -62,6 +66,7 @@ export const routes: Routes = [
       { path: 'commandes', loadComponent: () => import('./features/admin/gestion-commandes-page.component').then(m => m.GestionCommandesPageComponent), title: "Commandes — Gestion" },
       { path: 'commandes/:id', loadComponent: () => import('./features/admin/gestion-commande-detail-page.component').then(m => m.GestionCommandeDetailPageComponent), title: "Commande — Gestion" },
       { path: 'stocks', loadComponent: () => import('./features/admin/gestion-stocks-page.component').then(m => m.GestionStocksPageComponent), title: "Stocks — Gestion" },
+      { path: 'communaute', loadComponent: () => import('./features/admin/gestion-communaute-page.component').then(m => m.GestionCommunautePageComponent), title: "Communauté — Gestion" },
       { path: 'utilisateurs', loadComponent: () => import('./features/admin/gestion-utilisateurs-page.component').then(m => m.GestionUtilisateursPageComponent), title: "Utilisateurs — Gestion" },
     ],
   },
