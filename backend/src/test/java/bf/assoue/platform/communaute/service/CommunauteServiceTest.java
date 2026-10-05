@@ -9,6 +9,8 @@ import bf.assoue.platform.communaute.model.ChiffreCommunaute;
 import bf.assoue.platform.communaute.model.Evenement;
 import bf.assoue.platform.communaute.repository.ChiffreCommunauteRepository;
 import bf.assoue.platform.communaute.repository.EvenementRepository;
+import bf.assoue.platform.images.ImageService;
+import bf.assoue.platform.images.SuppressionImageApresCommit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -32,6 +34,10 @@ class CommunauteServiceTest {
     private EvenementRepository evenementRepository;
     @Mock
     private ChiffreCommunauteRepository chiffreRepository;
+    @Mock
+    private ImageService imageService;
+    @Mock
+    private SuppressionImageApresCommit nettoyageImage;
 
     @InjectMocks
     private CommunauteService communauteService;
@@ -43,7 +49,7 @@ class CommunauteServiceTest {
         when(evenementRepository.save(any(Evenement.class))).thenAnswer(appel -> appel.getArgument(0));
 
         EvenementResponse cree = communauteService.creer(new EvenementRequest(
-                "  Atelier de recyclage créatif ", date, " Centre AS'SOUÉ, Bobo-Dioulasso ", "   ", "", 15));
+                "  Atelier de recyclage créatif ", date, " Centre AS'SOUÉ, Bobo-Dioulasso ", "   ", "", null, 15));
 
         assertThat(cree.titre()).isEqualTo("Atelier de recyclage créatif");
         assertThat(cree.lieu()).isEqualTo("Centre AS'SOUÉ, Bobo-Dioulasso");
@@ -56,16 +62,42 @@ class CommunauteServiceTest {
     void modifier_refuseUnEvenementInconnu() {
         when(evenementRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> communauteService.modifier(99L, new EvenementRequest("Atelier", date, "Ouaga", null, null, null)))
+        assertThatThrownBy(() -> communauteService.modifier(99L, new EvenementRequest("Atelier", date, "Ouaga", null, null, null, null)))
                 .isInstanceOf(RessourceIntrouvableException.class);
     }
 
     @Test
     void supprimer_refuseUnEvenementInconnu() {
-        when(evenementRepository.existsById(99L)).thenReturn(false);
+        when(evenementRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> communauteService.supprimer(99L)).isInstanceOf(RessourceIntrouvableException.class);
-        verify(evenementRepository, never()).deleteById(any());
+        verify(evenementRepository, never()).delete(any());
+    }
+
+    @Test
+    void creer_avecImageCleLaExposeEtVideImageUrl() {
+        when(evenementRepository.save(any(Evenement.class))).thenAnswer(appel -> appel.getArgument(0));
+        String cle = "11111111-2222-3333-4444-555555555555.png";
+        when(imageService.validerCleExistante(cle)).thenReturn(cle);
+
+        EvenementResponse cree = communauteService.creer(new EvenementRequest(
+                "Atelier", date, "Ouaga", null, "https://cdn.example.com/ancien.jpg", cle, null));
+
+        assertThat(cree.imageCle()).isEqualTo(cle);
+        assertThat(cree.imageUrl()).isEqualTo("/api/images/" + cle);
+    }
+
+    @Test
+    void supprimer_nettoieLeFichierImage() {
+        Evenement evenement = Evenement.builder().id(7L).titre("Atelier")
+                .dateDebut(date).lieu("Ouaga")
+                .imageCle("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.jpg").build();
+        when(evenementRepository.findById(7L)).thenReturn(Optional.of(evenement));
+
+        communauteService.supprimer(7L);
+
+        verify(evenementRepository).delete(evenement);
+        verify(nettoyageImage).supprimer("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.jpg");
     }
 
     @Test

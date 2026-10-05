@@ -7,7 +7,10 @@ import bf.assoue.platform.commerce.model.Produit;
 import bf.assoue.platform.commerce.repository.AvisRepository;
 import bf.assoue.platform.commerce.repository.CategorieRepository;
 import bf.assoue.platform.commerce.repository.ProduitRepository;
+import bf.assoue.platform.common.exception.RequeteInvalideException;
 import bf.assoue.platform.common.exception.RessourceIntrouvableException;
+import bf.assoue.platform.images.ImageService;
+import bf.assoue.platform.images.SuppressionImageApresCommit;
 import bf.assoue.platform.stock.service.StockService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,6 +42,10 @@ class ProduitServiceTest {
     private StockService stockService;
     @Mock
     private AvisRepository avisRepository;
+    @Mock
+    private ImageService imageService;
+    @Mock
+    private SuppressionImageApresCommit nettoyageImage;
 
     @InjectMocks
     private ProduitService produitService;
@@ -139,7 +146,7 @@ class ProduitServiceTest {
         when(stockService.estEnRupture(20L)).thenReturn(false);
 
         ProduitResponse reponse = produitService.creer(new ProduitRequest(
-                "Tabouret", 1L, 12000, "Tabouret en pneu", "https://cdn.example.com/tabouret.jpg", 5, true));
+                "Tabouret", 1L, 12000, "Tabouret en pneu", "https://cdn.example.com/tabouret.jpg", null, 5, true));
 
         assertThat(reponse.id()).isEqualTo(20L);
         assertThat(reponse.prix()).isEqualByComparingTo("12000");
@@ -159,7 +166,7 @@ class ProduitServiceTest {
         when(stockService.estEnRupture(21L)).thenReturn(true);
 
         ProduitResponse reponse = produitService.creer(new ProduitRequest(
-                "Tabouret", 1L, 12000, null, null, null, null));
+                "Tabouret", 1L, 12000, null, null, null, null, null));
 
         assertThat(reponse.enRupture()).isTrue();
         verify(stockService).creerStockInitial(any(Produit.class), eq(0));
@@ -170,7 +177,7 @@ class ProduitServiceTest {
         when(categorieRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> produitService.creer(new ProduitRequest(
-                "Tabouret", 99L, 12000, null, null, null, null)))
+                "Tabouret", 99L, 12000, null, null, null, null, null)))
                 .isInstanceOf(RessourceIntrouvableException.class);
         verify(produitRepository, never()).save(any());
     }
@@ -186,7 +193,7 @@ class ProduitServiceTest {
         when(produitRepository.save(any(Produit.class))).thenAnswer(appel -> appel.getArgument(0));
 
         ProduitResponse reponse = produitService.modifier(4L, new ProduitRequest(
-                "Pouf retouche", 2L, 27000, "Neuf", null, 9, false));
+                "Pouf retouche", 2L, 27000, "Neuf", null, null, 9, false));
 
         assertThat(reponse.nom()).isEqualTo("Pouf retouche");
         assertThat(reponse.categorie()).isEqualTo("Bijoux");
@@ -203,7 +210,7 @@ class ProduitServiceTest {
         when(categorieRepository.findById(1L)).thenReturn(Optional.of(produit.getCategorie()));
         when(produitRepository.save(any(Produit.class))).thenAnswer(appel -> appel.getArgument(0));
 
-        produitService.modifier(4L, new ProduitRequest("Pouf", 1L, 25000, null, null, null, null));
+        produitService.modifier(4L, new ProduitRequest("Pouf", 1L, 25000, null, null, null, null, null));
 
         verify(stockService, never()).ajusterStockProduit(any(), anyInt());
     }
@@ -221,6 +228,76 @@ class ProduitServiceTest {
 
         assertThat(produit.isArchive()).isTrue();
         verify(produitRepository, never()).delete(any());
+    }
+
+    @Test
+    void creer_avecImageCleLaExposeEtVideImageUrl() {
+        Categorie categorie = Categorie.builder().id(1L).nom("Mobilier").build();
+        when(categorieRepository.findById(1L)).thenReturn(Optional.of(categorie));
+        when(produitRepository.save(any(Produit.class))).thenAnswer(appel -> {
+            Produit p = appel.getArgument(0);
+            p.setId(22L);
+            return p;
+        });
+        when(stockService.estEnRupture(22L)).thenReturn(false);
+        String cle = "11111111-2222-3333-4444-555555555555.jpg";
+        when(imageService.validerCleExistante(cle)).thenReturn(cle);
+
+        // imageCle et imageUrl ensemble : la clé l'emporte (documenté sur le DTO).
+        ProduitResponse reponse = produitService.creer(new ProduitRequest(
+                "Tabouret", 1L, 12000, null, "https://cdn.example.com/ancien.jpg", cle, null, false));
+
+        assertThat(reponse.imageCle()).isEqualTo(cle);
+        assertThat(reponse.imageUrl()).isEqualTo("/api/images/" + cle);
+    }
+
+    @Test
+    void creer_refuseUneCleInconnue() {
+        when(categorieRepository.findById(1L))
+                .thenReturn(Optional.of(Categorie.builder().id(1L).nom("Mobilier").build()));
+        when(imageService.validerCleExistante("inconnue.jpg"))
+                .thenThrow(new RequeteInvalideException("Image introuvable."));
+
+        assertThatThrownBy(() -> produitService.creer(new ProduitRequest(
+                "Tabouret", 1L, 12000, null, null, "inconnue.jpg", null, false)))
+                .isInstanceOf(RequeteInvalideException.class);
+        verify(produitRepository, never()).save(any());
+    }
+
+    @Test
+    void modifier_remplaceImageEtNettoieAncienFichier() {
+        Produit produit = Produit.builder()
+                .id(4L).nom("Pouf").prix(BigDecimal.valueOf(25000))
+                .imageCle("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.jpg")
+                .categorie(Categorie.builder().id(1L).nom("Mobilier").build())
+                .build();
+        when(produitRepository.findByIdAndArchiveFalse(4L)).thenReturn(Optional.of(produit));
+        when(categorieRepository.findById(1L)).thenReturn(Optional.of(produit.getCategorie()));
+        when(produitRepository.save(any(Produit.class))).thenAnswer(appel -> appel.getArgument(0));
+        String nouvelle = "11111111-2222-3333-4444-555555555555.jpg";
+        when(imageService.validerCleExistante(nouvelle)).thenReturn(nouvelle);
+
+        produitService.modifier(4L, new ProduitRequest("Pouf", 1L, 25000, null, null, nouvelle, null, false));
+
+        assertThat(produit.getImageCle()).isEqualTo(nouvelle);
+        assertThat(produit.getImageUrl()).isNull();
+        verify(nettoyageImage).supprimer("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.jpg");
+    }
+
+    @Test
+    void archiver_gardeLeFichierImage() {
+        Produit produit = Produit.builder()
+                .id(4L).nom("Pouf").prix(BigDecimal.valueOf(25000))
+                .imageCle("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.jpg")
+                .categorie(Categorie.builder().id(1L).nom("Mobilier").build())
+                .build();
+        when(produitRepository.findByIdAndArchiveFalse(4L)).thenReturn(Optional.of(produit));
+        when(produitRepository.save(any(Produit.class))).thenAnswer(appel -> appel.getArgument(0));
+
+        produitService.archiver(4L);
+
+        assertThat(produit.isArchive()).isTrue();
+        verify(nettoyageImage, never()).supprimer(any());
     }
 
 }
