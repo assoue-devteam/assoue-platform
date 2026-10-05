@@ -15,7 +15,7 @@ npm run e2e
 npm audit --omit=dev --audit-level=high
 ```
 
-La version Angular est verrouillée sur la ligne 20.3 et le lockfile doit toujours être commité avec `package.json`. Le build production, les 31 tests unitaires et les 3 scénarios E2E doivent être verts avant merge.
+La version Angular est verrouillée sur la ligne 20.3 et le lockfile doit toujours être commité avec `package.json`. Le build production, les 113 tests unitaires et les 3 scénarios E2E doivent être verts avant merge.
 
 ## Backend
 

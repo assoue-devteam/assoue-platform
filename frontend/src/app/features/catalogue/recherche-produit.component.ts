@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
@@ -50,7 +51,7 @@ export class RechercheProduitComponent {
 
   constructor() {
     // Le champ suit le q de l'URL (recherche lancée ailleurs, bouton retour).
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.pipe(takeUntilDestroyed()).subscribe(params => {
       const q = typeof params['q'] === 'string' ? params['q'] : '';
       if (q !== this.terme()) this.terme.set(q);
     });

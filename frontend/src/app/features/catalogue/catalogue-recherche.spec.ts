@@ -1,3 +1,5 @@
+import { registerLocaleData } from '@angular/common';
+import localeFr from '@angular/common/locales/fr';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -16,6 +18,7 @@ const categories: Categorie[] = [
 
 describe('recherche du catalogue', () => {
   beforeEach(() => {
+    registerLocaleData(localeFr);
     localStorage.clear();
     TestBed.configureTestingModule({ providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
   });

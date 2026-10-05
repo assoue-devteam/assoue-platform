@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -198,7 +199,7 @@ export class CataloguePageComponent {
 
   constructor() {
     this.chargerCategories();
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.pipe(takeUntilDestroyed()).subscribe(params => {
       const q = typeof params['q'] === 'string' ? params['q'] : '';
       const tri = lireTriParam(params['tri']);
       const categorie = lireCategorieParam(params['categorie'], this.categories());
