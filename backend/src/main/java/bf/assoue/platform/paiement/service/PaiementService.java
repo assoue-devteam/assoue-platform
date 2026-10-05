@@ -37,7 +37,7 @@ public class PaiementService {
     private final PaiementFinalisationService paiementFinalisationService;
 
     public PaiementResponse initier(Long commandeId, String emailClient) {
-        Commande commande = commandeRepository.findById(commandeId)
+        Commande commande = commandeRepository.findAvecLignesById(commandeId)
                 .orElseThrow(() -> new RessourceIntrouvableException("Commande introuvable : " + commandeId));
 
         if (!commande.getClient().getEmail().equals(emailClient)) {

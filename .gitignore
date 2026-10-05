@@ -55,6 +55,8 @@ seed_demo_dev.sql
 # Images uploadées : le dossier existe en dev (.gitkeep), jamais son contenu.
 uploads/*
 !uploads/.gitkeep
+# Dossier par défaut auto-créé au démarrage (dev) et par les tests.
+backend/uploads/
 
 # OS
 .DS_Store

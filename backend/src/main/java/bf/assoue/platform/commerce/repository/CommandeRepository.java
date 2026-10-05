@@ -27,6 +27,10 @@ public interface CommandeRepository extends JpaRepository<Commande, Long> {
     @EntityGraph(attributePaths = {"client", "lignes", "lignes.produit"})
     List<Commande> findByStatutOrderByDateCreationDesc(CommandeStatut statut);
 
+    /** Initiation du paiement : tout est chargé dans la requête (méthode hors transaction). */
+    @EntityGraph(attributePaths = {"client", "lignes", "lignes.produit"})
+    java.util.Optional<Commande> findAvecLignesById(@Param("id") Long id);
+
     /** Le client a-t-il une commande dans l'un de ces statuts qui contient ce produit ? */
     @Query("""
             select count(commande) > 0 from Commande commande join commande.lignes ligne
