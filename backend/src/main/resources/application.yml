@@ -1,6 +1,10 @@
 spring:
   application:
     name: assoue-platform
+  jpa:
+    # Sessions fermées en fin de transaction : tout accès lazy hors @Transactional
+    # échoue au lieu de générer des requêtes cachées (lot 11, N+1).
+    open-in-view: false
   # Rejet propre au-delà de 10 Mo (413 via GlobalExceptionHandler), avant tout décodage.
   # Une photo smartphone (jusqu'à 48 MP, 3 à 8 Mo) passe ; le client redimensionne
   # déjà à 2000 px, ces limites ne concernent que les envois non redimensionnés.

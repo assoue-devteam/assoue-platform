@@ -102,12 +102,14 @@ public class CollecteService {
         return CollecteResponse.depuis(collecteRepository.save(collecte));
     }
 
+    @Transactional(readOnly = true)
     public List<CollecteResponse> mesCollectes(String emailCollecteur) {
         return collecteRepository.findByCollecteurEmailOrderByDateDeclarationDesc(emailCollecteur).stream()
                 .map(CollecteResponse::depuis)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<MateriauResponse> materiaux() {
         return materiauRepository.findAll().stream()
                 .map(MateriauResponse::depuis)
@@ -119,6 +121,7 @@ public class CollecteService {
      * par statut. Le filtre statut est appliqué en mémoire, le volume de déclarations
      * reste faible à ce stade du projet.
      */
+    @Transactional(readOnly = true)
     public List<CollecteAdminResponse> lister(Long collecteurId, CollecteStatut statut) {
         List<Collecte> collectes = collecteurId != null
                 ? collecteRepository.findByCollecteurIdOrderByDateDeclarationDesc(collecteurId)
@@ -131,6 +134,7 @@ public class CollecteService {
     }
 
     /** Volumes cumulés par collecteur et par matériau (MG-04). */
+    @Transactional(readOnly = true)
     public List<VolumeCollecteResponse> volumes() {
         Map<String, VolumeCollecteResponse> cumul = new LinkedHashMap<>();
 

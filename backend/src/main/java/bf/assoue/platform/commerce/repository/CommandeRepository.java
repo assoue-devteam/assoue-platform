@@ -3,6 +3,7 @@ package bf.assoue.platform.commerce.repository;
 import bf.assoue.platform.commerce.model.Commande;
 import bf.assoue.platform.commerce.model.CommandeStatut;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -13,12 +14,17 @@ import java.util.List;
 
 public interface CommandeRepository extends JpaRepository<Commande, Long> {
 
+    /** Une seule requête : client, lignes et produits (une collection + ToOne, pas de sacs multiples). */
+    @EntityGraph(attributePaths = {"client", "lignes", "lignes.produit"})
     List<Commande> findByClientEmailOrderByDateCreationDesc(String email);
 
+    @EntityGraph(attributePaths = {"client", "lignes", "lignes.produit"})
     List<Commande> findByStatutAndDateCreationBeforeOrderByDateCreationAsc(CommandeStatut statut, LocalDateTime avant);
 
+    @EntityGraph(attributePaths = {"client", "lignes", "lignes.produit"})
     List<Commande> findAllByOrderByDateCreationDesc();
 
+    @EntityGraph(attributePaths = {"client", "lignes", "lignes.produit"})
     List<Commande> findByStatutOrderByDateCreationDesc(CommandeStatut statut);
 
     /** Le client a-t-il une commande dans l'un de ces statuts qui contient ce produit ? */

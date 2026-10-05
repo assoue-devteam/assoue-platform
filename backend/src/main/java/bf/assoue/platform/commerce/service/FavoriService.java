@@ -25,9 +25,10 @@ public class FavoriService {
 
     @Transactional(readOnly = true)
     public List<ProduitResponse> lister(String emailClient) {
-        return favoriRepository.findByClientEmailOrderByDateAjoutDesc(emailClient).stream()
-                .map(favori -> produitService.versReponse(favori.getProduit()))
+        List<Produit> produits = favoriRepository.findByClientEmailOrderByDateAjoutDesc(emailClient).stream()
+                .map(Favori::getProduit)
                 .toList();
+        return produitService.versReponses(produits);
     }
 
     /** Idempotent : un double clic sur le cœur ne crée pas de doublon. */

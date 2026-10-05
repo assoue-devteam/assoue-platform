@@ -70,6 +70,7 @@ public class CommandeService {
      * statut réel sans dépendre du webhook ; le client, lui, reste limité aux
      * siennes (404 sur celle d'un tiers, pour ne pas en révéler l'existence).
      */
+    @Transactional(readOnly = true)
     public CommandeResponse consulter(Long id, String emailAppelant, boolean estManager) {
         Commande commande = trouver(id);
 
@@ -81,6 +82,7 @@ public class CommandeService {
     }
 
     /** CL-05 : le client consulte l'historique de ses propres commandes. */
+    @Transactional(readOnly = true)
     public List<CommandeResponse> listerPourClient(String emailClient) {
         return commandeRepository.findByClientEmailOrderByDateCreationDesc(emailClient).stream()
                 .map(CommandeResponse::depuis)
@@ -88,6 +90,7 @@ public class CommandeService {
     }
 
     /** MG-02 : suivi de l'ensemble des commandes clients, filtrable par statut. */
+    @Transactional(readOnly = true)
     public List<CommandeAdminResponse> lister(CommandeStatut statut) {
         List<Commande> commandes = statut != null
                 ? commandeRepository.findByStatutOrderByDateCreationDesc(statut)
@@ -101,6 +104,7 @@ public class CommandeService {
      * Pas de notification poussée tant que l'infra temps réel (US-04) n'existe pas —
      * le manager interroge cet endpoint.
      */
+    @Transactional(readOnly = true)
     public List<CommandeEnAttenteResponse> enAttenteDepuis(int heures) {
         LocalDateTime maintenant = LocalDateTime.now();
 

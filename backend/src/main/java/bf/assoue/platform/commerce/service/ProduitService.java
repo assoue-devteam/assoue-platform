@@ -17,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,14 +31,16 @@ public class ProduitService {
     private final ImageService imageService;
     private final SuppressionImageApresCommit nettoyageImage;
 
+    @Transactional(readOnly = true)
     public List<ProduitResponse> lister(Long categorieId) {
         List<Produit> produits = categorieId != null
                 ? produitRepository.findByCategorieIdAndArchiveFalse(categorieId)
                 : produitRepository.findByArchiveFalse();
 
-        return produits.stream().map(this::versReponse).toList();
+        return versReponses(produits);
     }
 
+    @Transactional(readOnly = true)
     public ProduitResponse consulter(Long id) {
         return versReponse(produitVisible(id));
     }
@@ -137,6 +141,35 @@ public class ProduitService {
                 avisRepository.noteMoyenne(produit.getId()),
                 avisRepository.countByProduitId(produit.getId())
         );
+    }
+
+    /**
+     * Version listes : ruptures et avis chargés en masse (2 requêtes pour N
+     * produits au lieu de 3N), catégories déjà jointes par l'EntityGraph.
+     */
+    List<ProduitResponse> versReponses(List<Produit> produits) {
+        List<Long> ids = produits.stream().map(Produit::getId).toList();
+        Map<Long, Boolean> ruptures = stockService.rupturesParProduit(ids);
+        Map<Long, AvisRepository.AvisStat> stats = ids.isEmpty() ? Map.of()
+                : avisRepository.statsParProduit(ids).stream()
+                        .collect(Collectors.toMap(AvisRepository.AvisStat::getProduitId, stat -> stat));
+        return produits.stream()
+                .map(produit -> {
+                    AvisRepository.AvisStat stat = stats.get(produit.getId());
+                    return new ProduitResponse(
+                            produit.getId(),
+                            produit.getNom(),
+                            produit.getDescription(),
+                            produit.getPrix(),
+                            resoudreImage(produit.getImageUrl(), produit.getImageCle()),
+                            produit.getImageCle(),
+                            produit.getCategorie().getNom(),
+                            ruptures.getOrDefault(produit.getId(), true),
+                            produit.isVedette(),
+                            stat != null ? stat.getMoyenne() : null,
+                            stat != null ? stat.getNombre() : 0L);
+                })
+                .toList();
     }
 
     /** URL legacy telle quelle, sinon chemin d'image uploadée, sinon rien. */
