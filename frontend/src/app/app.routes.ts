@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { roleGuard } from './core/auth/guards';
+import { AuthLayoutComponent } from './core/layout/auth-layout.component';
 import { BoutiqueLayoutComponent } from './core/layout/boutique-layout.component';
 import { GestionLayoutComponent } from './core/layout/gestion-layout.component';
 import { CollecteurLayoutComponent } from './core/layout/collecteur-layout.component';
@@ -19,8 +20,6 @@ export const routes: Routes = [
       { path: 'communaute', loadComponent: () => import('./features/communaute/communaute-page.component').then(m => m.CommunautePageComponent), title: "Communauté — AS'SOUÉ" },
       { path: 'notre-impact', loadComponent: () => import('./features/impact/notre-impact-page.component').then(m => m.NotreImpactPageComponent), title: "Notre impact — AS'SOUÉ" },
       { path: 'panier', loadComponent: () => import('./features/catalogue/panier-page.component').then(m => m.PanierPageComponent), title: "Panier — AS'SOUÉ" },
-      { path: 'connexion', loadComponent: () => import('./features/auth/connexion-page.component').then(m => m.ConnexionPageComponent), title: "Connexion — AS'SOUÉ" },
-      { path: 'inscription', loadComponent: () => import('./features/auth/inscription-page.component').then(m => m.InscriptionPageComponent), title: "Inscription — AS'SOUÉ" },
 
       // Piste B — Commandes et paiement (client)
       {
@@ -40,6 +39,16 @@ export const routes: Routes = [
         loadComponent: () => import('./shared/pages/pages').then(m => m.PageAccesRefuseComponent),
         title: "Accès refusé — AS'SOUÉ",
       },
+    ],
+  },
+
+  // Auth : layout dépouillé (logo seul), hors BoutiqueLayout.
+  {
+    path: '',
+    component: AuthLayoutComponent,
+    children: [
+      { path: 'connexion', loadComponent: () => import('./features/auth/connexion-page.component').then(m => m.ConnexionPageComponent), title: "Connexion — AS'SOUÉ" },
+      { path: 'inscription', loadComponent: () => import('./features/auth/inscription-page.component').then(m => m.InscriptionPageComponent), title: "Inscription — AS'SOUÉ" },
     ],
   },
 

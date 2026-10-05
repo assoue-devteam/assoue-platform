@@ -24,6 +24,7 @@ describe('socle core', () => {
 
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     TestBed.configureTestingModule({
       providers: [provideHttpClient(withInterceptors([apiInterceptor])), provideHttpClientTesting(), provideRouter([])],
     });
@@ -48,6 +49,34 @@ describe('socle core', () => {
     expect(auth.connecte()).toBeTrue();
     expect(auth.email()).toBe('awa@example.com');
     expect(JSON.parse(localStorage.getItem('assoue.session')!).roles).toEqual(['CLIENT']);
+  });
+
+  it('« Se souvenir de moi » décoché : session en sessionStorage, pas en localStorage', () => {
+    auth.connecter({ email: 'awa@example.com', motDePasse: 'secret123' }, false).subscribe();
+    http.expectOne('/api/auth/login').flush({ token: jwt(dansUneHeure()), email: 'awa@example.com', roles: ['CLIENT'] });
+    expect(auth.connecte()).toBeTrue();
+    expect(sessionStorage.getItem('assoue.session')).toContain('awa@example.com');
+    expect(localStorage.getItem('assoue.session')).toBeNull();
+  });
+
+  it('changer d\u2019option vide l\u2019autre emplacement, la déconnexion vide les deux', () => {
+    auth.connecter({ email: 'awa@example.com', motDePasse: 'secret123' }, false).subscribe();
+    http.expectOne('/api/auth/login').flush({ token: jwt(dansUneHeure()), email: 'awa@example.com', roles: ['CLIENT'] });
+    auth.connecter({ email: 'awa@example.com', motDePasse: 'secret123' }, true).subscribe();
+    http.expectOne('/api/auth/login').flush({ token: jwt(dansUneHeure()), email: 'awa@example.com', roles: ['CLIENT'] });
+    expect(sessionStorage.getItem('assoue.session')).toBeNull();
+    expect(localStorage.getItem('assoue.session')).toContain('awa@example.com');
+    auth.deconnecter();
+    expect(localStorage.getItem('assoue.session')).toBeNull();
+    expect(sessionStorage.getItem('assoue.session')).toBeNull();
+  });
+
+  it('le 401 du login ne déclenche pas la modale « session expirée », même expirée', () => {
+    seConnecter(['CLIENT'], ilYaUneHeure());
+    auth.sessionExpiree.set(false);
+    TestBed.inject(HttpClient).post('/api/auth/login', {}).subscribe({ error: () => {} });
+    http.expectOne('/api/auth/login').flush(null, { status: 401, statusText: 'Unauthorized' });
+    expect(auth.sessionExpiree()).toBeFalse();
   });
 
   it('choisit l\'espace ADMIN > COLLECTEUR > CLIENT', () => {

@@ -21,7 +21,10 @@ export const apiInterceptor: HttpInterceptorFn = (req, next) => {
         if (err.status === 0) reseau.marquerEchecApi();
         // Sans AuthenticationEntryPoint, le backend renvoie 403 (pas 401) pour un token expiré :
         // on distingue par la date d'expiration lue dans le JWT, pas par le code HTTP (GAP-07).
-        if ((err.status === 401 || err.status === 403) && auth.estExpiree()) {
+        // Les appels /api/auth/** (login/register) sont exclus : leur 401/403 est une erreur
+        // métier (identifiants incorrects), pas une session expirée — sinon boucle de modales.
+        const estAppelAuth = req.url.includes('/api/auth/');
+        if (!estAppelAuth && (err.status === 401 || err.status === 403) && auth.estExpiree()) {
           auth.sessionExpiree.set(true);
         }
       },
