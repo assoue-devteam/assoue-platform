@@ -1,11 +1,15 @@
-import { ChangeDetectionStrategy, Component, HostListener, inject, signal } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { ChangeDetectionStrategy, Component, ElementRef, HostListener, effect, inject, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationStart, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { NetworkService } from '../network.service';
 import { CompteMenuComponent } from './compte-menu.component';
 import { SiteFooterComponent } from './site-footer.component';
 import { AlertComponent } from '../../shared/ui/alert.component';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
+import { ClickOutsideDirective } from '../../shared/ui/click-outside.directive';
+import { PopupService } from '../../shared/ui/popup.service';
 import { PanierService } from '../../features/catalogue/panier.service';
 import { FavorisService } from '../../features/catalogue/favoris.service';
 import { RechercheProduitComponent } from '../../features/catalogue/recherche-produit.component';
@@ -13,7 +17,7 @@ import { RechercheProduitComponent } from '../../features/catalogue/recherche-pr
 @Component({
   selector: 'app-boutique-layout',
   standalone: true,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, CompteMenuComponent, AlertComponent, IconComponent, SiteFooterComponent, RechercheProduitComponent],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, CompteMenuComponent, AlertComponent, IconComponent, SiteFooterComponent, RechercheProduitComponent, ClickOutsideDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <header class="entete" [class.entete--repliee]="repliee()">
@@ -38,11 +42,12 @@ import { RechercheProduitComponent } from '../../features/catalogue/recherche-pr
           } @else {
             <a routerLink="/connexion" class="entete__connexion">Se connecter</a>
           }
-          <button type="button" class="entete__recherche-bouton" [attr.aria-expanded]="rechercheOuverte()"
-                  aria-controls="recherche-mobile" (click)="rechercheOuverte.set(!rechercheOuverte())" aria-label="Rechercher un produit">
+          <button type="button" #boutonRecherche class="entete__recherche-bouton" [attr.aria-expanded]="rechercheOuverte()"
+                  aria-controls="recherche-mobile" (click)="basculerRecherche()" aria-label="Rechercher un produit">
             <app-icon name="search" />
           </button>
-          <button type="button" class="entete__menu" [attr.aria-expanded]="menuOuvert()" (click)="menuOuvert.set(!menuOuvert())">
+          <button type="button" #boutonBurger class="entete__menu" [attr.aria-expanded]="menuOuvert()"
+                  aria-controls="menu-burger" (click)="basculerBurger()">
             <app-icon name="menu" /> Menu
           </button>
         </div>
@@ -52,7 +57,9 @@ import { RechercheProduitComponent } from '../../features/catalogue/recherche-pr
         <app-recherche-produit />
       </div>
       @if (rechercheOuverte()) {
-        <div class="container entete__recherche entete__recherche--mobile" id="recherche-mobile">
+        <div class="container entete__recherche entete__recherche--mobile" id="recherche-mobile"
+             [appClickOutsideEnabled]="rechercheOuverte()" (appClickOutside)="fermerRechercheDepuisExterieur($event)"
+             (focusout)="fermerRechercheSiFocusSorti($event)">
           <app-recherche-produit />
         </div>
       }
@@ -66,12 +73,14 @@ import { RechercheProduitComponent } from '../../features/catalogue/recherche-pr
       </div>
 
       @if (menuOuvert()) {
-        <nav class="container entete__panneau" aria-label="Menu">
-          <a routerLink="/" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }" (click)="menuOuvert.set(false)">Catalogue</a>
-          <a routerLink="/notre-impact" routerLinkActive="actif" (click)="menuOuvert.set(false)">Notre impact</a>
-          <a routerLink="/communaute" routerLinkActive="actif" (click)="menuOuvert.set(false)">Communauté</a>
+        <nav id="menu-burger" class="container entete__panneau" aria-label="Menu"
+             [appClickOutsideEnabled]="menuOuvert()" (appClickOutside)="fermerBurgerDepuisExterieur($event)"
+             (focusout)="fermerBurgerSiFocusSorti($event)">
+          <a routerLink="/" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }" (click)="fermerBurger()">Catalogue</a>
+          <a routerLink="/notre-impact" routerLinkActive="actif" (click)="fermerBurger()">Notre impact</a>
+          <a routerLink="/communaute" routerLinkActive="actif" (click)="fermerBurger()">Communauté</a>
           @if (!auth.connecte()) {
-            <a routerLink="/connexion" (click)="menuOuvert.set(false)">Se connecter</a>
+            <a routerLink="/connexion" (click)="fermerBurger()">Se connecter</a>
           }
         </nav>
       }
@@ -113,6 +122,9 @@ import { RechercheProduitComponent } from '../../features/catalogue/recherche-pr
     .entete__nav a { color: var(--color-text); text-decoration: none; font-weight: 600; min-height: 32px; display: inline-flex; align-items: center; }
     .entete__nav a.actif { color: var(--color-primary); box-shadow: inset 0 -2px var(--color-primary); }
     .entete__panneau { display: none; }
+    .entete__recherche-bouton:focus-visible, .entete__menu:focus-visible, .entete__panneau a:focus-visible {
+      outline: none; box-shadow: var(--focus-ring);
+    }
     @media (prefers-reduced-motion: reduce) { .entete__secondaire { transition: none; } }
     @media (max-width: 1023px) {
       .entete__recherche--bureau, .entete__secondaire { display: none; }
@@ -136,12 +148,90 @@ export class BoutiqueLayoutComponent {
   protected reseau = inject(NetworkService);
   protected panier = inject(PanierService);
   protected favoris = inject(FavorisService);
+  private router = inject(Router);
+  private popups = inject(PopupService);
+  private boutonBurger = viewChild<ElementRef<HTMLButtonElement>>('boutonBurger');
+  private boutonRecherche = viewChild<ElementRef<HTMLButtonElement>>('boutonRecherche');
   protected menuOuvert = signal(false);
   protected rechercheOuverte = signal(false);
   protected repliee = signal(false);
 
+  constructor() {
+    // Un seul panneau ouvert à la fois : le menu compte signale son ouverture.
+    effect(() => {
+      const courant = this.popups.ouvert();
+      if (courant === null) return;
+      if (courant !== 'burger' && this.menuOuvert()) this.fermerBurger();
+      if (courant !== 'recherche-mobile' && this.rechercheOuverte()) this.fermerRecherche();
+    });
+    this.router.events
+      .pipe(filter(event => event instanceof NavigationStart), takeUntilDestroyed())
+      .subscribe(() => {
+        this.fermerBurger();
+        this.fermerRecherche();
+      });
+  }
+
+  protected basculerBurger(): void {
+    if (this.menuOuvert()) this.fermerBurger();
+    else {
+      this.fermerRecherche();
+      this.menuOuvert.set(true);
+      this.popups.signalerOuverture('burger');
+    }
+  }
+
+  protected fermerBurger(): void {
+    if (!this.menuOuvert()) return;
+    this.menuOuvert.set(false);
+    this.popups.signalerFermeture('burger');
+  }
+
+  /** Le bouton burger est hors du panneau : on l’ignore, c’est lui qui bascule. */
+  protected fermerBurgerDepuisExterieur(event: PointerEvent | KeyboardEvent): void {
+    if (!this.menuOuvert()) return;
+    if (event instanceof PointerEvent && this.boutonBurger()?.nativeElement.contains(event.target as Node)) return;
+    this.fermerBurger();
+    if (event instanceof KeyboardEvent) this.boutonBurger()?.nativeElement.focus();
+  }
+
+  protected fermerBurgerSiFocusSorti(event: FocusEvent): void {
+    const cible = event.relatedTarget as Node | null;
+    if (!cible || !(event.currentTarget as HTMLElement).contains(cible)) this.fermerBurger();
+  }
+
+  protected basculerRecherche(): void {
+    if (this.rechercheOuverte()) this.fermerRecherche();
+    else {
+      this.fermerBurger();
+      this.rechercheOuverte.set(true);
+      this.popups.signalerOuverture('recherche-mobile');
+    }
+  }
+
+  protected fermerRecherche(): void {
+    if (!this.rechercheOuverte()) return;
+    this.rechercheOuverte.set(false);
+    this.popups.signalerFermeture('recherche-mobile');
+  }
+
+  protected fermerRechercheDepuisExterieur(event: PointerEvent | KeyboardEvent): void {
+    if (!this.rechercheOuverte()) return;
+    if (event instanceof PointerEvent && this.boutonRecherche()?.nativeElement.contains(event.target as Node)) return;
+    this.fermerRecherche();
+    if (event instanceof KeyboardEvent) this.boutonRecherche()?.nativeElement.focus();
+  }
+
+  protected fermerRechercheSiFocusSorti(event: FocusEvent): void {
+    const cible = event.relatedTarget as Node | null;
+    if (!cible || !(event.currentTarget as HTMLElement).contains(cible)) this.fermerRecherche();
+  }
+
   @HostListener('window:scroll')
   surDefilement(): void {
     this.repliee.set(window.scrollY > 120);
+    // Le header se replie : les panneaux ouverts se ferment avec lui.
+    this.fermerBurger();
+    this.fermerRecherche();
   }
 }
