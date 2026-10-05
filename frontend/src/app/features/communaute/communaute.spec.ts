@@ -43,7 +43,7 @@ describe('communauté', () => {
     const texte = (selecteur: string) => [...fixture.nativeElement.querySelectorAll(selecteur)].map((el: HTMLElement) => el.textContent!.trim());
     expect(texte('.evenement h3')).toEqual(['Atelier 2099']);
     expect(texte('.passes strong')).toEqual(['Salon 2020']);
-    expect(texte('.chiffre span')).toEqual(['Artisans soutenus']);
+    expect(texte('.chiffre > span:not(.sr-only)')).toEqual(['Artisans soutenus']);
   });
 
   it('admin : publie un événement avec les champs vides envoyés à null', () => {
