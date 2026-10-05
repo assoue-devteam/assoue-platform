@@ -4,6 +4,7 @@ import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } fr
 import { messageErreur } from '../../core/http/erreurs';
 import { Evenement, EvenementRequest } from '../../shared/models/api';
 import { ButtonDirective } from '../../shared/ui/button.directive';
+import { ImageUploadComponent } from '../../shared/images/image-upload.component';
 import { ControlDirective, FieldComponent } from '../../shared/ui/field.component';
 import { ModalComponent } from '../../shared/ui/modal.component';
 import { ToastService } from '../../shared/ui/toast';
@@ -13,7 +14,7 @@ const MAX_CHIFFRES = 6;
 
 @Component({
   standalone: true,
-  imports: [DatePipe, ReactiveFormsModule, ButtonDirective, FieldComponent, ControlDirective, ModalComponent],
+  imports: [DatePipe, ReactiveFormsModule, ButtonDirective, ImageUploadComponent, FieldComponent, ControlDirective, ModalComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="gestion-page">
@@ -65,11 +66,11 @@ const MAX_CHIFFRES = 6;
         <app-field label="Date et heure" [error]="erreur('dateDebut')"><input appControl class="input" type="datetime-local" formControlName="dateDebut" /></app-field>
         <app-field label="Lieu" [error]="erreur('lieu')"><input appControl class="input" type="text" formControlName="lieu" maxlength="200" placeholder="Centre AS'SOUÉ, Ouagadougou" /></app-field>
         <app-field label="Description (facultatif)"><textarea appControl class="input" rows="3" formControlName="description" maxlength="2000"></textarea></app-field>
-        <app-field label="Adresse de la photo (facultatif)" hint="Lien https vers une image déjà en ligne." [error]="erreur('imageUrl')"><input appControl class="input" type="url" formControlName="imageUrl" /></app-field>
+        <app-image-upload legende="Photo de l'événement" [(cle)]="imageCle" [(apercu)]="imageLegacy" (envoiEnCours)="envoiImage.set($event)" />
         <app-field label="Places restantes (facultatif)" [error]="erreur('placesRestantes')"><input appControl class="input" type="number" min="0" formControlName="placesRestantes" /></app-field>
         <div class="formulaire__actions">
           <button type="button" appButton="ghost" (click)="formulaireOuvert.set(false)">Annuler</button>
-          <button type="submit" appButton="primary" [loading]="envoi()">Enregistrer</button>
+          <button type="submit" appButton="primary" [loading]="envoi()" [disabled]="envoi() || envoiImage()">Enregistrer</button>
         </div>
       </form>
     </app-modal>
@@ -112,6 +113,9 @@ export class GestionCommunautePageComponent {
   protected enEdition = signal<Evenement | null>(null);
   protected aSupprimer = signal<Evenement | null>(null);
   protected envoi = signal(false);
+  protected envoiImage = signal(false);
+  protected imageCle = signal<string | null>(null);
+  protected imageLegacy = signal<string | null>(null);
   protected envoiChiffres = signal(false);
   protected chiffresInvalides = signal(false);
 
@@ -120,7 +124,6 @@ export class GestionCommunautePageComponent {
     dateDebut: ['', Validators.required],
     lieu: ['', [Validators.required, Validators.maxLength(200)]],
     description: [''],
-    imageUrl: ['', Validators.pattern(/^https?:\/\/\S+$/)],
     placesRestantes: [null as number | null, Validators.min(0)],
   });
 
@@ -160,6 +163,7 @@ export class GestionCommunautePageComponent {
   protected ouvrirCreation(): void {
     this.enEdition.set(null);
     this.formulaire.reset();
+    this.imageCle.set(null); this.imageLegacy.set(null);
     this.formulaireOuvert.set(true);
   }
 
@@ -171,22 +175,26 @@ export class GestionCommunautePageComponent {
       dateDebut: evenement.dateDebut.slice(0, 16),
       lieu: evenement.lieu,
       description: evenement.description ?? '',
-      imageUrl: evenement.imageUrl ?? '',
       placesRestantes: evenement.placesRestantes,
     });
+    this.imageCle.set(evenement.imageCle ?? null);
+    this.imageLegacy.set(evenement.imageCle ? null : evenement.imageUrl);
     this.formulaireOuvert.set(true);
   }
 
   protected enregistrer(): void {
-    if (this.formulaire.invalid || this.envoi()) { this.formulaire.markAllAsTouched(); return; }
+    if (this.formulaire.invalid || this.envoi() || this.envoiImage()) { this.formulaire.markAllAsTouched(); return; }
     this.envoi.set(true);
     const valeur = this.formulaire.getRawValue();
+    const cle = this.imageCle();
+    const legacy = this.imageLegacy()?.trim() || null;
     const requete: EvenementRequest = {
       titre: valeur.titre,
       dateDebut: valeur.dateDebut,
       lieu: valeur.lieu,
       description: valeur.description || null,
-      imageUrl: valeur.imageUrl || null,
+      imageUrl: cle ? null : legacy,
+      imageCle: cle,
       placesRestantes: valeur.placesRestantes === null || (valeur.placesRestantes as unknown) === '' ? null : Number(valeur.placesRestantes),
     };
     const enEdition = this.enEdition();
@@ -211,10 +219,9 @@ export class GestionCommunautePageComponent {
     });
   }
 
-  protected erreur(champ: 'titre' | 'dateDebut' | 'lieu' | 'imageUrl' | 'placesRestantes'): string | null {
+  protected erreur(champ: 'titre' | 'dateDebut' | 'lieu' | 'placesRestantes'): string | null {
     const controle = this.formulaire.controls[champ];
     if (!controle.touched || !controle.invalid) return null;
-    if (champ === 'imageUrl') return 'Saisissez une adresse qui commence par http:// ou https://.';
     if (champ === 'placesRestantes') return 'Saisissez un nombre positif.';
     return 'Ce champ est obligatoire.';
   }

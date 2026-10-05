@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Produit } from '../../shared/models/api';
 import { FcfaPipe } from '../../shared/pipes/fcfa.pipe';
+import { SrcImagePipe } from '../../shared/images/src-image.pipe';
 import { ButtonDirective } from '../../shared/ui/button.directive';
 import { ErrorStateComponent, SkeletonComponent } from '../../shared/ui/states';
 import { CatalogueService } from './catalogue.service';
@@ -12,14 +13,14 @@ import { EtoilesComponent } from '../../shared/ui/etoiles.component';
 
 @Component({
   standalone: true,
-  imports: [RouterLink, FcfaPipe, ButtonDirective, ErrorStateComponent, SkeletonComponent, FavoriBoutonComponent, AvisSectionComponent, EtoilesComponent],
+  imports: [RouterLink, FcfaPipe, SrcImagePipe, ButtonDirective, ErrorStateComponent, SkeletonComponent, FavoriBoutonComponent, AvisSectionComponent, EtoilesComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="produit container">
       <a routerLink="/" class="retour">Retour au catalogue</a>
       @if (produit(); as item) {
         <div class="produit__grille">
-          <div class="produit__media"><app-favori-bouton class="produit__favori" [produit]="item" />@if (item.imageUrl) { <img [src]="item.imageUrl" [alt]="item.nom" /> } @else { <span aria-hidden="true">AS'SOUÉ</span> }</div>
+          <div class="produit__media"><app-favori-bouton class="produit__favori" [produit]="item" />@if (item.imageUrl) { <img [src]="item.imageUrl | srcImage" [alt]="item.nom" /> } @else { <span aria-hidden="true">AS'SOUÉ</span> }</div>
           <div class="produit__infos"><p class="categorie">{{ item.categorie }}</p><h1>{{ item.nom }}</h1><app-etoiles [note]="item.noteMoyenne" [nombre]="item.nombreAvis" /><p class="prix">{{ item.prix | fcfa }}</p><p class="description">{{ item.description }}</p>
             @if (item.enRupture) { <p class="rupture">Ce produit est momentanément indisponible.</p> } @else { <button type="button" appButton="purchase" (click)="panier.ajouter(item)">Ajouter au panier</button> }
           </div>

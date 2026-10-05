@@ -4,6 +4,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Categorie, Produit } from '../../shared/models/api';
 import { FcfaPipe } from '../../shared/pipes/fcfa.pipe';
+import { SrcImagePipe } from '../../shared/images/src-image.pipe';
 import { AlertComponent } from '../../shared/ui/alert.component';
 import { ButtonDirective } from '../../shared/ui/button.directive';
 import { EmptyStateComponent, ErrorStateComponent, SkeletonComponent } from '../../shared/ui/states';
@@ -48,7 +49,7 @@ export function trierProduits(produits: Produit[], tri: TriCatalogue): Produit[]
 
 @Component({
   standalone: true,
-  imports: [RouterLink, NgTemplateOutlet, FormsModule, FcfaPipe, AlertComponent, ButtonDirective, EmptyStateComponent, ErrorStateComponent, SkeletonComponent, IconComponent, FavoriBoutonComponent, EtoilesComponent],
+  imports: [RouterLink, NgTemplateOutlet, FormsModule, FcfaPipe, SrcImagePipe, AlertComponent, ButtonDirective, EmptyStateComponent, ErrorStateComponent, SkeletonComponent, IconComponent, FavoriBoutonComponent, EtoilesComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="catalogue container">
@@ -120,7 +121,7 @@ export function trierProduits(produits: Produit[], tri: TriCatalogue): Produit[]
     <article class="carte">
       <a class="carte__media" [routerLink]="['/produits', produit.id]" [attr.aria-label]="'Voir ' + produit.nom">
         @if (produit.imageUrl && !imagesEnErreur().has(produit.id)) {
-          <img [src]="produit.imageUrl" [alt]="produit.nom" loading="lazy" (error)="imageEnErreur(produit.id)" />
+          <img [src]="produit.imageUrl | srcImage" [alt]="produit.nom" loading="lazy" (error)="imageEnErreur(produit.id)" />
         } @else { <span class="carte__vide" aria-hidden="true">AS'SOUÉ</span> }
         <span class="badge-eco" title="Fabriqué à partir de déchets recyclés"><app-icon name="leaf" [size]="16" /> ÉCO</span>
       </a>

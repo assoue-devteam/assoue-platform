@@ -36,6 +36,8 @@ export interface Produit {
   description: string | null;
   prix: number;
   imageUrl: string | null;
+  /** Clé d'image uploadée (null si URL legacy ou sans image). */
+  imageCle: string | null;
   categorie: string;
   enRupture: boolean;
   vedette: boolean;
@@ -178,6 +180,8 @@ export interface ProduitGestionRequest {
   prix: number;
   description: string | null;
   imageUrl: string | null;
+  /** Clé renvoyée par POST /api/images ; si présente, elle l'emporte sur imageUrl. */
+  imageCle: string | null;
   stockQuantite: number | null;
   vedette: boolean;
 }
@@ -204,6 +208,8 @@ export interface Evenement {
   lieu: string;
   description: string | null;
   imageUrl: string | null;
+  /** Clé renvoyée par POST /api/images ; si présente, elle l'emporte sur imageUrl. */
+  imageCle: string | null;
   placesRestantes: number | null;
 }
 

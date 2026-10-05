@@ -2,13 +2,14 @@ import { DatePipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { ChiffreCommunaute, Evenement } from '../../shared/models/api';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
+import { SrcImagePipe } from '../../shared/images/src-image.pipe';
 import { ErrorStateComponent, SkeletonComponent } from '../../shared/ui/states';
 import { CompteurDirective } from '../impact/notre-impact-page.component';
 import { CommunauteService, estAVenir, lienParticipation } from './communaute.service';
 
 @Component({
   standalone: true,
-  imports: [DatePipe, IconComponent, ErrorStateComponent, SkeletonComponent, CompteurDirective],
+  imports: [DatePipe, IconComponent, SrcImagePipe, ErrorStateComponent, SkeletonComponent, CompteurDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="communaute container">
@@ -37,7 +38,7 @@ import { CommunauteService, estAVenir, lienParticipation } from './communaute.se
               @for (evenement of aVenir(); track evenement.id) {
                 <article class="evenement">
                   <div class="evenement__image">
-                    @if (evenement.imageUrl) { <img [src]="evenement.imageUrl" [alt]="evenement.titre" loading="lazy" /> }
+                    @if (evenement.imageUrl) { <img [src]="evenement.imageUrl | srcImage" [alt]="evenement.titre" loading="lazy" /> }
                     @else { <app-icon name="users" [size]="24" /> }
                   </div>
                   <div class="evenement__contenu">

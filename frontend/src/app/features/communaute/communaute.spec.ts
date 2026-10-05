@@ -11,7 +11,7 @@ import { estAVenir, lienParticipation } from './communaute.service';
 registerLocaleData(localeFr);
 
 const evenement = (id: number, dateDebut: string, titre = `Atelier ${id}`): Evenement =>
-  ({ id, titre, dateDebut, lieu: 'Ouagadougou', description: null, imageUrl: null, placesRestantes: null });
+  ({ id, titre, dateDebut, lieu: 'Ouagadougou', description: null, imageUrl: null, imageCle: null, placesRestantes: null });
 
 describe('communauté', () => {
   let http: HttpTestingController;
@@ -52,21 +52,32 @@ describe('communauté', () => {
     http.expectOne('/api/communaute/chiffres').flush([]);
     fixture.detectChanges();
     const page = fixture.componentInstance as unknown as { formulaire: GestionCommunautePageComponent['formulaire']; enregistrer(): void };
-    page.formulaire.setValue({ titre: 'Atelier', dateDebut: '2026-12-15T09:00', lieu: 'Ouagadougou', description: '', imageUrl: '', placesRestantes: null });
+    page.formulaire.setValue({ titre: 'Atelier', dateDebut: '2026-12-15T09:00', lieu: 'Ouagadougou', description: '', placesRestantes: null });
     page.enregistrer();
     const creation = http.expectOne({ method: 'POST', url: '/api/evenements' });
-    expect(creation.request.body).toEqual({ titre: 'Atelier', dateDebut: '2026-12-15T09:00', lieu: 'Ouagadougou', description: null, imageUrl: null, placesRestantes: null });
+    expect(creation.request.body).toEqual({ titre: 'Atelier', dateDebut: '2026-12-15T09:00', lieu: 'Ouagadougou', description: null, imageUrl: null, imageCle: null, placesRestantes: null });
     creation.flush(evenement(1, '2026-12-15T09:00:00'));
     http.expectOne('/api/evenements').flush([]);
   });
 
-  it('admin : refuse une image qui n\'est pas une adresse http(s)', () => {
+  it('admin : envoie la clé téléversée en priorité sur l’URL legacy', () => {
     const fixture = TestBed.createComponent(GestionCommunautePageComponent);
     http.expectOne('/api/evenements').flush([]);
     http.expectOne('/api/communaute/chiffres').flush([]);
-    const page = fixture.componentInstance as unknown as { formulaire: GestionCommunautePageComponent['formulaire']; enregistrer(): void };
-    page.formulaire.setValue({ titre: 'Atelier', dateDebut: '2026-12-15T09:00', lieu: 'Ouaga', description: '', imageUrl: 'javascript:alert(1)', placesRestantes: null });
+    fixture.detectChanges();
+    const page = fixture.componentInstance as unknown as {
+      formulaire: GestionCommunautePageComponent['formulaire'];
+      imageCle: { set(cle: string | null): void };
+      imageLegacy: { set(url: string | null): void };
+      enregistrer(): void;
+    };
+    page.formulaire.setValue({ titre: 'Atelier', dateDebut: '2026-12-15T09:00', lieu: 'Ouaga', description: '', placesRestantes: null });
+    page.imageCle.set('cle-1.jpg');
+    page.imageLegacy.set('https://cdn.example.com/ancien.jpg');
     page.enregistrer();
-    http.expectNone({ method: 'POST' });
+    const creation = http.expectOne({ method: 'POST', url: '/api/evenements' });
+    expect(creation.request.body).toEqual({ titre: 'Atelier', dateDebut: '2026-12-15T09:00', lieu: 'Ouaga', description: null, imageUrl: null, imageCle: 'cle-1.jpg', placesRestantes: null });
+    creation.flush(evenement(1, '2026-12-15T09:00:00'));
+    http.expectOne('/api/evenements').flush([]);
   });
 });

@@ -5,6 +5,7 @@ import { Categorie, Produit, ProduitGestionRequest } from '../../shared/models/a
 import { messageErreur } from '../../core/http/erreurs';
 import { GestionService } from './gestion.service';
 import { FcfaPipe } from '../../shared/pipes/fcfa.pipe';
+import { ImageUploadComponent } from '../../shared/images/image-upload.component';
 import { AlertComponent } from '../../shared/ui/alert.component';
 import { ButtonDirective } from '../../shared/ui/button.directive';
 import { ModalComponent } from '../../shared/ui/modal.component';
@@ -17,9 +18,14 @@ export interface ValeurProduitForm {
   categorieId: number | null;
   prix: number | null;
   description: string;
-  imageUrl: string;
   stockQuantite: number | null;
   vedette: boolean;
+}
+
+/** Image téléversée (clé) ou URL legacy conservée : la clé l'emporte, comme côté backend. */
+export interface ImageProduitChoisie {
+  cle: string | null;
+  legacy: string | null;
 }
 
 /** Prix et stock en FCFA/unités entières : pas de décimales (le backend refuse aussi). */
@@ -30,20 +36,21 @@ export function entierNonNegatif(controle: AbstractControl): ValidationErrors | 
 }
 
 /** Valeur du formulaire vers le corps POST/PUT : '' devient null (même convention que Communauté). */
-export function versRequeteProduit(valeur: ValeurProduitForm): ProduitGestionRequest {
+export function versRequeteProduit(valeur: ValeurProduitForm, image: ImageProduitChoisie): ProduitGestionRequest {
   const stock = valeur.stockQuantite as unknown;
   return {
     nom: valeur.nom.trim(),
     categorieId: valeur.categorieId ?? 0,
     prix: valeur.prix ?? 0,
     description: valeur.description.trim() || null,
-    imageUrl: valeur.imageUrl.trim() || null,
+    imageUrl: image.cle ? null : image.legacy?.trim() || null,
+    imageCle: image.cle,
     stockQuantite: stock === null || stock === '' ? null : Number(stock),
     vedette: valeur.vedette,
   };
 }
 
-type ChampProduit = 'nom' | 'categorieId' | 'prix' | 'description' | 'imageUrl' | 'stockQuantite';
+type ChampProduit = 'nom' | 'categorieId' | 'prix' | 'description' | 'stockQuantite';
 
 /**
  * Rattache un message 400 au bon champ (GAP-11 : le backend renvoie un message global).
@@ -54,16 +61,16 @@ export function champErreurProduit(statut: number, message: string): ChampProdui
   const texte = message.toLowerCase();
   if (texte.includes('catégorie')) return 'categorieId';
   if (texte.includes('prix')) return 'prix';
-  if (texte.includes('image') || texte.includes('http')) return 'imageUrl';
   if (texte.includes('stock')) return 'stockQuantite';
   if (texte.includes('description')) return 'description';
   if (texte.includes('nom')) return 'nom';
+  // Erreur d'image (clé inconnue…) : alerte haute, le téléversement n'a pas de champ texte.
   return null;
 }
 
 @Component({
   standalone: true,
-  imports: [ReactiveFormsModule, FcfaPipe, AlertComponent, ButtonDirective, ModalComponent, FieldComponent, ControlDirective, EmptyStateComponent, ErrorStateComponent, SkeletonComponent],
+  imports: [ReactiveFormsModule, FcfaPipe, ImageUploadComponent, AlertComponent, ButtonDirective, ModalComponent, FieldComponent, ControlDirective, EmptyStateComponent, ErrorStateComponent, SkeletonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="gestion-page">
@@ -108,12 +115,12 @@ export function champErreurProduit(statut: number, message: string): ChampProdui
         </app-field>
         <app-field label="Prix (FCFA, sans décimales)" [error]="erreurChamp('prix')"><input appControl class="input" type="number" min="0" step="1" formControlName="prix" /></app-field>
         <app-field label="Description" [error]="erreurChamp('description')"><textarea appControl class="input zone-texte" formControlName="description" maxlength="2000" rows="3"></textarea></app-field>
-        <app-field label="Adresse de la photo (facultatif)" hint="Lien https vers une image déjà en ligne." [error]="erreurChamp('imageUrl')"><input appControl class="input" type="url" formControlName="imageUrl" /></app-field>
+        <app-image-upload legende="Photo du produit" [(cle)]="imageCle" [(apercu)]="imageLegacy" (envoiEnCours)="envoiImage.set($event)" />
         <app-field [label]="edition() ? 'Stock (vide = inchangé)' : 'Stock initial (vide = 0)'" hint="Quantité entière, remplace la valeur actuelle." [error]="erreurChamp('stockQuantite')"><input appControl class="input" type="number" min="0" step="1" formControlName="stockQuantite" /></app-field>
         <label class="check"><input type="checkbox" formControlName="vedette" /> Produit vedette (en tête du catalogue)</label>
         <div class="formulaire__actions">
           <button type="button" appButton="secondary" (click)="formulaireOuvert.set(false)">Annuler</button>
-          <button type="submit" appButton [loading]="envoi()" [disabled]="envoi()">{{ edition() ? 'Enregistrer' : 'Créer le produit' }}</button>
+          <button type="submit" appButton [loading]="envoi()" [disabled]="envoi() || envoiImage()">{{ edition() ? 'Enregistrer' : 'Créer le produit' }}</button>
         </div>
       </form>
     </app-modal>
@@ -147,6 +154,9 @@ export class GestionProduitsPageComponent {
   protected suppression = signal<Produit | null>(null);
   protected edition = signal<Produit | null>(null);
   protected envoi = signal(false);
+  protected envoiImage = signal(false);
+  protected imageCle = signal<string | null>(null);
+  protected imageLegacy = signal<string | null>(null);
   protected erreurFormulaire = signal<string | null>(null);
   private erreurServeur = signal<{ champ: ChampProduit; message: string } | null>(null);
   protected formulaire = this.fb.group({
@@ -154,7 +164,6 @@ export class GestionProduitsPageComponent {
     categorieId: [null as number | null, Validators.required],
     prix: [null as number | null, [Validators.required, entierNonNegatif]],
     description: ['', Validators.maxLength(2000)],
-    imageUrl: ['', Validators.pattern(/^https?:\/\/\S+$/)],
     stockQuantite: [null as number | null, entierNonNegatif],
     vedette: [false],
   });
@@ -167,7 +176,8 @@ export class GestionProduitsPageComponent {
 
   protected ouvrirCreation(): void {
     this.edition.set(null);
-    this.formulaire.reset({ nom: '', categorieId: null, prix: null, description: '', imageUrl: '', stockQuantite: null, vedette: false });
+    this.formulaire.reset({ nom: '', categorieId: null, prix: null, description: '', stockQuantite: null, vedette: false });
+    this.imageCle.set(null); this.imageLegacy.set(null);
     this.erreurServeur.set(null); this.erreurFormulaire.set(null);
     this.formulaireOuvert.set(true);
   }
@@ -179,18 +189,20 @@ export class GestionProduitsPageComponent {
       categorieId: this.categories().find(c => c.nom === produit.categorie)?.id ?? null,
       prix: produit.prix,
       description: produit.description ?? '',
-      imageUrl: produit.imageUrl ?? '',
       stockQuantite: null,
       vedette: produit.vedette,
     });
+    // Clé renvoyée telle quelle, URL legacy affichée : à l'enregistrement la clé l'emporte.
+    this.imageCle.set(produit.imageCle ?? null);
+    this.imageLegacy.set(produit.imageCle ? null : produit.imageUrl);
     this.erreurServeur.set(null); this.erreurFormulaire.set(null);
     this.formulaireOuvert.set(true);
   }
 
   protected enregistrer(): void {
-    if (this.formulaire.invalid || this.envoi()) { this.formulaire.markAllAsTouched(); return; }
+    if (this.formulaire.invalid || this.envoi() || this.envoiImage()) { this.formulaire.markAllAsTouched(); return; }
     this.envoi.set(true); this.erreurServeur.set(null); this.erreurFormulaire.set(null);
-    const requete = versRequeteProduit(this.formulaire.getRawValue());
+    const requete = versRequeteProduit(this.formulaire.getRawValue(), { cle: this.imageCle(), legacy: this.imageLegacy() });
     const cible = this.edition();
     const appel = cible ? this.service.modifierProduit(cible.id, requete) : this.service.creerProduit(requete);
     appel.subscribe({
@@ -246,7 +258,6 @@ export class GestionProduitsPageComponent {
     if (nom === 'categorieId') return 'Choisissez une catégorie.';
     if (nom === 'prix') return 'Saisissez un prix entier à 0 ou plus.';
     if (nom === 'stockQuantite') return 'Saisissez une quantité entière à 0 ou plus.';
-    if (nom === 'imageUrl') return 'Saisissez une adresse qui commence par http:// ou https://.';
     if (nom === 'nom' && champ.hasError('maxlength')) return '200 caractères au plus.';
     if (nom === 'description') return '2000 caractères au plus.';
     return 'Ce champ est obligatoire.';

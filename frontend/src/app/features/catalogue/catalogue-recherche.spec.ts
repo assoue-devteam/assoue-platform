@@ -7,7 +7,7 @@ import { nettoyer } from './recherche-produit.component';
 import { Categorie, Produit } from '../../shared/models/api';
 
 const produit = (id: number, nom: string, categorie: string, prix = 1000): Produit =>
-  ({ id, nom, categorie, description: '', prix, imageUrl: null, enRupture: false, vedette: false, noteMoyenne: null, nombreAvis: 0 });
+  ({ id, nom, categorie, description: '', prix, imageUrl: null, imageCle: null, enRupture: false, vedette: false, noteMoyenne: null, nombreAvis: 0 });
 
 const categories: Categorie[] = [
   { id: 1, nom: 'Mobilier', description: null },

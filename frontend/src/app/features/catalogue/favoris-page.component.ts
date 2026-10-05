@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FcfaPipe } from '../../shared/pipes/fcfa.pipe';
+import { SrcImagePipe } from '../../shared/images/src-image.pipe';
 import { ButtonDirective } from '../../shared/ui/button.directive';
 import { EmptyStateComponent, ErrorStateComponent, SkeletonComponent } from '../../shared/ui/states';
 import { FavoriBoutonComponent } from './favori-bouton.component';
@@ -9,7 +10,7 @@ import { PanierService } from './panier.service';
 
 @Component({
   standalone: true,
-  imports: [RouterLink, FcfaPipe, ButtonDirective, EmptyStateComponent, ErrorStateComponent, SkeletonComponent, FavoriBoutonComponent],
+  imports: [RouterLink, FcfaPipe, SrcImagePipe, ButtonDirective, EmptyStateComponent, ErrorStateComponent, SkeletonComponent, FavoriBoutonComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="favoris container">
@@ -23,7 +24,7 @@ import { PanierService } from './panier.service';
           @for (produit of favoris.produits(); track produit.id) {
             <li class="ligne">
               <a [routerLink]="['/produits', produit.id]" class="ligne__image">
-                @if (produit.imageUrl) { <img [src]="produit.imageUrl" [alt]="produit.nom" /> } @else { <span aria-hidden="true">AS'SOUÉ</span> }
+                @if (produit.imageUrl) { <img [src]="produit.imageUrl | srcImage" [alt]="produit.nom" /> } @else { <span aria-hidden="true">AS'SOUÉ</span> }
               </a>
               <div class="ligne__detail">
                 <a [routerLink]="['/produits', produit.id]">{{ produit.nom }}</a>
