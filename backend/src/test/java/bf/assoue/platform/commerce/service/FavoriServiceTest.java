@@ -80,7 +80,7 @@ class FavoriServiceTest {
         ProduitResponse reponse = new ProduitResponse(5L, "Pouf", null, BigDecimal.valueOf(25000), null, null, "Mobilier", true, false, null, 0);
         when(favoriRepository.findByClientEmailOrderByDateAjoutDesc("client@example.com"))
                 .thenReturn(List.of(Favori.builder().client(client).produit(pouf).build()));
-        when(produitService.versReponse(pouf)).thenReturn(reponse);
+        when(produitService.versReponses(List.of(pouf))).thenReturn(List.of(reponse));
 
         assertThat(favoriService.lister("client@example.com")).containsExactly(reponse);
     }

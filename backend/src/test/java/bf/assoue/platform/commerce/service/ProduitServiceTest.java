@@ -63,7 +63,7 @@ class ProduitServiceTest {
                 .build();
 
         when(produitRepository.findByArchiveFalse()).thenReturn(List.of(p1));
-        when(stockService.estEnRupture(1L)).thenReturn(false);
+        when(stockService.rupturesParProduit(List.of(1L))).thenReturn(java.util.Map.of(1L, false));
 
         List<ProduitResponse> result = produitService.lister(null);
 
