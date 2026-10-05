@@ -60,7 +60,7 @@ const MAX_CHIFFRES = 6;
       </section>
     </section>
 
-    <app-modal [titre]="enEdition() ? 'Modifier l\\'événement' : 'Nouvel événement'" [(open)]="formulaireOuvert">
+    <app-modal [titre]="titreFormulaire()" [(open)]="formulaireOuvert">
       <form [formGroup]="formulaire" (ngSubmit)="enregistrer()" novalidate>
         <app-field label="Titre" [error]="erreur('titre')"><input appControl class="input" type="text" formControlName="titre" maxlength="150" /></app-field>
         <app-field label="Date et heure" [error]="erreur('dateDebut')"><input appControl class="input" type="datetime-local" formControlName="dateDebut" /></app-field>
@@ -116,6 +116,9 @@ export class GestionCommunautePageComponent {
   protected envoiImage = signal(false);
   protected imageCle = signal<string | null>(null);
   protected imageLegacy = signal<string | null>(null);
+  protected titreFormulaire(): string {
+    return this.enEdition() ? "Modifier l'événement" : 'Nouvel événement';
+  }
   protected envoiChiffres = signal(false);
   protected chiffresInvalides = signal(false);
 

@@ -26,11 +26,11 @@ let compteur = 0;
         <app-icon name="chevron-down" [size]="16" />
       </button>
       @if (ouvert()) {
-        <div class="compte__menu" [id]="idPanneau" (focusout)="fermerSiFocusSorti($event)" (click)="fermerSiAction($event)">
-          @if (auth.aRole('ADMIN')) { <a routerLink="/gestion">Espace gestion</a> }
-          @if (auth.aRole('COLLECTEUR')) { <a routerLink="/collecte">Espace collecte</a> }
-          @if (auth.aRole('CLIENT')) { <a routerLink="/commandes">Mes commandes</a> }
-          @if (auth.aRole('CLIENT')) { <a routerLink="/favoris">Mes favoris</a> }
+        <div class="compte__menu" [id]="idPanneau" (focusout)="fermerSiFocusSorti($event)">
+          @if (auth.aRole('ADMIN')) { <a routerLink="/gestion" (click)="fermer()">Espace gestion</a> }
+          @if (auth.aRole('COLLECTEUR')) { <a routerLink="/collecte" (click)="fermer()">Espace collecte</a> }
+          @if (auth.aRole('CLIENT')) { <a routerLink="/commandes" (click)="fermer()">Mes commandes</a> }
+          @if (auth.aRole('CLIENT')) { <a routerLink="/favoris" (click)="fermer()">Mes favoris</a> }
           <button type="button" (click)="deconnecter()"><app-icon name="log-out" [size]="16" /> Se déconnecter</button>
         </div>
       }
@@ -120,13 +120,8 @@ export class CompteMenuComponent {
     if (estDefilementFermant(event, this.hote)) this.fermer();
   }
 
-  /** Clic sur un lien ou « Se déconnecter » : le changement de route ferme déjà,
-      mais la déconnexion reste sur place (navigateByUrl('/')) — on ferme ici. */
-  protected fermerSiAction(event: Event): void {
-    if ((event.target as HTMLElement).closest('a,button')) this.fermer();
-  }
-
   protected deconnecter() {
+    this.fermer();
     this.auth.deconnecter();
     this.router.navigateByUrl('/');
   }

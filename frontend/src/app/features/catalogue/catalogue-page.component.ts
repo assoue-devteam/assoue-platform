@@ -131,7 +131,7 @@ export function trierProduits(produits: Produit[], tri: TriCatalogue): Produit[]
         <p class="carte__categorie">{{ produit.categorie }}</p>
         <h2><a [routerLink]="['/produits', produit.id]">{{ produit.nom }}</a></h2>
         <app-etoiles [note]="produit.noteMoyenne" [nombre]="produit.nombreAvis" />
-        @if (produit.prix == null) {
+        @if (produit.prix === null || produit.prix === undefined) {
           <p class="carte__prix">Prix sur demande</p>
           <button type="button" appButton="purchase" [block]="true" disabled>Ajouter au panier</button>
         } @else {

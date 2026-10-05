@@ -53,15 +53,6 @@ describe("champ d'envoi d'image", () => {
     throw new Error('envoi jamais parti');
   }
 
-  async function attendreTexte(el: HTMLElement, selecteur: string): Promise<HTMLElement> {
-    for (let i = 0; i < 100; i++) {
-      const cible = el.querySelector(selecteur) as HTMLElement | null;
-      if (cible) return cible;
-      await new Promise(resolve => setTimeout(resolve, 50));
-    }
-    throw new Error(`« ${selecteur} » jamais affiché`);
-  }
-
   async function attendreAlerte(
     fixture: ComponentFixture<ImageUploadComponent>, el: HTMLElement,
   ): Promise<HTMLElement> {

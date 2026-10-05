@@ -23,7 +23,7 @@ import { ClickOutsideDirective, estDefilementFermant } from '../../shared/ui/cli
       <span class="barre__titre">AS'SOUÉ Gestion</span>
     </header>
 
-    @if (menuOuvert()) { <div class="voile" (click)="menuOuvert.set(false)"></div> }
+    @if (menuOuvert()) { <button type="button" class="voile" aria-label="Fermer le menu" (click)="fermer()"></button> }
 
     <nav #panneau id="nav-gestion" class="sidebar" [class.sidebar--ouverte]="menuOuvert()" aria-label="Navigation gestion"
          [appClickOutsideEnabled]="menuOuvert()" (appClickOutside)="fermerDepuisExterieur($event)"
@@ -62,7 +62,7 @@ import { ClickOutsideDirective, estDefilementFermant } from '../../shared/ui/cli
       outline: none; box-shadow: var(--focus-ring);
     }
     .barre__titre { font-weight: 600; }
-    .voile { position: fixed; inset: 0; z-index: 20; background: var(--overlay); }
+    .voile { position: fixed; inset: 0; z-index: 20; border: 0; padding: 0; background: var(--overlay); cursor: pointer; }
     .sidebar {
       position: fixed; z-index: 21; inset: 0 auto 0 0; width: 280px; max-width: 85vw;
       display: none; flex-direction: column; overflow-y: auto;

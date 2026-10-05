@@ -74,12 +74,12 @@ export class FilterChipsComponent<T = string> {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="tabs" role="tablist" [attr.aria-label]="label()" (keydown)="clavier($event)">
+    <div class="tabs" role="tablist" [attr.aria-label]="label()">
       @for (option of options(); track option.valeur) {
         <button type="button" role="tab" class="tab"
                 [attr.aria-selected]="option.valeur === selected()"
                 [attr.tabindex]="option.valeur === selected() ? 0 : -1"
-                (click)="selected.set(option.valeur)">
+                (click)="selected.set(option.valeur)" (keydown)="clavier($event)">
           {{ option.libelle }}
         </button>
       }

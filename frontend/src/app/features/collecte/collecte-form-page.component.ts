@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Collecte, Materiau } from '../../shared/models/api';
+import { Materiau } from '../../shared/models/api';
 import { CollecteService } from './collecte.service';
 import { NetworkService } from '../../core/network.service';
 import { AlertComponent } from '../../shared/ui/alert.component';
@@ -11,7 +10,7 @@ import { ControlDirective, FieldComponent } from '../../shared/ui/field.componen
 
 @Component({
   standalone: true,
-  imports: [DecimalPipe, ReactiveFormsModule, RouterLink, AlertComponent, ButtonDirective, FieldComponent, ControlDirective],
+  imports: [ReactiveFormsModule, RouterLink, AlertComponent, ButtonDirective, FieldComponent, ControlDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="formulaire"><a routerLink="/collecte" class="retour">Mes collectes</a><p class="eyebrow">Espace terrain</p><h1>{{ edition ? 'Corriger une déclaration' : 'Nouvelle déclaration' }}</h1>
