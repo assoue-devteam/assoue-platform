@@ -33,7 +33,7 @@ export interface Categorie {
 export interface Produit {
   id: number;
   nom: string;
-  description: string;
+  description: string | null;
   prix: number;
   imageUrl: string | null;
   categorie: string;
