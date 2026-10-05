@@ -1,6 +1,18 @@
 spring:
   application:
     name: assoue-platform
+  # Rejet propre au-delà de 5 Mo (413 via GlobalExceptionHandler), avant tout décodage.
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+# Images uploadées (lot 8) : dossier configurable, absolu obligatoire en production.
+assoue:
+  images:
+    dossier: ${ASSOUE_IMAGES_DIR:./uploads}
+    largeur-max: 4000
+    hauteur-max: 4000
+    pixels-max: 12000000
 springdoc:
   api-docs:
     path: /api-docs

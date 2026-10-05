@@ -34,6 +34,10 @@ public class Produit {
     @Column(name = "image_url")
     private String imageUrl;
 
+    /** Clé d'image uploadée (lot 8) : imageUrl legacy (https) conservée pour l'existant. */
+    @Column(name = "image_cle", length = 100)
+    private String imageCle;
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "categorie_id", nullable = false)
     private Categorie categorie;

@@ -1,16 +1,27 @@
 package bf.assoue.platform.common.exception;
 
+import bf.assoue.platform.images.ImageInvalideException;
+import bf.assoue.platform.images.ImageService;
+import bf.assoue.platform.images.ImageTropLourdeException;
+import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.web.servlet.MultipartProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+
+    private final MultipartProperties multipart;
 
     @ExceptionHandler(EmailDejaUtiliseException.class)
     public ResponseEntity<ErreurApi> gererEmailDejaUtilise(EmailDejaUtiliseException ex) {
@@ -55,4 +66,25 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ErreurApi.de(400, message));
     }
 
+    /** Fichier au-delà de 5 Mo : rejeté par le conteneur avant le contrôleur. */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErreurApi> gererFichierTropGros(MaxUploadSizeExceededException ex) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body(ErreurApi.de(413, "L'image dépasse " + ImageService.formaterLimite(multipart.getMaxFileSize()) + "."));
+    }
+
+    @ExceptionHandler(ImageTropLourdeException.class)
+    public ResponseEntity<ErreurApi> gererImageTropLourde(ImageTropLourdeException ex) {
+        return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(ErreurApi.de(413, ex.getMessage()));
+    }
+
+    @ExceptionHandler(ImageInvalideException.class)
+    public ResponseEntity<ErreurApi> gererImageInvalide(ImageInvalideException ex) {
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(ErreurApi.de(415, ex.getMessage()));
+    }
+
+    @ExceptionHandler({MultipartException.class, MissingServletRequestPartException.class})
+    public ResponseEntity<ErreurApi> gererEnvoiInvalide(Exception ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ErreurApi.de(400, "Envoi d'image invalide."));
+    }
 }

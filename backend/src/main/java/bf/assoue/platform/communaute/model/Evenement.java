@@ -42,6 +42,10 @@ public class Evenement {
     @Column(name = "image_url", length = 500)
     private String imageUrl;
 
+    /** Clé d'image uploadée (lot 8) : imageUrl legacy (https) conservée pour l'existant. */
+    @Column(name = "image_cle", length = 100)
+    private String imageCle;
+
     // Information saisie par l'admin, pas un compteur tenu par le système.
     @Column(name = "places_restantes")
     private Integer placesRestantes;

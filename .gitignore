@@ -52,6 +52,10 @@ frontend/.angular/
 fix_users.sql
 seed_demo_dev.sql
 
+# Images uploadées : le dossier existe en dev (.gitkeep), jamais son contenu.
+uploads/*
+!uploads/.gitkeep
+
 # OS
 .DS_Store
 

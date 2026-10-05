@@ -1,5 +1,6 @@
 package bf.assoue.platform.communaute.dto;
 
+import bf.assoue.platform.images.CleImage;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -8,6 +9,10 @@ import jakarta.validation.constraints.Size;
 
 import java.time.LocalDateTime;
 
+/**
+ * Image : imageUrl (adresse https existante) ou imageCle (clé renvoyée par
+ * POST /api/images). Si les deux arrivent ensemble, imageCle l'emporte.
+ */
 public record EvenementRequest(
         @NotBlank @Size(max = 150) String titre,
         @NotNull LocalDateTime dateDebut,
@@ -15,6 +20,7 @@ public record EvenementRequest(
         @Size(max = 2000) String description,
         // http(s) seulement : l'URL finit dans un <img src>, pas de javascript: ni de data:.
         @Size(max = 500) @Pattern(regexp = "^https?://\\S+$", message = "L'image doit être une adresse http(s)") String imageUrl,
+        @Pattern(regexp = CleImage.REGEX_CHEMIN, message = "Référence d'image invalide") String imageCle,
         @Min(0) Integer placesRestantes
 ) {
 }

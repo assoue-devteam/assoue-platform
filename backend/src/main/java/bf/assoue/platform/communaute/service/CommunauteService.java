@@ -9,6 +9,8 @@ import bf.assoue.platform.communaute.model.ChiffreCommunaute;
 import bf.assoue.platform.communaute.model.Evenement;
 import bf.assoue.platform.communaute.repository.ChiffreCommunauteRepository;
 import bf.assoue.platform.communaute.repository.EvenementRepository;
+import bf.assoue.platform.images.ImageService;
+import bf.assoue.platform.images.SuppressionImageApresCommit;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,8 @@ public class CommunauteService {
 
     private final EvenementRepository evenementRepository;
     private final ChiffreCommunauteRepository chiffreRepository;
+    private final ImageService imageService;
+    private final SuppressionImageApresCommit nettoyageImage;
 
     @Transactional(readOnly = true)
     public List<EvenementResponse> evenements() {
@@ -45,10 +49,12 @@ public class CommunauteService {
 
     @Transactional
     public void supprimer(Long id) {
-        if (!evenementRepository.existsById(id)) {
-            throw new RessourceIntrouvableException("Événement introuvable : " + id);
-        }
-        evenementRepository.deleteById(id);
+        Evenement evenement = evenementRepository.findById(id)
+                .orElseThrow(() -> new RessourceIntrouvableException("Événement introuvable : " + id));
+        // Suppression physique : l'image n'est plus référencée nulle part, on la nettoie après commit.
+        String cle = evenement.getImageCle();
+        evenementRepository.delete(evenement);
+        nettoyageImage.supprimer(cle);
     }
 
     @Transactional(readOnly = true)
@@ -75,7 +81,18 @@ public class CommunauteService {
         evenement.setDateDebut(requete.dateDebut());
         evenement.setLieu(requete.lieu().trim());
         evenement.setDescription(videVersNull(requete.description()));
-        evenement.setImageUrl(videVersNull(requete.imageUrl()));
+        // imageCle l'emporte sur imageUrl (documenté sur le DTO).
+        String ancienneCle = evenement.getImageCle();
+        if (requete.imageCle() != null) {
+            evenement.setImageCle(imageService.validerCleExistante(requete.imageCle()));
+            evenement.setImageUrl(null);
+        } else {
+            evenement.setImageUrl(videVersNull(requete.imageUrl()));
+            evenement.setImageCle(null);
+        }
+        if (ancienneCle != null && !ancienneCle.equals(evenement.getImageCle())) {
+            nettoyageImage.supprimer(ancienneCle);
+        }
         evenement.setPlacesRestantes(requete.placesRestantes());
     }
 

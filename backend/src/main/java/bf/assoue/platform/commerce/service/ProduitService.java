@@ -8,6 +8,8 @@ import bf.assoue.platform.commerce.repository.AvisRepository;
 import bf.assoue.platform.commerce.repository.CategorieRepository;
 import bf.assoue.platform.commerce.repository.ProduitRepository;
 import bf.assoue.platform.common.exception.RessourceIntrouvableException;
+import bf.assoue.platform.images.ImageService;
+import bf.assoue.platform.images.SuppressionImageApresCommit;
 import bf.assoue.platform.stock.service.StockService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,8 @@ public class ProduitService {
     private final CategorieRepository categorieRepository;
     private final StockService stockService;
     private final AvisRepository avisRepository;
+    private final ImageService imageService;
+    private final SuppressionImageApresCommit nettoyageImage;
 
     public List<ProduitResponse> lister(Long categorieId) {
         List<Produit> produits = categorieId != null
@@ -56,11 +60,14 @@ public class ProduitService {
         Categorie categorie = categorieRepository.findById(requete.categorieId())
                 .orElseThrow(() -> new RessourceIntrouvableException("Catégorie introuvable : " + requete.categorieId()));
 
+        // imageCle l'emporte sur imageUrl (documenté sur le DTO).
+        String cle = imageService.validerCleExistante(requete.imageCle());
         Produit produit = produitRepository.save(Produit.builder()
                 .nom(requete.nom().trim())
                 .description(requete.description())
                 .prix(BigDecimal.valueOf(requete.prix()))
-                .imageUrl(requete.imageUrl())
+                .imageUrl(cle != null ? null : requete.imageUrl())
+                .imageCle(cle)
                 .categorie(categorie)
                 .vedette(Boolean.TRUE.equals(requete.vedette()))
                 .build());
@@ -79,7 +86,21 @@ public class ProduitService {
         produit.setNom(requete.nom().trim());
         produit.setDescription(requete.description());
         produit.setPrix(BigDecimal.valueOf(requete.prix()));
-        produit.setImageUrl(requete.imageUrl());
+        // imageCle l'emporte ; l'ancien fichier est supprimé après commit s'il n'est plus référencé.
+        // Les lignes de commande, paniers et favoris pointent le produit vivant : aucun historique
+        // ne stocke de copie d'image, la suppression est donc sans risque. L'archivage garde son fichier.
+        String ancienneCle = produit.getImageCle();
+        if (requete.imageCle() != null) {
+            String cle = imageService.validerCleExistante(requete.imageCle());
+            produit.setImageCle(cle);
+            produit.setImageUrl(null);
+        } else {
+            produit.setImageUrl(requete.imageUrl());
+            produit.setImageCle(null);
+        }
+        if (ancienneCle != null && !ancienneCle.equals(produit.getImageCle())) {
+            nettoyageImage.supprimer(ancienneCle);
+        }
         produit.setCategorie(categorie);
         produit.setVedette(Boolean.TRUE.equals(requete.vedette()));
         if (requete.stockQuantite() != null) {
@@ -108,13 +129,25 @@ public class ProduitService {
                 produit.getNom(),
                 produit.getDescription(),
                 produit.getPrix(),
-                produit.getImageUrl(),
+                resoudreImage(produit.getImageUrl(), produit.getImageCle()),
+                produit.getImageCle(),
                 produit.getCategorie().getNom(),
                 enRupture,
                 produit.isVedette(),
                 avisRepository.noteMoyenne(produit.getId()),
                 avisRepository.countByProduitId(produit.getId())
         );
+    }
+
+    /** URL legacy telle quelle, sinon chemin d'image uploadée, sinon rien. */
+    static String resoudreImage(String imageUrl, String imageCle) {
+        if (imageUrl != null) {
+            return imageUrl;
+        }
+        if (imageCle != null) {
+            return ImageService.CHEMIN_PUBLIC + imageCle;
+        }
+        return null;
     }
 
 }
