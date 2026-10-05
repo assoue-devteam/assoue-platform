@@ -20,6 +20,7 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
         @if (auth.aRole('ADMIN')) { <a routerLink="/gestion">Espace gestion</a> }
         @if (auth.aRole('COLLECTEUR')) { <a routerLink="/collecte">Espace collecte</a> }
         @if (auth.aRole('CLIENT')) { <a routerLink="/commandes">Mes commandes</a> }
+        @if (auth.aRole('CLIENT')) { <a routerLink="/favoris">Mes favoris</a> }
         <button type="button" (click)="deconnecter()"><app-icon name="log-out" [size]="16" /> Se déconnecter</button>
       </div>
     </details>
