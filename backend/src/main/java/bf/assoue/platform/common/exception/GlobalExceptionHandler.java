@@ -5,6 +5,7 @@ import bf.assoue.platform.images.ImageService;
 import bf.assoue.platform.images.ImageTropLourdeException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.web.servlet.MultipartProperties;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -86,5 +87,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({MultipartException.class, MissingServletRequestPartException.class})
     public ResponseEntity<ErreurApi> gererEnvoiInvalide(Exception ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ErreurApi.de(400, "Envoi d'image invalide."));
+    }
+
+    /**
+     * Modification concurrente d'un stock (@Version, migration V10) : 409 avec le
+     * message attendu par l'écran Gestion > Stocks, au lieu d'un 500 brut.
+     */
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<ErreurApi> gererConflitEcriture(OptimisticLockingFailureException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ErreurApi.de(409, "La quantité a changé entre-temps. Rechargez la page."));
     }
 }

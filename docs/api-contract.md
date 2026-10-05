@@ -268,7 +268,7 @@ Réponse `200` : `[{ "produitId": 1, "produitNom": "...", "quantite": 12 }]`
 Réponse `200` : `[{ "materiauId": 1, "materiauNom": "Plastique", "quantite": 42.5 }]`
 
 ### `PUT /api/stocks/produits/{produitId}`
-Requête : `{ "quantite": 20 }` (≥ 0, remplace la valeur). Ajuste manuellement le stock d'un produit fini. `404` si le produit n'a pas de ligne de stock. Verrou optimiste (`@Version`, migration V10) : en cas de modification concurrente, l'exception n'est pas gérée par `GlobalExceptionHandler` et sort en `500`.
+Requête : `{ "quantite": 20 }` (≥ 0, remplace la valeur). Ajuste manuellement le stock d'un produit fini. `404` si le produit n'a pas de ligne de stock. Verrou optimiste (`@Version`, migration V10) : en cas de modification concurrente, `409` (« La quantité a changé entre-temps. Rechargez la page. »).
 
 ## Codes d'erreur communs
 
