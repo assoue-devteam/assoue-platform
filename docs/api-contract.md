@@ -193,6 +193,23 @@ Rôle ADMIN. Requête : `{ "titre", "dateDebut", "lieu", "description"?, "imageU
 ### `GET /api/communaute/chiffres` · `PUT /api/communaute/chiffres`
 `GET` public : `[{ "libelle": "Artisans soutenus", "valeur": 245 }]`, dans l'ordre d'affichage, vide tant que l'admin n'a rien saisi. `PUT` (ADMIN) remplace toute la liste : `{ "chiffres": [{ "libelle", "valeur" }] }`, 6 au plus, libellé 80 car., valeur >= 0.
 
+## Images (upload admin, lot 8)
+
+Les formulaires admin n'exposent plus que l'upload (`app-image-upload`) ; les anciennes `imageUrl` en `https` restent affichées telles quelles (aucune migration de données).
+
+### `POST /api/images`
+Rôle ADMIN, `multipart/form-data` avec le champ `fichier`. Le serveur vérifie le type réel par magic bytes (JPEG et PNG uniquement — pas de WebP, ImageIO ne le lit pas sans plugin), les dimensions avant décodage (4000 × 4000 et 12 M pixels au plus, anti bombe de décompression), décode puis **réencode** l'image (supprime EXIF/GPS et contenus annexes). Réponse `201` : `{ "cle": "<uuid>.jpg" }` — la clé, jamais un chemin disque ni le nom client. Le nom d'origine n'est jamais utilisé pour stocker.
+Erreurs : `400` fichier vide/illisible ou clé inconnue dans un formulaire, `413` au-delà de 5 Mo (« L'image dépasse 5 Mo »), `415` format interdit ou contenu non image, `403` sans token (comme tous les endpoints protégés, pas d'`AuthenticationEntryPoint` dédié) ou avec un mauvais rôle.
+
+### `GET /api/images/{cle}`
+Public. `{cle}` validée par regex stricte (UUID + `.jpg`/`.png`, sinon 404) ; `../`, séparateurs encodés et clés inconnues → 4xx sans accès fichier. `Content-Type` fixé par le serveur, `Cache-Control: public, max-age=31536000, immutable` (clé unique), `X-Content-Type-Options: nosniff` global.
+
+### Champs `imageCle` (produits et événements)
+`POST/PUT /api/produits` et `POST/PUT /api/evenements` acceptent `imageCle` (clé renvoyée par l'upload, doit exister sinon `400`) en plus de `imageUrl` (legacy `http(s)`, même validateur qu'avant). **Si les deux arrivent ensemble, `imageCle` l'emporte** et `imageUrl` est vidée. Les réponses portent `imageCle` (ou `null`) et `imageUrl` **résolue** : URL legacy telle quelle, sinon `/api/images/{cle}`, sinon `null` — le front n'a rien changé à son affichage. Côté front, `/api/images/...` passe par le proxy en dev et la même origine en prod ; si un jour front et API sont sur des origines différentes, le helper `resoudreUrlImage` préfixe avec l'origine de `apiUrl` (absolue).
+Remplacement d'image ou suppression d'événement (physique) : l'ancien fichier est supprimé après commit. Archivage produit (suppression logique) : le fichier est gardé (commandes, paniers et favoris pointent le produit vivant, aucune copie d'image n'est stockée dans l'historique). Un upload jamais rattaché à un formulaire reste orphelin (nettoyage à prévoir, voir dette technique).
+
+Stockage : interface `StockageImage`, implémentation disque, dossier `ASSOUE_IMAGES_DIR` (`./uploads` en dev, **absolu obligatoire en production**, échec clair au démarrage sinon — volume à monter, voir README). Disque éphémère = images perdues à chaque redéploiement : passer au stockage objet = 2e implémentation de l'interface, sans autre changement.
+
 ## Collecte
 
 ### `POST /api/collectes`

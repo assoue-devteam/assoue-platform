@@ -45,6 +45,13 @@ Vérifier : `http://localhost:4200`
 
 Comptes de démo (base seedée, mot de passe dans `docs/demarrage-local.md`) : `admin@assoue.bf` (ADMIN → `/gestion`), `client@assoue.bf` (CLIENT → boutique), `collecteur@assoue.bf` (COLLECTEUR → `/collecte`). L'inscription publique crée toujours un CLIENT ; les rôles COLLECTEUR/ADMIN se créent via **Gestion → Utilisateurs**.
 
+## Images uploadées
+
+Les photos produits/événements sont envoyées par l'admin (`POST /api/images`, JPEG/PNG, 5 Mo au plus, réencodées côté serveur) et stockées sur disque :
+- en dev : `./uploads` (créé par le dépôt, `ASSOUE_IMAGES_DIR` relatif accepté) ;
+- en production : `ASSOUE_IMAGES_DIR` **absolu et obligatoire** (ex. `/var/lib/assoue/uploads`), avec un **volume monté** sur ce chemin — sinon le backend refuse de démarrer, et sur disque éphémère les images seraient perdues à chaque redéploiement (le passage au stockage objet se fera derrière la même interface `StockageImage`, voir contrat d'API).
+- `docker compose` monte déjà `./uploads:/app/uploads` avec `ASSOUE_IMAGES_DIR=/app/uploads`.
+
 ## Vérifications qualité
 
 Depuis `backend` :
