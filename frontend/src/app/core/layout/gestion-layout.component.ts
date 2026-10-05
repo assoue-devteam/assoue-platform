@@ -95,6 +95,7 @@ export class GestionLayoutComponent {
   protected liens = [
     { url: '/gestion/collectes', libelle: 'Collectes' },
     { url: '/gestion/commandes', libelle: 'Commandes' },
+    { url: '/gestion/produits', libelle: 'Produits' },
     { url: '/gestion/stocks', libelle: 'Stocks' },
     { url: '/gestion/communaute', libelle: 'Communauté' },
     { url: '/gestion/utilisateurs', libelle: 'Utilisateurs' },

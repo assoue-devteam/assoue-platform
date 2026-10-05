@@ -63,7 +63,23 @@ Public. `categorieId` optionnel. Réponse `200` :
 `imageUrl` peut être `null` (CL-03, migration V9). Aucun endpoint ne permet encore de le renseigner.
 
 ### `GET /api/produits/{id}`
-Public. Réponse `200` : un objet au même format qu'un élément de la liste ci-dessus. `404` si introuvable.
+Public. Réponse `200` : un objet au même format qu'un élément de la liste ci-dessus. `404` si introuvable ou archivé (un produit archivé est introuvable partout côté public, comme s'il n'existait pas).
+
+### `POST /api/produits`
+Rôle ADMIN. Crée un produit du catalogue avec son stock initial. Requête :
+```json
+{ "nom": "Tabouret en pneu", "categorieId": 1, "prix": 12000, "description": "...", "imageUrl": "https://.../tabouret.jpg", "stockQuantite": 5, "vedette": false }
+```
+`nom` (non vide, 200 car. max), `categorieId` (existante) et `prix` (entier FCFA ≥ 0, jamais de float ; `0` accepté) sont obligatoires. `description` (2000 car. max), `imageUrl` (optionnel, `http(s)://` uniquement, même règle que les événements — pas d'upload), `stockQuantite` (optionnel, ≥ 0 ; absent = `0`, donc en rupture) et `vedette` (optionnel, défaut `false`) sont facultatifs. `enRupture` n'est jamais saisi : il est dérivé du stock (`0` ou ligne absente → en rupture).
+Réponse `201` au format produit. Erreurs : `400` validation, `404` catégorie inconnue.
+
+### `PUT /api/produits/{id}`
+Rôle ADMIN. Remplace les champs du produit ; `stockQuantite` présent **remplace** le stock (absent = inchangé) — pas d'endpoint dédié, un seul appel suffit. Réponse `200` au format produit. Erreurs : `400` validation, `404` produit introuvable, archivé ou catégorie inconnue.
+
+### `DELETE /api/produits/{id}`
+Rôle ADMIN. Suppression toujours logique (archivage, jamais de `409`, jamais de suppression physique) : le produit disparaît du catalogue mais reste lisible dans l'historique des commandes, favoris et paniers qui le référencent. Réponse `204`. `404` si introuvable ou déjà archivé.
+
+Un produit archivé est refusé comme un produit en rupture : `PUT /api/panier` et `POST /api/commandes` renvoient `400` (« « \<nom\> » n'est plus disponible »).
 
 ### `POST /api/commandes`
 Authentifié (rôle CLIENT). Requête :
@@ -250,5 +266,5 @@ Toute erreur renvoie :
 ## Ce qui n'est pas encore couvert
 
 - **US-04 (Should Have)** : pas de notification temps réel sur le changement de statut de commande — l'infra de notification (WebSocket/push) n'existe pas encore dans ce lot. Le frontend peut pour l'instant faire du polling sur `GET /api/commandes/{id}`.
-- **Création de produits/catégories côté admin** : pas d'endpoint `POST`/`PUT` sur `/api/produits` ou `/api/categories` dans ce lot — à ajouter si le besoin d'admin apparaît avant la fin de la livraison.
+- **Catégories côté admin** : pas d'endpoint `POST` sur `/api/categories` — les quatre catégories (Mobilier, Bijoux, Chaussures, Accessoires) sont fournies par les données de départ, il n'y a pas de besoin réel.
 - **Déclaration de Depot par un fournisseur** : pas d'endpoint dédié — le lien `Collecte.depot` existe en base mais rien ne le renseigne encore côté API.

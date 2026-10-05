@@ -110,6 +110,17 @@ class PanierServiceTest {
     }
 
     @Test
+    void remplacer_refuseUnProduitArchiveCommeUnProduitEnRupture() {
+        pouf.setArchive(true);
+
+        assertThatThrownBy(() -> panierService.remplacer(
+                new PanierRequest(List.of(new LigneCommandeRequest(5L, 1))), "client@example.com"))
+                .isInstanceOf(RequeteInvalideException.class)
+                .hasMessageContaining("n'est plus disponible");
+        verify(lignePanierRepository, never()).deleteByClientId(any());
+    }
+
+    @Test
     void remplacer_refuseUnProduitInconnu() {
         when(produitRepository.findById(99L)).thenReturn(Optional.empty());
 

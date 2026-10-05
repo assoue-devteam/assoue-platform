@@ -46,4 +46,9 @@ public class Produit {
     @Builder.Default
     private boolean vedette = false;
 
+    /** Suppression logique (admin) : un produit vendu reste lisible dans l'historique. */
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean archive = false;
+
 }

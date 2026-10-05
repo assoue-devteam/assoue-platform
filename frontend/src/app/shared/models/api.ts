@@ -171,6 +171,17 @@ export interface StockProduit {
   quantite: number;
 }
 
+/** Corps de POST/PUT /api/produits (admin). stockQuantite absent : 0 à la création, inchangé en modification. */
+export interface ProduitGestionRequest {
+  nom: string;
+  categorieId: number;
+  prix: number;
+  description: string | null;
+  imageUrl: string | null;
+  stockQuantite: number | null;
+  vedette: boolean;
+}
+
 export interface StockMatiere {
   materiauId: number;
   materiauNom: string;

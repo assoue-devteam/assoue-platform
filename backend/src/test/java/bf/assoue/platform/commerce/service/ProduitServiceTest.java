@@ -1,9 +1,11 @@
 package bf.assoue.platform.commerce.service;
 
+import bf.assoue.platform.commerce.dto.ProduitRequest;
 import bf.assoue.platform.commerce.dto.ProduitResponse;
 import bf.assoue.platform.commerce.model.Categorie;
 import bf.assoue.platform.commerce.model.Produit;
 import bf.assoue.platform.commerce.repository.AvisRepository;
+import bf.assoue.platform.commerce.repository.CategorieRepository;
 import bf.assoue.platform.commerce.repository.ProduitRepository;
 import bf.assoue.platform.common.exception.RessourceIntrouvableException;
 import bf.assoue.platform.stock.service.StockService;
@@ -20,6 +22,10 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -27,6 +33,8 @@ class ProduitServiceTest {
 
     @Mock
     private ProduitRepository produitRepository;
+    @Mock
+    private CategorieRepository categorieRepository;
     @Mock
     private StockService stockService;
     @Mock
@@ -47,7 +55,7 @@ class ProduitServiceTest {
                 .categorie(categorie)
                 .build();
 
-        when(produitRepository.findAll()).thenReturn(List.of(p1));
+        when(produitRepository.findByArchiveFalse()).thenReturn(List.of(p1));
         when(stockService.estEnRupture(1L)).thenReturn(false);
 
         List<ProduitResponse> result = produitService.lister(null);
@@ -69,7 +77,7 @@ class ProduitServiceTest {
                 .categorie(categorie)
                 .build();
 
-        when(produitRepository.findById(2L)).thenReturn(Optional.of(p1));
+        when(produitRepository.findByIdAndArchiveFalse(2L)).thenReturn(Optional.of(p1));
         when(stockService.estEnRupture(2L)).thenReturn(true);
 
         ProduitResponse result = produitService.consulter(2L);
@@ -81,9 +89,18 @@ class ProduitServiceTest {
 
     @Test
     void consulter_leveException_siInexistant() {
-        when(produitRepository.findById(99L)).thenReturn(Optional.empty());
+        when(produitRepository.findByIdAndArchiveFalse(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> produitService.consulter(99L))
+                .isInstanceOf(RessourceIntrouvableException.class);
+    }
+
+    @Test
+    void consulter_leveException_siArchive() {
+        // Un produit archivé est introuvable côté public, comme s'il n'existait pas.
+        when(produitRepository.findByIdAndArchiveFalse(5L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> produitService.consulter(5L))
                 .isInstanceOf(RessourceIntrouvableException.class);
     }
 
@@ -93,7 +110,7 @@ class ProduitServiceTest {
                 .id(4L).nom("Pouf").prix(BigDecimal.valueOf(25000))
                 .categorie(Categorie.builder().id(1L).nom("Mobilier").build())
                 .build();
-        when(produitRepository.findById(4L)).thenReturn(Optional.of(produit));
+        when(produitRepository.findByIdAndArchiveFalse(4L)).thenReturn(Optional.of(produit));
         when(produitRepository.save(any(Produit.class))).thenAnswer(appel -> appel.getArgument(0));
 
         ProduitResponse reponse = produitService.definirVedette(4L, true);
@@ -104,10 +121,106 @@ class ProduitServiceTest {
 
     @Test
     void definirVedette_refuseUnProduitInconnu() {
-        when(produitRepository.findById(99L)).thenReturn(Optional.empty());
+        when(produitRepository.findByIdAndArchiveFalse(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> produitService.definirVedette(99L, true))
                 .isInstanceOf(RessourceIntrouvableException.class);
+    }
+
+    @Test
+    void creer_enregistreProduitEtStockInitialPuisDeriveLaRupture() {
+        Categorie categorie = Categorie.builder().id(1L).nom("Mobilier").build();
+        when(categorieRepository.findById(1L)).thenReturn(Optional.of(categorie));
+        when(produitRepository.save(any(Produit.class))).thenAnswer(appel -> {
+            Produit p = appel.getArgument(0);
+            p.setId(20L);
+            return p;
+        });
+        when(stockService.estEnRupture(20L)).thenReturn(false);
+
+        ProduitResponse reponse = produitService.creer(new ProduitRequest(
+                "Tabouret", 1L, 12000, "Tabouret en pneu", "https://cdn.example.com/tabouret.jpg", 5, true));
+
+        assertThat(reponse.id()).isEqualTo(20L);
+        assertThat(reponse.prix()).isEqualByComparingTo("12000");
+        assertThat(reponse.vedette()).isTrue();
+        verify(stockService).creerStockInitial(any(Produit.class), eq(5));
+    }
+
+    @Test
+    void creer_sansStockInitialCreeUnStockAZeroDoncEnRupture() {
+        Categorie categorie = Categorie.builder().id(1L).nom("Mobilier").build();
+        when(categorieRepository.findById(1L)).thenReturn(Optional.of(categorie));
+        when(produitRepository.save(any(Produit.class))).thenAnswer(appel -> {
+            Produit p = appel.getArgument(0);
+            p.setId(21L);
+            return p;
+        });
+        when(stockService.estEnRupture(21L)).thenReturn(true);
+
+        ProduitResponse reponse = produitService.creer(new ProduitRequest(
+                "Tabouret", 1L, 12000, null, null, null, null));
+
+        assertThat(reponse.enRupture()).isTrue();
+        verify(stockService).creerStockInitial(any(Produit.class), eq(0));
+    }
+
+    @Test
+    void creer_refuseUneCategorieInconnue() {
+        when(categorieRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> produitService.creer(new ProduitRequest(
+                "Tabouret", 99L, 12000, null, null, null, null)))
+                .isInstanceOf(RessourceIntrouvableException.class);
+        verify(produitRepository, never()).save(any());
+    }
+
+    @Test
+    void modifier_metAJourProduitEtRemplaceLeStockQuandRenseigne() {
+        Produit produit = Produit.builder()
+                .id(4L).nom("Pouf").prix(BigDecimal.valueOf(25000))
+                .categorie(Categorie.builder().id(1L).nom("Mobilier").build())
+                .build();
+        when(produitRepository.findByIdAndArchiveFalse(4L)).thenReturn(Optional.of(produit));
+        when(categorieRepository.findById(2L)).thenReturn(Optional.of(Categorie.builder().id(2L).nom("Bijoux").build()));
+        when(produitRepository.save(any(Produit.class))).thenAnswer(appel -> appel.getArgument(0));
+
+        ProduitResponse reponse = produitService.modifier(4L, new ProduitRequest(
+                "Pouf retouche", 2L, 27000, "Neuf", null, 9, false));
+
+        assertThat(reponse.nom()).isEqualTo("Pouf retouche");
+        assertThat(reponse.categorie()).isEqualTo("Bijoux");
+        verify(stockService).ajusterStockProduit(4L, 9);
+    }
+
+    @Test
+    void modifier_sansStockQuantiteLaisseLeStockInchange() {
+        Produit produit = Produit.builder()
+                .id(4L).nom("Pouf").prix(BigDecimal.valueOf(25000))
+                .categorie(Categorie.builder().id(1L).nom("Mobilier").build())
+                .build();
+        when(produitRepository.findByIdAndArchiveFalse(4L)).thenReturn(Optional.of(produit));
+        when(categorieRepository.findById(1L)).thenReturn(Optional.of(produit.getCategorie()));
+        when(produitRepository.save(any(Produit.class))).thenAnswer(appel -> appel.getArgument(0));
+
+        produitService.modifier(4L, new ProduitRequest("Pouf", 1L, 25000, null, null, null, null));
+
+        verify(stockService, never()).ajusterStockProduit(any(), anyInt());
+    }
+
+    @Test
+    void archiver_marqueLeProduitSansLeffacer() {
+        Produit produit = Produit.builder()
+                .id(4L).nom("Pouf").prix(BigDecimal.valueOf(25000))
+                .categorie(Categorie.builder().id(1L).nom("Mobilier").build())
+                .build();
+        when(produitRepository.findByIdAndArchiveFalse(4L)).thenReturn(Optional.of(produit));
+        when(produitRepository.save(any(Produit.class))).thenAnswer(appel -> appel.getArgument(0));
+
+        produitService.archiver(4L);
+
+        assertThat(produit.isArchive()).isTrue();
+        verify(produitRepository, never()).delete(any());
     }
 
 }

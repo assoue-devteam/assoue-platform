@@ -72,6 +72,25 @@ class CommandeServiceTest {
     }
 
     @Test
+    void creer_refuseUnProduitArchive() {
+        Produit produit = Produit.builder()
+                .id(1L).nom("Chaise").prix(BigDecimal.valueOf(15000))
+                .categorie(Categorie.builder().id(1L).nom("Mobilier").build())
+                .archive(true)
+                .build();
+
+        when(utilisateurRepository.findByEmail("client@example.com"))
+                .thenReturn(Optional.of(Utilisateur.builder().id(1L).email("client@example.com").build()));
+        when(produitRepository.findById(1L)).thenReturn(Optional.of(produit));
+
+        assertThatThrownBy(() -> commandeService.creer(
+                new CommandeRequest(List.of(new LigneCommandeRequest(1L, 1))), "client@example.com"))
+                .isInstanceOf(RequeteInvalideException.class)
+                .hasMessageContaining("n'est plus disponible");
+        verify(commandeRepository, never()).saveAndFlush(any(Commande.class));
+    }
+
+    @Test
     void enAttenteDepuis_remonteLancienneteDeLaCommandeNonPayee() {
         Produit produit = Produit.builder()
                 .id(1L).nom("Chaise").prix(BigDecimal.valueOf(15000))

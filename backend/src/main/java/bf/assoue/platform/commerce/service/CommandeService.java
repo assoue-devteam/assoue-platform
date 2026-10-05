@@ -47,6 +47,9 @@ public class CommandeService {
         requete.lignes().forEach(ligneRequete -> {
             Produit produit = produitRepository.findById(ligneRequete.produitId())
                     .orElseThrow(() -> new RessourceIntrouvableException("Produit introuvable : " + ligneRequete.produitId()));
+            if (produit.isArchive()) {
+                throw new RequeteInvalideException("« " + produit.getNom() + " » n'est plus disponible");
+            }
 
             LigneCommande ligne = LigneCommande.builder()
                     .commande(commande)

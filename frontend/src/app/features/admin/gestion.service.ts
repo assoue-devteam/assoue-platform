@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CollecteAdmin, CollecteStatut, CommandeAdmin, CommandeEnAttente, Produit, Role, StockMatiere, StockProduit, UtilisateurAdmin, VolumeCollecte } from '../../shared/models/api';
+import { Categorie, CollecteAdmin, CollecteStatut, CommandeAdmin, CommandeEnAttente, Produit, ProduitGestionRequest, Role, StockMatiere, StockProduit, UtilisateurAdmin, VolumeCollecte } from '../../shared/models/api';
 
 @Injectable({ providedIn: 'root' })
 export class GestionService {
@@ -23,6 +23,11 @@ export class GestionService {
   ajusterStock(produitId: number, quantite: number): Observable<StockProduit> { return this.http.put<StockProduit>(`${environment.apiUrl}/stocks/produits/${produitId}`, { quantite }); }
   utilisateurs(verrouilles?: boolean): Observable<UtilisateurAdmin[]> { const params = verrouilles === undefined ? undefined : new HttpParams().set('verrouilles', verrouilles); return this.http.get<UtilisateurAdmin[]>(`${environment.apiUrl}/utilisateurs`, { params }); }
   produits(): Observable<Produit[]> { return this.http.get<Produit[]>(`${environment.apiUrl}/produits`); }
+  categories(): Observable<Categorie[]> { return this.http.get<Categorie[]>(`${environment.apiUrl}/categories`); }
+  creerProduit(requete: ProduitGestionRequest): Observable<Produit> { return this.http.post<Produit>(`${environment.apiUrl}/produits`, requete); }
+  modifierProduit(id: number, requete: ProduitGestionRequest): Observable<Produit> { return this.http.put<Produit>(`${environment.apiUrl}/produits/${id}`, requete); }
+  /** Suppression logique côté backend (archivage) : le produit sort du catalogue, pas de l'historique. */
+  supprimerProduit(id: number): Observable<void> { return this.http.delete<void>(`${environment.apiUrl}/produits/${id}`); }
   definirVedette(produitId: number, vedette: boolean): Observable<Produit> { return this.http.put<Produit>(`${environment.apiUrl}/produits/${produitId}/vedette`, { vedette }); }
   debloquerUtilisateur(id: number): Observable<UtilisateurAdmin> { return this.http.post<UtilisateurAdmin>(`${environment.apiUrl}/utilisateurs/${id}/debloquer`, {}); }
   creerUtilisateur(requete: { email: string; motDePasse: string; nom?: string; prenom?: string; roles: Role[] }): Observable<UtilisateurAdmin> { return this.http.post<UtilisateurAdmin>(`${environment.apiUrl}/utilisateurs`, requete); }

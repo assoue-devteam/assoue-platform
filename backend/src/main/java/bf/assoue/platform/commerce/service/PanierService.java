@@ -53,6 +53,9 @@ public class PanierService {
         List<LignePanier> lignes = quantitesParProduit.entrySet().stream().map(ligne -> {
             Produit produit = produitRepository.findById(ligne.getKey())
                     .orElseThrow(() -> new RessourceIntrouvableException("Produit introuvable : " + ligne.getKey()));
+            if (produit.isArchive()) {
+                throw new RequeteInvalideException("« " + produit.getNom() + " » n'est plus disponible");
+            }
             int disponible = stockService.quantiteDisponible(produit.getId());
             if (ligne.getValue() > disponible) {
                 throw new RequeteInvalideException("Stock insuffisant pour « " + produit.getNom()

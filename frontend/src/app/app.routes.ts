@@ -75,6 +75,7 @@ export const routes: Routes = [
       { path: 'commandes', loadComponent: () => import('./features/admin/gestion-commandes-page.component').then(m => m.GestionCommandesPageComponent), title: "Commandes — Gestion" },
       { path: 'commandes/:id', loadComponent: () => import('./features/admin/gestion-commande-detail-page.component').then(m => m.GestionCommandeDetailPageComponent), title: "Commande — Gestion" },
       { path: 'stocks', loadComponent: () => import('./features/admin/gestion-stocks-page.component').then(m => m.GestionStocksPageComponent), title: "Stocks — Gestion" },
+      { path: 'produits', loadComponent: () => import('./features/admin/gestion-produits-page.component').then(m => m.GestionProduitsPageComponent), title: "Produits — Gestion" },
       { path: 'communaute', loadComponent: () => import('./features/admin/gestion-communaute-page.component').then(m => m.GestionCommunautePageComponent), title: "Communauté — Gestion" },
       { path: 'utilisateurs', loadComponent: () => import('./features/admin/gestion-utilisateurs-page.component').then(m => m.GestionUtilisateursPageComponent), title: "Utilisateurs — Gestion" },
     ],
