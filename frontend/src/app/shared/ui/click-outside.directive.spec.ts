@@ -1,6 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { ClickOutsideDirective } from './click-outside.directive';
+import { ClickOutsideDirective, estDefilementFermant } from './click-outside.directive';
 
 @Component({
   standalone: true,
@@ -78,5 +78,33 @@ describe('ClickOutsideDirective', () => {
     pointerdownSur(dehors);
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     expect(hote.recus.length).toBe(0);
+  });
+});
+
+describe('estDefilementFermant', () => {
+  function scrollSur(cible: EventTarget): Event {
+    const event = new Event('scroll', { bubbles: false });
+    cible.dispatchEvent(event);
+    return event;
+  }
+
+  it('ignore le scroll qui vient de l’intérieur du panneau', () => {
+    const fixture = TestBed.createComponent(HoteComponent);
+    fixture.detectChanges();
+    const panneau = fixture.nativeElement.querySelector('#panneau') as HTMLElement;
+    // Un scroll interne ne remonte pas à window : target = l’élément lui-même.
+    expect(estDefilementFermant(scrollSur(panneau), panneau)).toBeFalse();
+  });
+
+  it('ignore le scroll de la page quand le focus est dans le panneau (clavier mobile)', () => {
+    const fixture = TestBed.createComponent(HoteComponent);
+    fixture.detectChanges();
+    const el = fixture.nativeElement as HTMLElement;
+    const panneau = el.querySelector('#panneau') as HTMLElement;
+    el.querySelector<HTMLElement>('#dedans')!.focus();
+    // Propagation document → window : target = document.
+    expect(estDefilementFermant(scrollSur(document), panneau)).toBeFalse();
+    (document.activeElement as HTMLElement | null)?.blur?.();
+    expect(estDefilementFermant(scrollSur(document), panneau)).toBeTrue();
   });
 });

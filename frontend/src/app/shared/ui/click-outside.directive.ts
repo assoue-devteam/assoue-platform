@@ -52,3 +52,17 @@ export class ClickOutsideDirective {
     this.detacher = null;
   }
 }
+
+/**
+ * Garde de fermeture au scroll : on ne ferme que si le scroll vient de la page
+ * (`event.target === document`, pas de l'intérieur du panneau — les scrolls
+ * internes ne remontent de toute façon pas jusqu'à window) et que le focus
+ * n'est pas dans le panneau (ouverture du clavier mobile dans la recherche :
+ * le navigateur fait défiler la page pour cadrer le champ, ça ne doit pas fermer).
+ */
+export function estDefilementFermant(event: Event, panneau: HTMLElement): boolean {
+  if (event.target !== document) return false;
+  const actif = document.activeElement;
+  if (actif && panneau.contains(actif)) return false;
+  return true;
+}

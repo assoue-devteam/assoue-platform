@@ -111,4 +111,23 @@ describe('CompteMenuComponent', () => {
     fixture.detectChanges();
     expect(el.querySelector('.compte__menu')).toBeNull();
   });
+
+  it('ne ferme pas au scroll interne ni quand le focus est dans le menu', () => {
+    const { fixture, el, ouvrir } = creer();
+    ouvrir();
+    const panneau = el.querySelector('.compte__menu') as HTMLElement;
+    // Sans RouterLink (retiré, voir creer()), l'ancre n'a pas de href donc pas
+    // focusable : on le pose à la main comme le ferait le routeur en production.
+    const lien = panneau.querySelector('a') as HTMLAnchorElement;
+    lien.setAttribute('href', '/commandes');
+    lien.focus();
+    document.dispatchEvent(new Event('scroll', { bubbles: true }));
+    fixture.detectChanges();
+    expect(el.querySelector('.compte__menu')).toBeTruthy();
+
+    (document.activeElement as HTMLElement).blur();
+    document.dispatchEvent(new Event('scroll', { bubbles: true }));
+    fixture.detectChanges();
+    expect(el.querySelector('.compte__menu')).toBeNull();
+  });
 });

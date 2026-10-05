@@ -4,7 +4,7 @@ import { NavigationStart, Router, RouterLink, RouterLinkActive, RouterOutlet } f
 import { filter } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
-import { ClickOutsideDirective } from '../../shared/ui/click-outside.directive';
+import { ClickOutsideDirective, estDefilementFermant } from '../../shared/ui/click-outside.directive';
 
 // Sidebar fixe dès 1024px ; en dessous, barre haute « Menu » + panneau par-dessus le contenu (DS §5).
 // Seuls les écrans P0 sont listés ; À traiter, Volumes et Paiements viendront avec leurs écrans (P1).
@@ -25,9 +25,9 @@ import { ClickOutsideDirective } from '../../shared/ui/click-outside.directive';
 
     @if (menuOuvert()) { <div class="voile" (click)="menuOuvert.set(false)"></div> }
 
-    <nav id="nav-gestion" class="sidebar" [class.sidebar--ouverte]="menuOuvert()" aria-label="Navigation gestion"
+    <nav #panneau id="nav-gestion" class="sidebar" [class.sidebar--ouverte]="menuOuvert()" aria-label="Navigation gestion"
          [appClickOutsideEnabled]="menuOuvert()" (appClickOutside)="fermerDepuisExterieur($event)"
-         (focusout)="fermerSiFocusSorti($event)">
+         (focusout)="fermerSiFocusSorti($event)" (window:scroll)="fermerSiDefilementExterieur($event)">
       <div class="sidebar__entete">
         <span class="sidebar__marque"><img src="logo-assoue.png" alt="AS'SOUÉ" width="108" height="40" /></span>
         <button type="button" class="sidebar__fermer" aria-label="Fermer le menu" (click)="menuOuvert.set(false)">
@@ -99,6 +99,7 @@ export class GestionLayoutComponent {
   protected auth = inject(AuthService);
   private router = inject(Router);
   private boutonMenu = viewChild<ElementRef<HTMLButtonElement>>('boutonMenu');
+  private panneau = viewChild<ElementRef<HTMLElement>>('panneau');
   protected menuOuvert = signal(false);
 
   constructor() {
@@ -118,6 +119,11 @@ export class GestionLayoutComponent {
   protected fermerSiFocusSorti(event: FocusEvent): void {
     const cible = event.relatedTarget as Node | null;
     if (!cible || !(event.currentTarget as HTMLElement).contains(cible)) this.fermer();
+  }
+
+  protected fermerSiDefilementExterieur(event: Event): void {
+    const zone = this.panneau()?.nativeElement;
+    if (zone && estDefilementFermant(event, zone)) this.fermer();
   }
 
   protected fermer(): void {

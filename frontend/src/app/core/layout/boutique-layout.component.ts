@@ -8,7 +8,7 @@ import { CompteMenuComponent } from './compte-menu.component';
 import { SiteFooterComponent } from './site-footer.component';
 import { AlertComponent } from '../../shared/ui/alert.component';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
-import { ClickOutsideDirective } from '../../shared/ui/click-outside.directive';
+import { ClickOutsideDirective, estDefilementFermant } from '../../shared/ui/click-outside.directive';
 import { PopupService } from '../../shared/ui/popup.service';
 import { PanierService } from '../../features/catalogue/panier.service';
 import { FavorisService } from '../../features/catalogue/favoris.service';
@@ -20,7 +20,7 @@ import { RechercheProduitComponent } from '../../features/catalogue/recherche-pr
   imports: [RouterOutlet, RouterLink, RouterLinkActive, CompteMenuComponent, AlertComponent, IconComponent, SiteFooterComponent, RechercheProduitComponent, ClickOutsideDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <header class="entete" [class.entete--repliee]="repliee()">
+    <header #entete class="entete" [class.entete--repliee]="repliee()">
       <div class="container entete__ligne">
         <a routerLink="/" class="logo"><img src="logo-assoue.png" alt="AS'SOUÉ, accueil de la boutique" width="119" height="44" /></a>
 
@@ -152,6 +152,7 @@ export class BoutiqueLayoutComponent {
   private popups = inject(PopupService);
   private boutonBurger = viewChild<ElementRef<HTMLButtonElement>>('boutonBurger');
   private boutonRecherche = viewChild<ElementRef<HTMLButtonElement>>('boutonRecherche');
+  private entete = viewChild<ElementRef<HTMLElement>>('entete');
   protected menuOuvert = signal(false);
   protected rechercheOuverte = signal(false);
   protected repliee = signal(false);
@@ -227,10 +228,13 @@ export class BoutiqueLayoutComponent {
     if (!cible || !(event.currentTarget as HTMLElement).contains(cible)) this.fermerRecherche();
   }
 
-  @HostListener('window:scroll')
-  surDefilement(): void {
+  @HostListener('window:scroll', ['$event'])
+  surDefilement(event: Event): void {
     this.repliee.set(window.scrollY > 120);
-    // Le header se replie : les panneaux ouverts se ferment avec lui.
+    // Le header se replie : les panneaux ouverts se ferment avec lui, sauf si le
+    // scroll vient de l'intérieur ou que le focus y est (clavier mobile dans la recherche).
+    const zone = this.entete()?.nativeElement;
+    if (zone && !estDefilementFermant(event, zone)) return;
     this.fermerBurger();
     this.fermerRecherche();
   }

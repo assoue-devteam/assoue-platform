@@ -4,7 +4,7 @@ import { NavigationStart, Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
-import { ClickOutsideDirective } from '../../shared/ui/click-outside.directive';
+import { ClickOutsideDirective, estDefilementFermant } from '../../shared/ui/click-outside.directive';
 import { PopupService } from '../../shared/ui/popup.service';
 
 let compteur = 0;
@@ -18,7 +18,7 @@ let compteur = 0;
   imports: [RouterLink, IconComponent, ClickOutsideDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="compte" [appClickOutsideEnabled]="ouvert()" (appClickOutside)="fermerDepuisExterieur($event)" (window:scroll)="fermer()">
+    <div class="compte" [appClickOutsideEnabled]="ouvert()" (appClickOutside)="fermerDepuisExterieur($event)" (window:scroll)="fermerSiDefilementExterieur($event)">
       <button #declencheur type="button" class="compte__bouton" [attr.aria-expanded]="ouvert()"
               [attr.aria-controls]="idPanneau" (click)="basculer()">
         <span class="compte__avatar" aria-hidden="true">{{ initiale() }}</span>
@@ -73,6 +73,7 @@ export class CompteMenuComponent {
 
   protected readonly idPanneau = `menu-compte-${++compteur}`;
   protected ouvert = signal(false);
+  private hote = inject(ElementRef<HTMLElement>).nativeElement;
 
   constructor() {
     // Un seul menu ouvert à la fois : un autre panneau signale son ouverture.
@@ -112,6 +113,11 @@ export class CompteMenuComponent {
   protected fermerSiFocusSorti(event: FocusEvent): void {
     const cible = event.relatedTarget as Node | null;
     if (!cible || !(event.currentTarget as HTMLElement).contains(cible)) this.fermer();
+  }
+
+  /** Scroll de la page uniquement, jamais depuis le panneau ni focus dedans (clavier mobile). */
+  protected fermerSiDefilementExterieur(event: Event): void {
+    if (estDefilementFermant(event, this.hote)) this.fermer();
   }
 
   /** Clic sur un lien ou « Se déconnecter » : le changement de route ferme déjà,
