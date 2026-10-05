@@ -96,13 +96,13 @@ test('zone de dépôt : vide, glissement, erreur', async ({ page }) => {
   });
   await photo(page, 'depot-glissement-1366.png');
 
-  // Fichier trop gros : refus client immédiat, sans appel réseau.
+  // Fichier illisible : refus sans appel réseau (les photos valides sont réduites avant l'envoi).
   await page.locator('input[type="file"]').setInputFiles({
     name: 'grosse.jpg',
     mimeType: 'image/jpeg',
     buffer: Buffer.alloc(6 * 1024 * 1024),
   });
-  await expect(page.getByRole('alert')).toContainText('5 Mo');
+  await expect(page.getByRole('alert')).toContainText('pas une image lisible');
   await photo(page, 'depot-erreur-1366.png');
 });
 

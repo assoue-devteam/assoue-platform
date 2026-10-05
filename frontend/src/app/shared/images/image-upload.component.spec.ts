@@ -1,6 +1,6 @@
 import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { TestBed } from '@angular/core/testing';
+import { HttpTestingController, TestRequest, provideHttpClientTesting } from '@angular/common/http/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ImageUploadComponent } from './image-upload.component';
 
 describe("champ d'envoi d'image", () => {
@@ -20,8 +20,19 @@ describe("champ d'envoi d'image", () => {
     return { fixture, composant, el };
   }
 
-  function deposerFichier(el: HTMLElement, fichier: File, viaGlisser = false): void {
-    const champ = el.querySelector('input[type="file"]') as HTMLInputElement;
+  /** Vraie image décodable (le navigateur refuse les faux contenus). */
+  async function vraiJpeg(largeur = 64, hauteur = 48, nom = 'photo.jpg'): Promise<File> {
+    const toile = document.createElement('canvas');
+    toile.width = largeur;
+    toile.height = hauteur;
+    const contexte = toile.getContext('2d')!;
+    contexte.fillStyle = '#E4002B';
+    contexte.fillRect(0, 0, largeur, hauteur);
+    const blob = await new Promise<Blob | null>(resolve => toile.toBlob(resolve, 'image/jpeg', 0.9));
+    return new File([blob!], nom, { type: 'image/jpeg' });
+  }
+
+  function deposerFichier(el: HTMLElement, fichier: File, viaGlisser = false): void {    const champ = el.querySelector('input[type="file"]') as HTMLInputElement;
     if (viaGlisser) {
       const transfert = new DataTransfer();
       transfert.items.add(fichier);
@@ -32,16 +43,43 @@ describe("champ d'envoi d'image", () => {
     }
   }
 
-  const jpeg = (nom = 'photo.jpg', contenu = 'contenu-jpeg') =>
-    new File([contenu], nom, { type: 'image/jpeg' });
+  /** Le redimensionnement passe par des files navigateur hors zone : on attend la requête. */
+  async function attendreEnvoi(): Promise<TestRequest> {
+    for (let i = 0; i < 100; i++) {
+      const requetes = http.match({ method: 'POST', url: '/api/images' });
+      if (requetes.length) return requetes[0];
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    throw new Error('envoi jamais parti');
+  }
+
+  async function attendreTexte(el: HTMLElement, selecteur: string): Promise<HTMLElement> {
+    for (let i = 0; i < 100; i++) {
+      const cible = el.querySelector(selecteur) as HTMLElement | null;
+      if (cible) return cible;
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    throw new Error(`« ${selecteur} » jamais affiché`);
+  }
+
+  async function attendreAlerte(
+    fixture: ComponentFixture<ImageUploadComponent>, el: HTMLElement,
+  ): Promise<HTMLElement> {
+    for (let i = 0; i < 100; i++) {
+      fixture.detectChanges();
+      const cible = el.querySelector('[role="alert"]') as HTMLElement | null;
+      if (cible) return cible;
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    throw new Error('alerte jamais affichée');
+  }
 
   afterEach(() => http.verify());
 
-  it('téléverse un fichier valide et expose sa clé', () => {
+  it('téléverse un fichier valide et expose sa clé', async () => {
     const { fixture, composant, el } = creer();
-    deposerFichier(el, jpeg());
-
-    http.expectOne({ method: 'POST', url: '/api/images' }).flush({ cle: 'cle-1.jpg' });
+    deposerFichier(el, await vraiJpeg());
+    (await attendreEnvoi()).flush({ cle: 'cle-1.jpg' });
     fixture.detectChanges();
 
     expect(composant.cle()).toBe('cle-1.jpg');
@@ -49,26 +87,50 @@ describe("champ d'envoi d'image", () => {
     expect(el.querySelector('[aria-live]')!.textContent).toContain('envoyée');
   });
 
-  it('refuse un fichier trop gros sans appel réseau, avec réessai possible', () => {
+  it('redimensionne avant l’envoi : JPEG de 2000 px au plus', async () => {
+    const { fixture, el } = creer();
+    deposerFichier(el, await vraiJpeg(3000, 100));
+    const requete = await attendreEnvoi();
+    const envoye = (requete.request.body as FormData).get('fichier') as File;
+    expect(envoye.type).toBe('image/jpeg');
+    const image = await createImageBitmap(envoye);
+    expect(image.width).toBe(2000);
+    expect(image.height).toBe(67);
+    image.close();
+    requete.flush({ cle: 'cle-1.jpg' });
+    fixture.detectChanges();
+  });
+
+  it('refuse sans appel réseau ce que le navigateur ne décode pas', async () => {
     const { fixture, composant, el } = creer();
-    deposerFichier(el, new File([new ArrayBuffer(6 * 1024 * 1024)], 'gros.jpg', { type: 'image/jpeg' }));
+    deposerFichier(el, new File(['pas-une-image'], 'photo.jpg', { type: 'image/jpeg' }));
+    const alerte = await attendreAlerte(fixture, el);
     fixture.detectChanges();
 
     expect(composant.cle()).toBeNull();
     http.expectNone({ method: 'POST' });
-    const alerte = el.querySelector('[role="alert"]')!;
-    expect(alerte.textContent).toContain('5 Mo');
+    expect(alerte.textContent).toContain('pas une image lisible');
     expect(alerte.querySelector('label')!.textContent).toContain('Réessayer');
   });
 
-  it('remplace puis supprime la photo', () => {
-    const { fixture, composant, el } = creer();
-    deposerFichier(el, jpeg('a.jpg'));
-    http.expectOne({ method: 'POST', url: '/api/images' }).flush({ cle: 'cle-a.jpg' });
+  it('refuse un format interdit sans appel réseau', async () => {
+    const { fixture, el } = creer();
+    deposerFichier(el, new File(['x'], 'photo.webp', { type: 'image/webp' }));
+    const refus = await attendreAlerte(fixture, el);
     fixture.detectChanges();
 
-    deposerFichier(el, jpeg('b.jpg'), true);
-    http.expectOne({ method: 'POST', url: '/api/images' }).flush({ cle: 'cle-b.jpg' });
+    http.expectNone({ method: 'POST' });
+    expect(refus.textContent).toContain('JPEG ou PNG');
+  });
+
+  it('remplace puis supprime la photo', async () => {
+    const { fixture, composant, el } = creer();
+    deposerFichier(el, await vraiJpeg(64, 48, 'a.jpg'));
+    (await attendreEnvoi()).flush({ cle: 'cle-a.jpg' });
+    fixture.detectChanges();
+
+    deposerFichier(el, await vraiJpeg(64, 48, 'b.jpg'), true);
+    (await attendreEnvoi()).flush({ cle: 'cle-b.jpg' });
     fixture.detectChanges();
     expect(composant.cle()).toBe('cle-b.jpg');
 
@@ -79,12 +141,12 @@ describe("champ d'envoi d'image", () => {
     expect(el.querySelector('[aria-live]')!.textContent).toContain('supprimée');
   });
 
-  it('annule un envoi en cours et restaure la clé précédente', () => {
+  it('annule un envoi en cours et restaure la clé précédente', async () => {
     const { fixture, composant, el } = creer();
     composant.cle.set('cle-avant.jpg');
     fixture.detectChanges();
-    deposerFichier(el, jpeg('b.jpg'));
-    http.expectOne({ method: 'POST', url: '/api/images' });
+    deposerFichier(el, await vraiJpeg(64, 48, 'b.jpg'));
+    await attendreEnvoi();
     fixture.detectChanges();
 
     (el.querySelectorAll('.actions .bouton')[0] as HTMLButtonElement).click();

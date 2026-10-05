@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, computed, inject, input, model, output, signal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { messageErreur } from '../../core/http/erreurs';
-import { ImageService, cheminImageCle, resoudreUrlImage, validerImageClient } from './image.service';
+import { ImageService, cheminImageCle, resoudreUrlImage, validerTypeImageClient, redimensionnerPourEnvoi, IMAGE_TAILLE_MAX } from './image.service';
 import { IconComponent } from '../ui/icon/icon.component';
 import { SrcImagePipe } from './src-image.pipe';
 
@@ -34,7 +34,7 @@ let compteur = 0;
           <app-icon name="image" [size]="24" aria-hidden="true" />
           <p>Glissez une image ici</p>
         }
-        <p class="aide">JPEG ou PNG, 5 Mo au plus.</p>
+        <p class="aide">JPEG ou PNG, 10 Mo au plus. Les photos sont réduites avant l'envoi.</p>
         <input #choix class="sr-only" type="file" [id]="idChamp" accept="image/jpeg,image/png"
                (change)="choisir(choix.files); choix.value = ''" [disabled]="etat() === 'envoi'" />
         <div class="actions">
@@ -113,6 +113,7 @@ export class ImageUploadComponent {
   private objetUrl: string | null = null;
   private abonnement: Subscription | null = null;
   private clePrecedente: string | null = null;
+  private operation = 0;
 
   private gardeFichiers = (event: DragEvent) => event.preventDefault();
 
@@ -146,48 +147,71 @@ export class ImageUploadComponent {
   protected choisir(fichiers: FileList | null): void {
     const fichier = fichiers?.[0];
     if (!fichier || this.etat() === 'envoi') return;
-    const refus = validerImageClient(fichier);
-    if (refus) {
+    const refusType = validerTypeImageClient(fichier);
+    if (refusType) {
       this.etat.set('erreur');
-      this.erreur.set(refus);
-      this.annonce.set(`Image refusée. ${refus}`);
+      this.erreur.set(refusType);
+      this.annonce.set(`Image refusée. ${refusType}`);
       return;
     }
+    const operation = ++this.operation;
     this.clePrecedente = this.cle();
     this.nomFichier.set(fichier.name);
-    this.libererApercuLocal();
-    this.objetUrl = URL.createObjectURL(fichier);
-    this.apercuLocal.set(this.objetUrl);
     this.etat.set('envoi');
     this.progression.set(0);
     this.erreur.set(null);
     this.envoiEnCours.emit(true);
-    this.annonce.set(`Envoi de ${fichier.name} en cours.`);
-    this.abonnement?.unsubscribe();
-    this.abonnement = this.service.envoyer(fichier).subscribe({
-      next: etape => {
-        if ('pourcentage' in etape) {
-          this.progression.set(etape.pourcentage);
-        } else {
-          this.cle.set(etape.cle);
-          this.etat.set('succes');
-          this.envoiEnCours.emit(false);
-          this.annonce.set('Image envoyée.');
+    this.annonce.set(`Préparation de ${fichier.name}…`);
+    redimensionnerPourEnvoi(fichier).then(
+      prete => {
+        if (operation !== this.operation) return;
+        if (prete.size > IMAGE_TAILLE_MAX) {
+          this.rejeter('L’image dépasse 10 Mo.');
+          return;
         }
+        this.libererApercuLocal();
+        this.objetUrl = URL.createObjectURL(prete);
+        this.apercuLocal.set(this.objetUrl);
+        this.annonce.set(`Envoi de ${fichier.name} en cours.`);
+        this.abonnement?.unsubscribe();
+        this.abonnement = this.service.envoyer(prete).subscribe({
+          next: etape => {
+            if ('pourcentage' in etape) {
+              this.progression.set(etape.pourcentage);
+            } else {
+              this.cle.set(etape.cle);
+              this.etat.set('succes');
+              this.envoiEnCours.emit(false);
+              this.annonce.set('Image envoyée.');
+            }
+          },
+          error: err => {
+            this.abonnement = null;
+            this.cle.set(this.clePrecedente);
+            this.etat.set('erreur');
+            const message = messageErreur(err);
+            this.erreur.set(message);
+            this.envoiEnCours.emit(false);
+            this.annonce.set(`Échec de l’envoi. ${message}`);
+          },
+        });
       },
-      error: err => {
-        this.abonnement = null;
-        this.cle.set(this.clePrecedente);
-        this.etat.set('erreur');
-        const message = messageErreur(err);
-        this.erreur.set(message);
-        this.envoiEnCours.emit(false);
-        this.annonce.set(`Échec de l’envoi. ${message}`);
+      (erreur: Error) => {
+        if (operation !== this.operation) return;
+        this.rejeter(erreur.message);
       },
-    });
+    );
+  }
+
+  private rejeter(message: string): void {
+    this.etat.set('erreur');
+    this.erreur.set(message);
+    this.envoiEnCours.emit(false);
+    this.annonce.set(`Image refusée. ${message}`);
   }
 
   protected annuler(): void {
+    this.operation++;
     this.abonnement?.unsubscribe();
     this.abonnement = null;
     this.cle.set(this.clePrecedente);

@@ -21,9 +21,10 @@ import java.nio.file.Path;
 public class ImageProperties implements EnvironmentAware {
 
     private Path dossier = Path.of("uploads");
-    private int largeurMax = 4000;
-    private int hauteurMax = 4000;
-    private long pixelsMax = 12_000_000L;
+    private int largeurMax = 9000;
+    private int hauteurMax = 9000;
+    private long pixelsMax = 50_000_000L;
+    private int tailleCoteMax = 1600;
 
     private Environment environnement;
 

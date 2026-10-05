@@ -110,17 +110,58 @@ class ImageServiceTest {
     @Test
     void dimensionsExcessives_sontRefuseesAvantDecodage() {
         // Seul l'en-tête IHDR : aucun pixel à décoder, le refus vient des dimensions.
-        assertThatThrownBy(() -> service.enregistrer(fichier("grand.png", "image/png", pngEnteteSeule(5000, 10))))
+        assertThatThrownBy(() -> service.enregistrer(fichier("grand.png", "image/png", pngEnteteSeule(10000, 10))))
                 .isInstanceOf(RequeteInvalideException.class)
                 .hasMessageContaining("trop grande");
     }
 
     @Test
     void tropDePixels_estRefuse() {
-        // 3500 × 3500 dans les dimensions max, mais 12,25 M pixels > 12 M.
-        assertThatThrownBy(() -> service.enregistrer(fichier("lourd.png", "image/png", pngEnteteSeule(3500, 3500))))
+        // 8000 × 7000 dans les dimensions max, mais 56 M pixels > 50 M.
+        assertThatThrownBy(() -> service.enregistrer(fichier("lourd.png", "image/png", pngEnteteSeule(8000, 7000))))
                 .isInstanceOf(RequeteInvalideException.class)
                 .hasMessageContaining("pixels");
+    }
+
+    @Test
+    void photoSmartphone_estRamenee1600Px() throws Exception {
+        String cle = service.enregistrer(fichier("photo.jpg", "image/jpeg", jpeg(4032, 3024)));
+
+        assertThat(cle).endsWith(".jpg");
+        var stockee = javax.imageio.ImageIO.read(dossier.resolve(cle).toFile());
+        assertThat(Math.max(stockee.getWidth(), stockee.getHeight())).isEqualTo(1600);
+    }
+
+    @Test
+    void portraitAvecOrientationExif_restePortraitSansExif() throws Exception {
+        // Pixels paysage + EXIF orientation 6 (photo portrait de smartphone).
+        byte[] portrait = avecOrientationExif(jpeg(8, 6), 6);
+        assertThat(ImageService.orientationExif(portrait)).isEqualTo(6);
+        assertThat(ImageService.orientationExif(jpeg(8, 6))).isEqualTo(1);
+
+        String cle = service.enregistrer(fichier("portrait.jpg", "image/jpeg", portrait));
+
+        var stockee = javax.imageio.ImageIO.read(dossier.resolve(cle).toFile());
+        assertThat(stockee.getWidth()).isEqualTo(6);
+        assertThat(stockee.getHeight()).isEqualTo(8);
+        assertThat(new String(Files.readAllBytes(dossier.resolve(cle)),
+                java.nio.charset.StandardCharsets.US_ASCII)).doesNotContain("Exif");
+    }
+
+    @Test
+    void pngTransparent_gardeLaTransparence() throws Exception {
+        var dessin = new java.awt.image.BufferedImage(8, 6, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+        dessin.setRGB(0, 0, 0x00FFFFFF); // pixel transparent
+        dessin.setRGB(1, 0, 0xFFFF0000);
+        var sortie = new ByteArrayOutputStream();
+        javax.imageio.ImageIO.write(dessin, "png", sortie);
+
+        String cle = service.enregistrer(fichier("calque.png", "image/png", sortie.toByteArray()));
+
+        assertThat(cle).endsWith(".png");
+        var stockee = javax.imageio.ImageIO.read(dossier.resolve(cle).toFile());
+        assertThat(stockee.getColorModel().hasAlpha()).isTrue();
+        assertThat((stockee.getRGB(0, 0) >>> 24) & 0xFF).isEqualTo(0);
     }
 
     @Test
@@ -182,5 +223,26 @@ class ImageServiceTest {
         sortie.write((valeur >>> 16) & 0xFF);
         sortie.write((valeur >>> 8) & 0xFF);
         sortie.write(valeur & 0xFF);
+    }
+
+    /** Insère un segment APP1 EXIF (orientation) juste après le SOI d'un JPEG. */
+    private static byte[] avecOrientationExif(byte[] jpeg, int orientation) throws IOException {
+        ByteArrayOutputStream exif = new ByteArrayOutputStream();
+        exif.write("Exif\0\0".getBytes(StandardCharsets.US_ASCII));
+        exif.write(new byte[]{'I', 'I', 42, 0, 8, 0, 0, 0});
+        exif.write(new byte[]{1, 0});
+        exif.write(new byte[]{0x12, 0x01, 3, 0, 1, 0, 0, 0, (byte) orientation, 0, 0, 0});
+        exif.write(new byte[]{0, 0, 0, 0});
+        byte[] corps = exif.toByteArray();
+        ByteArrayOutputStream sortie = new ByteArrayOutputStream();
+        sortie.write(jpeg, 0, 2);
+        sortie.write(0xFF);
+        sortie.write(0xE1);
+        int longueur = corps.length + 2;
+        sortie.write((longueur >>> 8) & 0xFF);
+        sortie.write(longueur & 0xFF);
+        sortie.write(corps);
+        sortie.write(jpeg, 2, jpeg.length - 2);
+        return sortie.toByteArray();
     }
 }
