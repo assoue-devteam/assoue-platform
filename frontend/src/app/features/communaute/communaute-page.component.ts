@@ -53,12 +53,14 @@ import { CommunauteService, estAVenir, lienParticipation } from './communaute.se
                       <span><app-icon name="map-pin" [size]="16" /> {{ evenement.lieu }}</span>
                     </p>
                     @if (evenement.description) { <p class="text-muted description">{{ evenement.description }}</p> }
-                    <div class="evenement__actions">
-                      <a class="participer" [href]="lien(evenement)" target="_blank" rel="noopener">
-                        <app-icon name="message-circle" [size]="20" /> Participer
-                        @if (evenement.placesRestantes !== null) { <span>({{ evenement.placesRestantes }} places restantes)</span> }
-                      </a>
-                    </div>
+                    @if (lien(evenement); as participation) {
+                      <div class="evenement__actions">
+                        <a class="participer" [href]="participation" target="_blank" rel="noopener">
+                          <app-icon name="message-circle" [size]="20" /> Participer
+                          @if (evenement.placesRestantes !== null) { <span>({{ evenement.placesRestantes }} places restantes)</span> }
+                        </a>
+                      </div>
+                    }
                   </div>
                 </article>
               }
@@ -89,10 +91,10 @@ import { CommunauteService, estAVenir, lienParticipation } from './communaute.se
     .chiffre .num { font-size: 32px; line-height: 1.1; color: var(--color-chiffre); }    .chiffre span { color: var(--color-text-muted); font-size: 14px; }
     .bloc { display: grid; gap: var(--space-4); }
     .evenements { display: grid; gap: var(--space-4); grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
-    .evenement { display: grid; grid-template-rows: auto 1fr; overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
-    .evenement__image { aspect-ratio: 16 / 9; display: grid; place-items: center; background: var(--color-primary-tint); color: var(--color-primary-strong); }
-    .evenement__image img { width: 100%; height: 100%; object-fit: cover; }
-    .evenement__contenu { display: grid; gap: var(--space-3); align-content: start; padding: var(--space-4); }
+    .evenement { display: grid; grid-template-rows: auto 1fr; grid-template-columns: minmax(0, 1fr); min-width: 0; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+    .evenement__image { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border-radius: calc(var(--radius-md) - 1px) calc(var(--radius-md) - 1px) 0 0; display: grid; place-items: center; min-width: 0; background: var(--color-primary-tint); color: var(--color-primary-strong); }
+    .evenement__image img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .evenement__contenu { display: grid; gap: var(--space-3); align-content: start; min-width: 0; padding: var(--space-4); }
     .meta { display: grid; gap: var(--space-1); font-size: 14px; color: var(--color-text-muted); }
     .meta span { display: inline-flex; align-items: center; gap: var(--space-2); }
     .meta span:first-child::first-letter { text-transform: uppercase; }

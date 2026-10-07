@@ -21,10 +21,13 @@ export class CommunauteService {
 }
 
 // Le bouton « Participer » ouvre WhatsApp avec un message prérempli : pas d'inscription gérée par le site.
-export function lienParticipation(evenement: Evenement): string {
+// Numéro en configuration (chiffres, indicatif 226 inclus). Sans numéro valide,
+// null : le template n'affiche alors aucun bouton plutôt qu'un lien cassé.
+export function lienParticipation(evenement: Evenement, numero = environment.whatsappNumero): string | null {
+  if (!/^226\d{8}$/.test(numero ?? '')) return null;
   const date = new Date(evenement.dateDebut).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
   const texte = `Bonjour AS'SOUÉ, je souhaite participer à « ${evenement.titre} » du ${date}.`;
-  return `https://wa.me/22654958282?text=${encodeURIComponent(texte)}`;
+  return `https://wa.me/${numero}?text=${encodeURIComponent(texte)}`;
 }
 
 /** Un événement de la journée reste « à venir » jusqu'au soir. */

@@ -31,8 +31,16 @@ describe('communauté', () => {
 
   it('prépare un message WhatsApp avec le titre et la date', () => {
     const lien = lienParticipation(evenement(1, '2026-12-15T09:00:00', 'Atelier de recyclage créatif'));
-    expect(lien.startsWith('https://wa.me/22654958282?text=')).toBeTrue();
-    expect(decodeURIComponent(lien)).toContain('« Atelier de recyclage créatif » du 15 décembre 2026');
+    expect(lien?.startsWith('https://wa.me/22654958282?text=')).toBeTrue();
+    expect(decodeURIComponent(lien!)).toContain('« Atelier de recyclage créatif » du 15 décembre 2026');
+  });
+
+  it('ne propose aucun lien sans numéro WhatsApp valide (pas de bouton cassé)', () => {
+    const cible = evenement(1, '2026-12-15T09:00:00');
+    expect(lienParticipation(cible, '')).toBeNull();
+    expect(lienParticipation(cible, '12345')).toBeNull();
+    expect(lienParticipation(cible, '+22654958282')).toBeNull();
+    expect(lienParticipation(cible, '2265495828')).toBeNull();
   });
 
   it('sépare les événements à venir des événements passés', () => {
