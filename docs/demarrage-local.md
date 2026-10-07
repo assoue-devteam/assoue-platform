@@ -26,13 +26,27 @@ docker exec -i assoue-db psql -U assoue -d assoue_db < seed_demo_dev.sql
 ```
 Contenu : 3 comptes (mot de passe `Password123!`), 7 produits + stocks, 2 matériaux (`Plastique`, `Pneu`), 2 collectes de démo. Rejouable sans doublon. **Ne jamais en faire une migration Flyway** (partirait en production).
 
+### Catalogue 2026 (24 produits)
+
+Le catalogue 2026 (PDF `docs/Catalogue 2026.pdf`, visuels `seed-assets/catalogue-2026/`) est injecté par `scripts/seed_catalogue_2026.mjs` — **pas de SQL brut** : le script passe par l'API admin (`POST /api/images` puis `POST /api/produits`, stock initial via `creerStockInitial`).
+
+Prérequis : backend Docker démarré (la migration `V21__categories_catalogue_2026.sql` crée les 3 catégories `Maison et jardin`, `Vêtements`, `Décoration et maison` au démarrage).
+
+```bash
+node scripts/seed_catalogue_2026.mjs
+```
+
+- **Idempotent** : un produit dont le nom existe déjà n'est ni recréé ni écrasé (modifications admin préservées) ; les produits actifs absents du catalogue 2026 sont archivés (suppression logique).
+- **Dev uniquement** : le script refuse de tourner si l'API n'est pas `localhost`/`127.0.0.1`.
+- **Images** : 1 par produit (la plus grande de son groupe, objet seul, jamais agrandie) ; les doublons `chaussures-pneus-01/07` et `06/08` sont évités (image `05` utilisée).
+- **Prix provisoires** (FCFA, à valider par l'admin) : Guéridon 25000, Poubelle 20000, Pot de culture 12000, Pot de fleurs 5000, Pouf 12000, Chaise haute 18000, Pouf deux en un 18000, Mini salon 2pl 85000, Salon 4pl 150000, Salon 7pl 300000, Bureau 120000, Sandales 8000, Bracelet 2500, Pull-over 15000, Ensemble enfant 12000, Sac à main 15000, Sac à dos 10000, Éventail-ceinture 6000, Couverture carnet 3000, Drap 25000, Tableaux 15000, Boîtes à mouchoirs 4000, Housses voiture 45000, Décoration restaurant 20000.
+
 ## 3. Démarrage quotidien
 
 Terminal 1 — backend (tourne aussi dans Docker, mais en local on garde le hot-reload) :
 ```cmd
 cd backend
-for /f "usebackq eol=# tokens=1,* delims==" %a in ("..\.env") do @set "%a=%b"
-set SPRING_PROFILES_ACTIVE=dev
+
 mvnw.cmd spring-boot:run
 ```
 Aucun profil n'est actif par défaut : sans `SPRING_PROFILES_ACTIVE=dev`, le démarrage échoue sur `Could not resolve placeholder 'jwt.expiration-ms'`. La ligne `for /f` charge les variables du `.env` (`POSTGRES_USER`, `JWT_SECRET`…) dans le terminal courant, `mvnw.cmd` ne lit pas `.env` seul.
@@ -44,9 +58,17 @@ Terminal 2 — frontend :
 ```cmd
 cd frontend
 npm ci
-npx ng serve --proxy-config proxy.conf.json
+npx ng serve --proxy-config proxy.conf.json --disable-host-check
 ```
 Vérifier : `http://localhost:4200` (le `/api` est proxifié vers `:8080`, pas de CORS).
+
+Terminal 3 — tunnel (partage avec l'équipe, optionnel) :
+```cmd
+npx localtunnel --port 4200 --subdomain assoue
+```
+URL fixe de l'équipe : **`https://assoue.loca.lt`**
+Garder ce terminal ouvert tant que le partage est actif.
+> Les coéquipiers devront entrer l'adresse IP de ta connexion internet (indiquée sur la page d'accueil) lors de leur première connexion pour des raisons de sécurité.
 
 Adminer (inspecter la base) : `http://localhost:8081` — serveur `db`, identifiants du `.env`.
 
