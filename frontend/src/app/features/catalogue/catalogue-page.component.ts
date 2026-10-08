@@ -63,7 +63,7 @@ export function trierProduits(produits: Produit[], tri: TriCatalogue): Produit[]
       }
       <div class="outils">
         @if (categories().length) {
-          <div class="filtres" role="group" aria-label="Catégories">
+          <div class="filtres defilement-horizontal" role="group" aria-label="Catégories" tabindex="0">
             <button type="button" [class.actif]="categorieSelectionnee() === null" [attr.aria-pressed]="categorieSelectionnee() === null" (click)="choisirCategorie(null)">Tout</button>
             @for (categorie of categories(); track categorie.id) {
               <button type="button" [class.actif]="categorieSelectionnee() === categorie.id" [attr.aria-pressed]="categorieSelectionnee() === categorie.id" (click)="choisirCategorie(categorie.id)">{{ categorie.nom }}</button>

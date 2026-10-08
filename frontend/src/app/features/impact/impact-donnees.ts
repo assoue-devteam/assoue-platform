@@ -8,6 +8,8 @@ import { IconName } from '../../shared/ui/icon/icons';
 export interface ChiffreImpact {
   valeur: number;
   libelle: string;
+  /** Ce que mesure le chiffre, sans promesse au-delà de la plaquette. */
+  contexte: string;
 }
 
 export interface CarteMission {
@@ -27,7 +29,7 @@ export interface Distinction {
 }
 
 export interface DonneesImpact {
-  /** Année de création, pour « Depuis N ans ». À confirmer : 2018 = 2026 moins 8 ans. */
+  /** Année de création, pour le sur-titre fixe « Depuis 2018 au Burkina Faso ». */
   anneeCreation: number;
   source: string;
   regions: string[];
@@ -38,14 +40,13 @@ export interface DonneesImpact {
 }
 
 export const DONNEES_IMPACT: DonneesImpact = {
-  anneeCreation: 2018, // À confirmer : 2018 = 2026 moins les « 8 ans » de la plaquette.
+  anneeCreation: 2018,
   source: "plaquette AS'SOUÉ 2026",
   regions: ['Centre', 'Centre-Nord', 'Hauts-Bassins', 'Est', 'Centre-Est'],
   chiffres: [
-    { valeur: 400670, libelle: 'pneus recyclés' },
-    { valeur: 801, libelle: 'emplois directs' },
-    { valeur: 1857, libelle: 'emplois indirects' },
-    { valeur: 5, libelle: "régions d'intervention" },
+    { valeur: 400670, libelle: 'pneus recyclés', contexte: 'Pneus usagés collectés et transformés en objets utiles.' },
+    { valeur: 801, libelle: 'emplois directs', contexte: 'Artisans salariés dans les ateliers.' },
+    { valeur: 1857, libelle: 'emplois indirects', contexte: 'Activités générées en amont et en aval.' },
   ],
   mission: [
     { icone: 'recycle', titre: 'Réduire la pollution', texte: 'Chaque pneu collecté quitte un caniveau ou un terrain vague de nos quartiers pour devenir un objet utile.' },
@@ -66,8 +67,5 @@ export const DONNEES_IMPACT: DonneesImpact = {
   ],
 };
 
-/** « Depuis 8 ans au Burkina Faso », calculé depuis l'année de création (accord géré). */
-export function surtitreImpact(donnees: DonneesImpact, anneeEnCours = new Date().getFullYear()): string {
-  const ans = Math.max(0, anneeEnCours - donnees.anneeCreation);
-  return `Depuis ${ans} an${ans > 1 ? 's' : ''} au Burkina Faso`;
-}
+/** Sur-titre fixe : valeur de la plaquette, pas un calcul d'âge qui vieillit. */
+export const SURTITRE_IMPACT = `Depuis ${DONNEES_IMPACT.anneeCreation} au Burkina Faso`;

@@ -1,5 +1,6 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component, DestroyRef, ElementRef, inject, input, viewChild } from '@angular/core';
 import { formaterNombreFr } from '../../shared/nombres';
+import { DUREE_COMPTEUR, valeurInterpolee } from '../../shared/compteur';
 
 /**
  * Compte de 0 jusqu'à `valeur` quand il entre dans la fenêtre (une seule fois).
@@ -7,7 +8,12 @@ import { formaterNombreFr } from '../../shared/nombres';
  * d'un setInterval. La valeur finale est déjà dans le DOM (sans observer ou avec
  * « réduire les animations », le chiffre exact reste affiché) ; le conteneur
  * porte aria-hidden et la valeur accessible est fournie à côté (texte masqué).
- * Utilisé par « Notre impact » et les chiffres de la page Communauté.
+ *
+ * Déclenchement : si l'élément est déjà visible au chargement (cas fréquent sur
+ * grand écran), le premier rappel de l'observer est ignoré — l'animation ne se
+ * lance qu'après une sortie du viewport, pour ne pas se terminer avant que
+ * l'utilisateur ne regarde la zone. Sur mobile (élément plus bas), le
+ * déclenchement est naturel à l'arrivée au scroll.
  */
 @Component({
   selector: 'app-compteur-anime',
@@ -22,7 +28,7 @@ import { formaterNombreFr } from '../../shared/nombres';
 })
 export class CompteurAnimeComponent implements AfterViewInit {
   readonly valeur = input.required<number>();
-  readonly duree = input(1600);
+  readonly duree = input(DUREE_COMPTEUR);
   readonly suffixe = input('');
 
   protected readonly formater = formaterNombreFr;
@@ -37,8 +43,17 @@ export class CompteurAnimeComponent implements AfterViewInit {
     el.textContent = formaterNombreFr(this.valeur()) + this.suffixe();
     if (typeof IntersectionObserver === 'undefined'
       || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    // « pret » passe à true dès que l'élément sort du viewport : l'animation ne
+    // se lance qu'à une entrée réelle, jamais au chargement initial.
+    let pret = false;
     const observateur = new IntersectionObserver(entrees => {
-      if (!entrees.some(entree => entree.isIntersecting)) return;
+      const entree = entrees[entrees.length - 1];
+      if (!entree.isIntersecting) {
+        pret = true;
+        return;
+      }
+      if (!pret) return;
       this.observateur?.disconnect();
       this.observateur = null;
       this.animer(el);
@@ -58,8 +73,7 @@ export class CompteurAnimeComponent implements AfterViewInit {
     const duree = this.duree();
     const pas = (maintenant: number) => {
       const progression = Math.min(1, (maintenant - debut) / duree);
-      const valeur = Math.round(cible * (1 - Math.pow(1 - progression, 3)));
-      el.textContent = formaterNombreFr(valeur) + suffixe;
+      el.textContent = formaterNombreFr(valeurInterpolee(cible, progression)) + suffixe;
       if (progression < 1) this.trame = requestAnimationFrame(pas);
     };
     this.trame = requestAnimationFrame(pas);

@@ -111,3 +111,35 @@
 
 .space-gestion { --control-height: 40px; }
 .space-collecteur .btn { min-height: 48px; }
+
+// Listes à défilement horizontal (filtres catalogue, chips, onglets).
+// Tactile : barre masquée, fondu léger aux bords, scroll-snap. Souris : barre fine.
+.defilement-horizontal {
+  overflow-x: auto;
+  padding-bottom: var(--space-1);
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  // Léger fondu sur les bords pour signaler qu’il y a une suite
+  mask-image: linear-gradient(to right, transparent, black 6px, black calc(100% - 6px), transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 6px, black calc(100% - 6px), transparent);
+
+  // Tactile : barre masquée, défilement natif conservé
+  @media (hover: none) and (pointer: coarse) {
+    scrollbar-width: none;
+    &::-webkit-scrollbar { display: none; }
+  }
+
+  // Souris : barre fine et discrète aux tokens du site
+  @media (hover: hover) and (pointer: fine) {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border-strong) transparent;
+    &::-webkit-scrollbar { height: 6px; }
+    &::-webkit-scrollbar-thumb { background: var(--color-border-strong); border-radius: 3px; }
+    &::-webkit-scrollbar-track { background: transparent; }
+  }
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+}

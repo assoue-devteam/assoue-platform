@@ -45,7 +45,7 @@ export class QuantityStepperComponent {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="chips" role="group" [attr.aria-label]="label()">
+    <div class="chips defilement-horizontal" role="group" [attr.aria-label]="label()" tabindex="0">
       @for (option of options(); track option.valeur) {
         <button type="button" class="chip" [attr.aria-pressed]="option.valeur === selected()" (click)="selected.set(option.valeur)">
           {{ option.libelle }}
@@ -74,7 +74,7 @@ export class FilterChipsComponent<T = string> {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="tabs" role="tablist" [attr.aria-label]="label()">
+    <div class="tabs defilement-horizontal" role="tablist" [attr.aria-label]="label()">
       @for (option of options(); track option.valeur) {
         <button type="button" role="tab" class="tab"
                 [attr.aria-selected]="option.valeur === selected()"
