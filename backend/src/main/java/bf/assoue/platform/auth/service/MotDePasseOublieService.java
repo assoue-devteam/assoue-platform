@@ -34,8 +34,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class MotDePasseOublieService {
 
-    private static final String MESSAGE_UNIFORME =
-            "Si un compte existe avec cette adresse, un code de réinitialisation a été envoyé.";
+    private static final String MESSAGE_UNIFORME = "Si un compte existe avec cette adresse, un code de réinitialisation a été envoyé.";
     private static final String ERREUR_CODE_INVALIDE = "Code invalide ou expiré.";
     private static final String ERREUR_JETON_INVALIDE = "Jeton invalide ou expiré.";
 
@@ -213,7 +212,7 @@ public class MotDePasseOublieService {
     }
 
     private void envoyerCodeAsync(String email, String code) {
-        String sujet = "Code de réinitialisation — AS'Soué";
+        String sujet = "Code de réinitialisation  AS'Soué";
         String corpsHtml = "<p>Votre code de réinitialisation : <strong>" + code + "</strong></p>"
                 + "<p>Ce code est valable " + proprietes.getCodeDureeMin() + " minutes.</p>";
         String corpsTexte = "Votre code de réinitialisation : " + code
@@ -225,7 +224,7 @@ public class MotDePasseOublieService {
     }
 
     private void envoyerConfirmationAsync(String email) {
-        String sujet = "Mot de passe modifié — AS'Soué";
+        String sujet = "Mot de passe modifié AS'Soué";
         String corpsHtml = "<p>Votre mot de passe a été modifié avec succès.</p>";
         String corpsTexte = "Votre mot de passe a été modifié avec succès.";
         serviceNotification.envoyerAsynchrone(new MessageEmail(

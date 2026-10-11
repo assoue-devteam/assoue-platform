@@ -39,7 +39,7 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
             <p class="instructions">Entrez le code à 6 chiffres reçu par e-mail.</p>
             <app-field label="Code" [error]="erreurChamp(formCode, 'code')">
               <input appControl type="text" formControlName="code" inputmode="numeric" autocomplete="one-time-code"
-                     maxlength="6" pattern="\d*" (input)="onCodeInput($event)" />
+                     maxlength="6" (input)="onCodeInput($event)" />
             </app-field>
             @if (messageErreur()) {
               <p class="error-message">{{ messageErreur() }}</p>
