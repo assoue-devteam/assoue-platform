@@ -51,6 +51,18 @@ Les photos produits/événements sont envoyées par l'admin (`POST /api/images`,
 - en dev : `./uploads` (créé par le dépôt, `ASSOUE_IMAGES_DIR` relatif accepté) ;
 - en production : `ASSOUE_IMAGES_DIR` **absolu et obligatoire** (ex. `/var/lib/assoue/uploads`), avec un **volume monté** sur ce chemin — sinon le backend refuse de démarrer, et sur disque éphémère les images seraient perdues à chaque redéploiement (le passage au stockage objet se fera derrière la même interface `StockageImage`, voir contrat d'API).
 - `docker compose` monte déjà `./uploads:/app/uploads` avec `ASSOUE_IMAGES_DIR=/app/uploads`.
+- Mémoire : le serveur décode au plus 50 M pixels (photo 48 MP ≈ 150 Mo transitoires) et traite **2 uploads en parallèle au plus** (sémaphore, 3e refusé en `429 « Réessayez dans un instant »`), soit ~300 Mo transitoires. Sur un VPS 2 Go (OS + Postgres + backend), lancer avec `-Xmx1g` (voir `JAVA_OPTS` dans `docker-compose.yml`) : 1 Go de tas absorbe les 2 décodages + le reste de l'appli, le Go restant va à Postgres et au système.
+
+## Envoi d'e-mails
+
+Le backend envoie des e-mails (mot de passe oublié, alertes métier) via SMTP, de façon asynchrone : un échec d'envoi ne bloque jamais la transaction métier qui l'a déclenché. Configuration via les variables `ASSOUE_MAIL_*` (voir `.env.example`) :
+
+- `ASSOUE_MAIL_HOST`, `ASSOUE_MAIL_PORT`, `ASSOUE_MAIL_PROTOCOL` — serveur SMTP ;
+- `ASSOUE_MAIL_USERNAME`, `ASSOUE_MAIL_PASSWORD` — authentification (vide = non authentifié) ;
+- `ASSOUE_MAIL_FROM` — adresse d'expédition ;
+- `ASSOUE_MAIL_ALERTES_DESTINATAIRES` — une ou plusieurs adresses (séparées par des virgules) recevant les alertes métier (collecte déclarée, signalement).
+
+Sans configuration SMTP, les envois échouent silencieusement (journalisation, aucune erreur métier). En production, renseignez un SMTP réel.
 
 ## Vérifications qualité
 
@@ -71,6 +83,7 @@ npm audit --omit=dev --audit-level=high
 ```
 
 Le frontend utilise Angular 20 et Playwright pour les E2E. `npm audit` (prod comme dev) est à 0 vulnérabilité : les failles de l'outillage (webpack-dev-middleware, uuid) sont neutralisées par `overrides` ciblés dans `package.json`, sans monter de version majeure. Le backend suit la ligne Spring Boot 3.3.x en patch à jour.
+Budgets CSS (`angular.json`, `anyComponentStyle` 4 kB alerte / 6 kB erreur — JSON sans commentaire possible) : les styles sont inline par composant (pas de feuille globale) et 5 écrans riches (header boutique, catalogue, impact, gestion, formulaires) dépassent légitimement 2 kB.
 
 Le backend utilise `SPRING_PROFILES_ACTIVE=prod` en production. Ce profil impose la validation du schéma par Flyway, désactive Swagger et masque les valeurs SQL. Les secrets `JWT_SECRET` et PayDunya doivent être fournis par l'environnement de déploiement. La checklist complète est dans [`docs/release-checklist.md`](./docs/release-checklist.md).
 

@@ -21,6 +21,15 @@ assoue:
     pixels-max: 50000000
     # Plus grand côté à l'écriture (redimensionnement serveur après normalisation).
     taille-cote-max: 1600
+  mail:
+    hote: ${ASSOUE_MAIL_HOST:localhost}
+    port: ${ASSOUE_MAIL_PORT:25}
+    protocol: ${ASSOUE_MAIL_PROTOCOL:smtp}
+    utilisateur: ${ASSOUE_MAIL_USERNAME:}
+    mot-de-passe: ${ASSOUE_MAIL_PASSWORD:}
+    expediteur: ${ASSOUE_MAIL_FROM:no-reply@assoue.bf}
+    # Destinataires des alertes métier (collecte, signalement) — séparés par des virgules.
+    alertes-destinataires: ${ASSOUE_MAIL_ALERTES_DESTINATAIRES:}
 springdoc:
   api-docs:
     path: /api-docs
