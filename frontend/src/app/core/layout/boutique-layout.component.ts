@@ -69,6 +69,9 @@ import { RechercheProduitComponent } from '../../features/catalogue/recherche-pr
           <a routerLink="/" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }">Catalogue</a>
           <a routerLink="/notre-impact" routerLinkActive="actif">Notre impact</a>
           <a routerLink="/communaute" routerLinkActive="actif">Communauté</a>
+          @if (auth.aRole('COLLECTEUR')) {
+            <a routerLink="/collecte" class="entete__lien-collecte">Espace collecte</a>
+          }
         </nav>
       </div>
 
@@ -79,6 +82,9 @@ import { RechercheProduitComponent } from '../../features/catalogue/recherche-pr
           <a routerLink="/" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }" (click)="fermerBurger()">Catalogue</a>
           <a routerLink="/notre-impact" routerLinkActive="actif" (click)="fermerBurger()">Notre impact</a>
           <a routerLink="/communaute" routerLinkActive="actif" (click)="fermerBurger()">Communauté</a>
+          @if (auth.aRole('COLLECTEUR')) {
+            <a routerLink="/collecte" (click)="fermerBurger()">Espace collecte</a>
+          }
           @if (!auth.connecte()) {
             <a routerLink="/connexion" (click)="fermerBurger()">Se connecter</a>
           }
@@ -123,6 +129,7 @@ import { RechercheProduitComponent } from '../../features/catalogue/recherche-pr
     .entete__nav { display: flex; gap: var(--space-4); padding-bottom: var(--space-2); }
     .entete__nav a { color: var(--color-text); text-decoration: none; font-weight: 600; min-height: 2rem; display: inline-flex; align-items: center; }
     .entete__nav a.actif { color: var(--color-primary); box-shadow: inset 0 -2px var(--color-primary); }
+    .entete__lien-collecte { color: var(--color-primary-strong) !important; font-weight: 700 !important; }
     .entete__panneau { display: none; min-width: 0; max-width: 100%; }
     .entete__recherche--mobile { min-width: 0; max-width: 100%; }
     .entete__recherche-bouton:focus-visible, .entete__menu:focus-visible, .entete__panneau a:focus-visible {

@@ -1,7 +1,6 @@
 package bf.assoue.platform.common.notification;
 
 import bf.assoue.platform.common.mail.ModelesEmail;
-import bf.assoue.platform.common.mail.MessageEmail;
 import bf.assoue.platform.common.mail.ServiceNotification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

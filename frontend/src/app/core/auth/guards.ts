@@ -4,7 +4,7 @@ import { Role } from '../../shared/models/api';
 import { AuthService } from './auth.service';
 
 /** Protège un espace : non connecté ou session expirée → connexion, mauvais rôle → accès refusé. */
-export function roleGuard(role: Role): CanActivateFn {
+export function roleGuard(...roles: Role[]): CanActivateFn {
   return (_route, state) => {
     const auth = inject(AuthService);
     const router = inject(Router);
@@ -13,6 +13,6 @@ export function roleGuard(role: Role): CanActivateFn {
       const raison = auth.connecte() ? { raison: 'expiree' } : {};
       return router.createUrlTree(['/connexion'], { queryParams: { retour: state.url, ...raison } });
     }
-    return auth.aRole(role) ? true : router.createUrlTree(['/acces-refuse']);
+    return roles.some(role => auth.aRole(role)) ? true : router.createUrlTree(['/acces-refuse']);
   };
 }

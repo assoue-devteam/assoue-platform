@@ -1,7 +1,6 @@
 package bf.assoue.platform.auth.controller;
 
 import bf.assoue.platform.auth.model.CodeReinitialisation;
-import bf.assoue.platform.auth.model.JetonReset;
 import bf.assoue.platform.auth.model.Role;
 import bf.assoue.platform.auth.model.Utilisateur;
 import bf.assoue.platform.auth.repository.CodeReinitialisationRepository;
@@ -33,13 +32,11 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.HexFormat;
-import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest

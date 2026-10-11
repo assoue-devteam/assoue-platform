@@ -3,6 +3,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationStart, Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
+import { CollecteService } from '../../features/collecte/collecte.service';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
 import { ClickOutsideDirective, estDefilementFermant } from '../../shared/ui/click-outside.directive';
 import { PopupService } from '../../shared/ui/popup.service';
@@ -29,9 +30,12 @@ let compteur = 0;
         <div class="compte__menu" [id]="idPanneau" (focusout)="fermerSiFocusSorti($event)">
           <p class="compte__email-complet">{{ auth.email() }}</p>
           @if (auth.aRole('ADMIN')) { <a routerLink="/gestion" (click)="fermer()">Espace gestion</a> }
-          @if (auth.aRole('COLLECTEUR')) { <a routerLink="/collecte" (click)="fermer()">Espace collecte</a> }
-          @if (auth.aRole('CLIENT')) { <a routerLink="/commandes" (click)="fermer()">Mes commandes</a> }
-          @if (auth.aRole('CLIENT')) { <a routerLink="/favoris" (click)="fermer()">Mes favoris</a> }
+          @if (auth.aRole('COLLECTEUR')) {
+            <a routerLink="/collecte" (click)="fermer()">Espace collecte</a>
+            <a routerLink="/" (click)="fermer()">Boutique</a>
+          }
+          @if (auth.aRole('CLIENT') || auth.aRole('COLLECTEUR')) { <a routerLink="/commandes" (click)="fermer()">Mes commandes</a> }
+          @if (auth.aRole('CLIENT') || auth.aRole('COLLECTEUR')) { <a routerLink="/favoris" (click)="fermer()">Mes favoris</a> }
           <button type="button" (click)="deconnecter()"><app-icon name="log-out" [size]="16" /> Se déconnecter</button>
         </div>
       }
@@ -74,6 +78,7 @@ export class CompteMenuComponent {
   protected auth = inject(AuthService);
   private router = inject(Router);
   private popups = inject(PopupService);
+  private collecteService = inject(CollecteService, { optional: true });
   private declencheur = viewChild<ElementRef<HTMLButtonElement>>('declencheur');
 
   protected readonly idPanneau = `menu-compte-${++compteur}`;
@@ -126,6 +131,12 @@ export class CompteMenuComponent {
   }
 
   protected deconnecter() {
+    if (this.auth.aRole('COLLECTEUR') && (this.collecteService?.enAttente() ?? 0) > 0) {
+      const confirmer = window.confirm(
+        'Vous avez des déclarations de collecte non synchronisées sur ce téléphone. Elles ne seront pas transmises tant que vous ne vous reconnecterez pas. Voulez-vous vraiment vous déconnecter ?'
+      );
+      if (!confirmer) return;
+    }
     this.fermer();
     this.auth.deconnecter();
     this.router.navigateByUrl('/');

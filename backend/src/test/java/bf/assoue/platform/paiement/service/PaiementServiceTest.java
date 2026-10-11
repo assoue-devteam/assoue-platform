@@ -74,7 +74,7 @@ class PaiementServiceTest {
     @Test
     void initier_creePaiementEtRetourneUrlDuFournisseur() {
         Commande commande = commandeAvecLigne(10L, "client@example.com", CommandeStatut.EN_ATTENTE_PAIEMENT, BigDecimal.valueOf(30000));
-        when(commandeRepository.findById(10L)).thenReturn(Optional.of(commande));
+        when(commandeRepository.findAvecLignesById(10L)).thenReturn(Optional.of(commande));
         when(paiementRepository.findByCommandeId(10L)).thenReturn(Optional.empty());
         when(paydunyaProperties.callbackUrl()).thenReturn("https://example.test/webhook");
         when(paydunyaClient.creerInvoice(eq(BigDecimal.valueOf(30000)), anyString(), eq("https://example.test/webhook")))
@@ -91,7 +91,7 @@ class PaiementServiceTest {
         Commande commande = commandeAvecLigne(10L, "client@example.com", CommandeStatut.EN_ATTENTE_PAIEMENT, BigDecimal.valueOf(30000));
         Paiement existant = Paiement.builder().id(1L).commande(commande).montant(BigDecimal.valueOf(30000))
                 .tokenPaydunya("tok_exist").urlPaydunya("https://paydunya.test/invoice/tok_exist").build();
-        when(commandeRepository.findById(10L)).thenReturn(Optional.of(commande));
+        when(commandeRepository.findAvecLignesById(10L)).thenReturn(Optional.of(commande));
         when(paiementRepository.findByCommandeId(10L)).thenReturn(Optional.of(existant));
         when(paydunyaClient.estEnAttente("tok_exist")).thenReturn(true);
 
@@ -104,7 +104,7 @@ class PaiementServiceTest {
     @Test
     void initier_refusePaiementPourCommandePayeeOuAnnulee() {
         Commande commande = commandeDe(10L, "client@example.com", CommandeStatut.PAYEE);
-        when(commandeRepository.findById(10L)).thenReturn(Optional.of(commande));
+        when(commandeRepository.findAvecLignesById(10L)).thenReturn(Optional.of(commande));
 
         assertThatThrownBy(() -> paiementService.initier(10L, "client@example.com"))
                 .isInstanceOf(RequeteInvalideException.class);
@@ -115,7 +115,7 @@ class PaiementServiceTest {
 
     @Test
     void initier_cacheUneCommandeTiers() {
-        when(commandeRepository.findById(10L)).thenReturn(Optional.of(commandeDe(10L, "autre@example.com", CommandeStatut.EN_ATTENTE_PAIEMENT)));
+        when(commandeRepository.findAvecLignesById(10L)).thenReturn(Optional.of(commandeDe(10L, "autre@example.com", CommandeStatut.EN_ATTENTE_PAIEMENT)));
         assertThatThrownBy(() -> paiementService.initier(10L, "client@example.com"))
                 .isInstanceOf(RessourceIntrouvableException.class);
     }
@@ -123,7 +123,7 @@ class PaiementServiceTest {
     @Test
     void initier_conflitEcritureConcurrente_remontePaiementDejaInitie() {
         Commande commande = commandeAvecLigne(10L, "client@example.com", CommandeStatut.EN_ATTENTE_PAIEMENT, BigDecimal.valueOf(30000));
-        when(commandeRepository.findById(10L)).thenReturn(Optional.of(commande));
+        when(commandeRepository.findAvecLignesById(10L)).thenReturn(Optional.of(commande));
         when(paiementRepository.findByCommandeId(10L)).thenReturn(Optional.empty());
         when(paydunyaProperties.callbackUrl()).thenReturn("https://example.test/webhook");
         when(paydunyaClient.creerInvoice(eq(BigDecimal.valueOf(30000)), anyString(), eq("https://example.test/webhook")))

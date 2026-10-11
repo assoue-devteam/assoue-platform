@@ -16,6 +16,8 @@ import bf.assoue.platform.commerce.repository.CommandeRepository;
 import bf.assoue.platform.commerce.repository.ProduitRepository;
 import bf.assoue.platform.common.exception.RequeteInvalideException;
 import bf.assoue.platform.common.exception.RessourceIntrouvableException;
+import bf.assoue.platform.signalement.service.PointsProperties;
+import bf.assoue.platform.signalement.service.PointsService;
 import bf.assoue.platform.stock.service.ReservationStockService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,6 +47,10 @@ class CommandeServiceTest {
     private UtilisateurRepository utilisateurRepository;
     @Mock
     private ReservationStockService reservationStockService;
+    @Mock
+    private PointsService pointsService;
+    @Mock
+    private PointsProperties pointsProperties;
 
     @InjectMocks
     private CommandeService commandeService;

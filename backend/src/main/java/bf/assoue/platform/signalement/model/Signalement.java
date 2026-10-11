@@ -34,12 +34,13 @@ public class Signalement {
     private String description;
 
     @Column(precision = 10, scale = 7)
-    private Double latitude;
+    private java.math.BigDecimal latitude;
 
     @Column(precision = 10, scale = 7)
-    private Double longitude;
+    private java.math.BigDecimal longitude;
 
     @Column(nullable = false, length = 20)
+    @Builder.Default
     private String statut = "EN_ATTENTE";
 
     @Column(name = "motif_rejet", length = 500)
@@ -55,6 +56,10 @@ public class Signalement {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "valide_par")
     private bf.assoue.platform.auth.model.Utilisateur validePar;
+
+    @OneToMany(mappedBy = "signalement", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private java.util.List<PhotoSignalement> photos = new java.util.ArrayList<>();
 
     @Version
     private int version;

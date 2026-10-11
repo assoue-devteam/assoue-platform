@@ -23,7 +23,7 @@ public class PaiementController {
     private final ObjectMapper objectMapper;
 
     @PostMapping("/commandes/{commandeId}")
-    @PreAuthorize("hasRole('CLIENT')")
+    @PreAuthorize("hasAnyRole('CLIENT','COLLECTEUR')")
     public PaiementResponse initier(@PathVariable Long commandeId, Principal principal) {
         return paiementService.initier(commandeId, principal.getName());
     }

@@ -13,7 +13,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/favoris")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('CLIENT')")
+@PreAuthorize("hasAnyRole('CLIENT','COLLECTEUR')")
 public class FavoriController {
 
     private final FavoriService favoriService;

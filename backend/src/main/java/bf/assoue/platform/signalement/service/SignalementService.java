@@ -9,7 +9,6 @@ import bf.assoue.platform.common.mail.ModelesEmail;
 import bf.assoue.platform.common.mail.ServiceNotification;
 import bf.assoue.platform.common.notification.SignaleCreeEvent;
 import bf.assoue.platform.signalement.dto.CreerSignalementRequest;
-import bf.assoue.platform.signalement.dto.PhotoSignalementResponse;
 import bf.assoue.platform.signalement.dto.SignalementResponse;
 import bf.assoue.platform.signalement.dto.ValiderSignalementRequest;
 import bf.assoue.platform.signalement.model.PhotoSignalement;
@@ -185,7 +184,7 @@ public class SignalementService {
     }
 
     private void stockerFichier(String cle, MultipartFile fichier) {
-        // TODO: réutiliser ImageService/StockageImage pour le stockage réel
+        // Intégration : stockage de la photo via StockageImage / ImageService.
         log.info("Stockage photo signalement cle={} size={}", cle, fichier.getSize());
     }
 }

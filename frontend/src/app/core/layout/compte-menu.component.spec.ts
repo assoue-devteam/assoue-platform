@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { NavigationStart, Router, RouterLink } from '@angular/router';
 import { Subject } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
+import { CollecteService } from '../../features/collecte/collecte.service';
 import { CompteMenuComponent } from './compte-menu.component';
 
 describe('CompteMenuComponent', () => {
@@ -23,6 +24,10 @@ describe('CompteMenuComponent', () => {
             aRole: (role: string) => role === 'CLIENT',
             deconnecter,
           },
+        },
+        {
+          provide: CollecteService,
+          useValue: { enAttente: () => 0 },
         },
         {
           provide: Router,

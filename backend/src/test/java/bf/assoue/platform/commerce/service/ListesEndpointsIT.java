@@ -58,6 +58,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ListesEndpointsIT {
 
     @Container
+    @SuppressWarnings("resource")
     static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16-alpine");
 
     static final java.nio.file.Path IMAGES;

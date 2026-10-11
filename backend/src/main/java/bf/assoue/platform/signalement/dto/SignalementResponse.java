@@ -1,6 +1,7 @@
 package bf.assoue.platform.signalement.dto;
 
 import bf.assoue.platform.signalement.model.Signalement;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -9,8 +10,8 @@ public record SignalementResponse(
         Long zoneId,
         String zoneNom,
         String description,
-        Double latitude,
-        Double longitude,
+        BigDecimal latitude,
+        BigDecimal longitude,
         String statut,
         String motifRejet,
         LocalDateTime dateCreation,

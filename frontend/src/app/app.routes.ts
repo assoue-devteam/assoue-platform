@@ -16,28 +16,28 @@ export const routes: Routes = [
     children: [
       // Piste A — Boutique (public)
       { path: '', loadComponent: () => import('./features/catalogue/catalogue-page.component').then(m => m.CataloguePageComponent), title: "AS'SOUÉ" },
-      { path: 'produits/:id', loadComponent: () => import('./features/catalogue/produit-page.component').then(m => m.ProduitPageComponent), title: "Produit — AS'SOUÉ" },
-      { path: 'communaute', loadComponent: () => import('./features/communaute/communaute-page.component').then(m => m.CommunautePageComponent), title: "Communauté — AS'SOUÉ" },
-      { path: 'notre-impact', loadComponent: () => import('./features/impact/notre-impact-page.component').then(m => m.NotreImpactPageComponent), title: "Notre impact — AS'SOUÉ" },
-      { path: 'panier', loadComponent: () => import('./features/catalogue/panier-page.component').then(m => m.PanierPageComponent), title: "Panier — AS'SOUÉ" },
+      { path: 'produits/:id', loadComponent: () => import('./features/catalogue/produit-page.component').then(m => m.ProduitPageComponent), title: "Produit · AS'SOUÉ" },
+      { path: 'communaute', loadComponent: () => import('./features/communaute/communaute-page.component').then(m => m.CommunautePageComponent), title: "Communauté · AS'SOUÉ" },
+      { path: 'notre-impact', loadComponent: () => import('./features/impact/notre-impact-page.component').then(m => m.NotreImpactPageComponent), title: "Notre impact · AS'SOUÉ" },
+      { path: 'panier', loadComponent: () => import('./features/catalogue/panier-page.component').then(m => m.PanierPageComponent), title: "Panier · AS'SOUÉ" },
 
-      // Piste B — Commandes et paiement (client)
+      // Piste B — Commandes et paiement (client et collecteur)
       {
         path: 'commandes',
-        canActivate: [roleGuard('CLIENT')],
+        canActivate: [roleGuard('CLIENT', 'COLLECTEUR')],
         children: [
-          { path: '', loadComponent: () => import('./features/commande/mes-commandes-page.component').then(m => m.MesCommandesPageComponent), title: "Mes commandes — AS'SOUÉ" },
-          { path: ':id', loadComponent: () => import('./features/commande/commande-detail-page.component').then(m => m.CommandeDetailPageComponent), title: "Commande — AS'SOUÉ" },
-          { path: ':id/paiement', loadComponent: () => import('./features/commande/paiement-page.component').then(m => m.PaiementPageComponent), title: "Paiement — AS'SOUÉ" },
+          { path: '', loadComponent: () => import('./features/commande/mes-commandes-page.component').then(m => m.MesCommandesPageComponent), title: "Mes commandes · AS'SOUÉ" },
+          { path: ':id', loadComponent: () => import('./features/commande/commande-detail-page.component').then(m => m.CommandeDetailPageComponent), title: "Commande · AS'SOUÉ" },
+          { path: ':id/paiement', loadComponent: () => import('./features/commande/paiement-page.component').then(m => m.PaiementPageComponent), title: "Paiement · AS'SOUÉ" },
         ],
       },
 
-      { path: 'favoris', canActivate: [roleGuard('CLIENT')], loadComponent: () => import('./features/catalogue/favoris-page.component').then(m => m.FavorisPageComponent), title: "Mes favoris — AS'SOUÉ" },
+      { path: 'favoris', canActivate: [roleGuard('CLIENT', 'COLLECTEUR')], loadComponent: () => import('./features/catalogue/favoris-page.component').then(m => m.FavorisPageComponent), title: "Mes favoris · AS'SOUÉ" },
 
       {
         path: 'acces-refuse',
         loadComponent: () => import('./shared/pages/pages').then(m => m.PageAccesRefuseComponent),
-        title: "Accès refusé — AS'SOUÉ",
+        title: "Accès refusé · AS'SOUÉ",
       },
     ],
   },
@@ -47,9 +47,9 @@ export const routes: Routes = [
     path: '',
     component: AuthLayoutComponent,
     children: [
-      { path: 'connexion', loadComponent: () => import('./features/auth/connexion-page.component').then(m => m.ConnexionPageComponent), title: "Connexion — AS'SOUÉ" },
-      { path: 'inscription', loadComponent: () => import('./features/auth/inscription-page.component').then(m => m.InscriptionPageComponent), title: "Inscription — AS'SOUÉ" },
-      { path: 'mot-de-passe-oublie', loadComponent: () => import('./features/auth/mot-de-passe-oublie-page.component').then(m => m.MotDePasseOubliePageComponent), title: "Mot de passe oublié — AS'SOUÉ" },
+      { path: 'connexion', loadComponent: () => import('./features/auth/connexion-page.component').then(m => m.ConnexionPageComponent), title: "Connexion · AS'SOUÉ" },
+      { path: 'inscription', loadComponent: () => import('./features/auth/inscription-page.component').then(m => m.InscriptionPageComponent), title: "Inscription · AS'SOUÉ" },
+      { path: 'mot-de-passe-oublie', loadComponent: () => import('./features/auth/mot-de-passe-oublie-page.component').then(m => m.MotDePasseOubliePageComponent), title: "Mot de passe oublié · AS'SOUÉ" },
     ],
   },
 
@@ -59,9 +59,9 @@ export const routes: Routes = [
     canActivate: [roleGuard('COLLECTEUR')],
     component: CollecteurLayoutComponent,
     children: [
-      { path: '', loadComponent: () => import('./features/collecte/mes-collectes-page.component').then(m => m.MesCollectesPageComponent), title: "Mes collectes — AS'SOUÉ" },
-      { path: 'nouvelle', loadComponent: () => import('./features/collecte/collecte-form-page.component').then(m => m.CollecteFormPageComponent), title: "Déclarer — AS'SOUÉ" },
-      { path: ':id/modifier', loadComponent: () => import('./features/collecte/collecte-form-page.component').then(m => m.CollecteFormPageComponent), title: "Corriger — AS'SOUÉ" },
+      { path: '', loadComponent: () => import('./features/collecte/mes-collectes-page.component').then(m => m.MesCollectesPageComponent), title: "Mes collectes · AS'SOUÉ" },
+      { path: 'nouvelle', loadComponent: () => import('./features/collecte/collecte-form-page.component').then(m => m.CollecteFormPageComponent), title: "Déclarer · AS'SOUÉ" },
+      { path: ':id/modifier', loadComponent: () => import('./features/collecte/collecte-form-page.component').then(m => m.CollecteFormPageComponent), title: "Corriger · AS'SOUÉ" },
     ],
   },
 
@@ -72,13 +72,13 @@ export const routes: Routes = [
     component: GestionLayoutComponent,
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'collectes' },
-      { path: 'collectes', loadComponent: () => import('./features/admin/gestion-collectes-page.component').then(m => m.GestionCollectesPageComponent), title: "Collectes — Gestion" },
-      { path: 'commandes', loadComponent: () => import('./features/admin/gestion-commandes-page.component').then(m => m.GestionCommandesPageComponent), title: "Commandes — Gestion" },
-      { path: 'commandes/:id', loadComponent: () => import('./features/admin/gestion-commande-detail-page.component').then(m => m.GestionCommandeDetailPageComponent), title: "Commande — Gestion" },
-      { path: 'stocks', loadComponent: () => import('./features/admin/gestion-stocks-page.component').then(m => m.GestionStocksPageComponent), title: "Stocks — Gestion" },
-      { path: 'produits', loadComponent: () => import('./features/admin/gestion-produits-page.component').then(m => m.GestionProduitsPageComponent), title: "Produits — Gestion" },
-      { path: 'communaute', loadComponent: () => import('./features/admin/gestion-communaute-page.component').then(m => m.GestionCommunautePageComponent), title: "Communauté — Gestion" },
-      { path: 'utilisateurs', loadComponent: () => import('./features/admin/gestion-utilisateurs-page.component').then(m => m.GestionUtilisateursPageComponent), title: "Utilisateurs — Gestion" },
+      { path: 'collectes', loadComponent: () => import('./features/admin/gestion-collectes-page.component').then(m => m.GestionCollectesPageComponent), title: "Collectes · Gestion" },
+      { path: 'commandes', loadComponent: () => import('./features/admin/gestion-commandes-page.component').then(m => m.GestionCommandesPageComponent), title: "Commandes · Gestion" },
+      { path: 'commandes/:id', loadComponent: () => import('./features/admin/gestion-commande-detail-page.component').then(m => m.GestionCommandeDetailPageComponent), title: "Commande · Gestion" },
+      { path: 'stocks', loadComponent: () => import('./features/admin/gestion-stocks-page.component').then(m => m.GestionStocksPageComponent), title: "Stocks · Gestion" },
+      { path: 'produits', loadComponent: () => import('./features/admin/gestion-produits-page.component').then(m => m.GestionProduitsPageComponent), title: "Produits · Gestion" },
+      { path: 'communaute', loadComponent: () => import('./features/admin/gestion-communaute-page.component').then(m => m.GestionCommunautePageComponent), title: "Communauté · Gestion" },
+      { path: 'utilisateurs', loadComponent: () => import('./features/admin/gestion-utilisateurs-page.component').then(m => m.GestionUtilisateursPageComponent), title: "Utilisateurs · Gestion" },
     ],
   },
 
@@ -86,6 +86,6 @@ export const routes: Routes = [
     path: '**',
     component: BoutiqueLayoutComponent,
     children: [{ path: '', loadComponent: () => import('./shared/pages/pages').then(m => m.PageIntrouvableComponent) }],
-    title: "Page introuvable — AS'SOUÉ",
+    title: "Page introuvable · AS'SOUÉ",
   },
 ];

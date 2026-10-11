@@ -13,7 +13,7 @@ import java.security.Principal;
 @RestController
 @RequestMapping("/api/panier")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('CLIENT')")
+@PreAuthorize("hasAnyRole('CLIENT','COLLECTEUR')")
 public class PanierController {
 
     private final PanierService panierService;

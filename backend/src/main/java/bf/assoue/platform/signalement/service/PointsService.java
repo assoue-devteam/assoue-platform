@@ -7,7 +7,6 @@ import bf.assoue.platform.signalement.dto.MouvementPointsResponse;
 import bf.assoue.platform.signalement.dto.PointsResponse;
 import bf.assoue.platform.signalement.model.MouvementPoints;
 import bf.assoue.platform.signalement.model.Signalement;
-import bf.assoue.platform.signalement.repository.ConfigurationPointsRepository;
 import bf.assoue.platform.signalement.repository.MouvementPointsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class PointsService {
 
     private final MouvementPointsRepository mouvementPointsRepository;
-    private final ConfigurationPointsRepository configRepository;
     private final UtilisateurRepository utilisateurRepository;
     private final PointsProperties pointsProperties;
 

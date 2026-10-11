@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -28,7 +27,6 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.HexFormat;
-import java.util.Set;
 import java.util.UUID;
 
 @Slf4j

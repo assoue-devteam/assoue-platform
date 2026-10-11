@@ -30,7 +30,7 @@ public class ImageProperties implements EnvironmentAware {
     private Environment environnement;
 
     @Override
-    public void setEnvironment(Environment environnement) {
+    public void setEnvironment(@org.springframework.lang.NonNull Environment environnement) {
         this.environnement = environnement;
     }
 
