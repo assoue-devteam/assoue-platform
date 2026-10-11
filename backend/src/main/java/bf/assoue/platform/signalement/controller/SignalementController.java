@@ -1,6 +1,5 @@
 package bf.assoue.platform.signalement.controller;
 
-import bf.assoue.platform.auth.model.Utilisateur;
 import bf.assoue.platform.signalement.dto.CreerSignalementRequest;
 import bf.assoue.platform.signalement.dto.SignalementResponse;
 import bf.assoue.platform.signalement.dto.ValiderSignalementRequest;
@@ -12,10 +11,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -30,29 +29,29 @@ public class SignalementController {
     public ResponseEntity<SignalementResponse> creer(
             @ModelAttribute CreerSignalementRequest request,
             @RequestParam("photos") List<MultipartFile> photos,
-            @AuthenticationPrincipal Utilisateur client) {
-        return ResponseEntity.ok(signalementService.creer(request, client.getEmail(), photos));
+            Principal principal) {
+        return ResponseEntity.ok(signalementService.creer(request, principal.getName(), photos));
     }
 
     @GetMapping
     @PreAuthorize("hasAnyRole('CLIENT','COLLECTEUR')")
     public ResponseEntity<Page<SignalementResponse>> mesSignalements(
-            @AuthenticationPrincipal Utilisateur client, Pageable pageable) {
-        return ResponseEntity.ok(signalementService.mesSignalements(client, pageable));
+            Principal principal, Pageable pageable) {
+        return ResponseEntity.ok(signalementService.mesSignalements(principal.getName(), pageable));
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('CLIENT','COLLECTEUR')")
     public ResponseEntity<SignalementResponse> consulter(
-            @PathVariable Long id, @AuthenticationPrincipal Utilisateur client) {
-        return ResponseEntity.ok(signalementService.consulter(id, client));
+            @PathVariable Long id, Principal principal) {
+        return ResponseEntity.ok(signalementService.consulter(id, principal.getName()));
     }
 
     @PutMapping("/{id}/valider")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<SignalementResponse> valider(
             @PathVariable Long id, @Valid @RequestBody ValiderSignalementRequest request,
-            @AuthenticationPrincipal Utilisateur admin) {
-        return ResponseEntity.ok(signalementService.valider(id, request, admin.getEmail()));
+            Principal principal) {
+        return ResponseEntity.ok(signalementService.valider(id, request, principal.getName()));
     }
 }

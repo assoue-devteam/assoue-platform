@@ -17,8 +17,11 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestControllerAdvice
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
@@ -108,5 +111,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErreurApi> gererConflitEcriture(OptimisticLockingFailureException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(ErreurApi.de(409, "La quantité a changé entre-temps. Rechargez la page."));
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErreurApi> gererErreurInattendue(Exception ex) {
+        log.error("Erreur serveur inattendue : ", ex);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErreurApi.de(500, "Une erreur inattendue est survenue. Veuillez réessayer plus tard."));
     }
 }

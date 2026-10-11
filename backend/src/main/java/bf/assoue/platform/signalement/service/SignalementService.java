@@ -11,6 +11,7 @@ import bf.assoue.platform.common.notification.SignaleCreeEvent;
 import bf.assoue.platform.signalement.dto.CreerSignalementRequest;
 import bf.assoue.platform.signalement.dto.SignalementResponse;
 import bf.assoue.platform.signalement.dto.ValiderSignalementRequest;
+import bf.assoue.platform.images.StockageImage;
 import bf.assoue.platform.signalement.model.PhotoSignalement;
 import bf.assoue.platform.signalement.model.Signalement;
 import bf.assoue.platform.signalement.repository.PhotoSignalementRepository;
@@ -26,6 +27,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -44,6 +47,7 @@ public class SignalementService {
     private final ServiceNotification serviceNotification;
     private final ApplicationEventPublisher eventPublisher;
     private final PointsProperties pointsProperties;
+    private final StockageImage stockageImage;
 
     @Transactional
     public SignalementResponse creer(CreerSignalementRequest request, String emailClient, List<MultipartFile> photos) {
@@ -98,15 +102,17 @@ public class SignalementService {
     }
 
     @Transactional(readOnly = true)
-    public Page<SignalementResponse> mesSignalements(Utilisateur client, Pageable pageable) {
+    public Page<SignalementResponse> mesSignalements(String emailClient, Pageable pageable) {
+        Utilisateur client = utilisateurRepository.findByEmail(emailClient)
+                .orElseThrow(() -> new RessourceIntrouvableException("Client introuvable : " + emailClient));
         return signalementRepository.findByClient(client, pageable).map(SignalementResponse::de);
     }
 
     @Transactional(readOnly = true)
-    public SignalementResponse consulter(Long id, Utilisateur client) {
+    public SignalementResponse consulter(Long id, String emailClient) {
         Signalement signalement = signalementRepository.findById(id)
                 .orElseThrow(() -> new RessourceIntrouvableException("Signalement introuvable : " + id));
-        if (!signalement.getClient().getId().equals(client.getId())) {
+        if (!signalement.getClient().getEmail().equals(emailClient)) {
             throw new AccessDeniedException("Accès refusé à ce signalement");
         }
         return SignalementResponse.de(signalement);
@@ -178,13 +184,19 @@ public class SignalementService {
     }
 
     private String extension(String filename) {
-        if (filename == null || !filename.contains(".")) return "jpg";
-        String ext = filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
-        return Set.of("jpg", "jpeg", "png", "webp").contains(ext) ? ext : "jpg";
+        if (filename != null && filename.toLowerCase().endsWith(".png")) {
+            return "png";
+        }
+        return "jpg";
     }
 
     private void stockerFichier(String cle, MultipartFile fichier) {
-        // Intégration : stockage de la photo via StockageImage / ImageService.
-        log.info("Stockage photo signalement cle={} size={}", cle, fichier.getSize());
+        try {
+            stockageImage.enregistrer(cle, fichier.getBytes());
+            log.info("Photo signalement stockée : cle={} (taille={} octets)", cle, fichier.getSize());
+        } catch (IOException e) {
+            log.error("Échec stockage photo signalement cle={} : {}", cle, e.getMessage());
+            throw new UncheckedIOException("Enregistrement de la photo impossible.", e);
+        }
     }
 }

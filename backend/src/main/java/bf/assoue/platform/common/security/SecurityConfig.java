@@ -31,7 +31,8 @@ public class SecurityConfig {
             "/api/paiements/webhook",
             "/swagger-ui/**",
             "/swagger-ui.html",
-            "/api-docs/**"
+            "/api-docs/**",
+            "/error"
     };
 
     private final JwtAuthFilter jwtAuthFilter;
