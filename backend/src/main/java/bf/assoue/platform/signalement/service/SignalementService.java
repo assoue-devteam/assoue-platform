@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
@@ -85,7 +84,8 @@ public class SignalementService {
         signalementRepository.save(signalement);
 
         for (MultipartFile fichier : photos) {
-            if (fichier.isEmpty()) continue;
+            if (fichier.isEmpty())
+                continue;
             String cle = UUID.randomUUID() + "." + extension(fichier.getOriginalFilename());
             PhotoSignalement photo = PhotoSignalement.builder()
                     .signalement(signalement)
@@ -142,7 +142,8 @@ public class SignalementService {
         if (accepte) {
             pointsService.crediterPourSignalement(signalement);
             envoyerNotificationClient(signalement.getClient().getEmail(),
-                    "Votre signalement a été validé", "Vous avez gagné " + pointsProperties.getPointsParSignalement() + " points.");
+                    "Votre signalement a été validé",
+                    "Vous avez gagné " + pointsProperties.getPointsParSignalement() + " points.");
         } else {
             envoyerNotificationClient(signalement.getClient().getEmail(),
                     "Votre signalement a été rejeté", "Motif : " + signalement.getMotifRejet());
@@ -164,13 +165,15 @@ public class SignalementService {
         LocalDateTime debutJour = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0);
         long count = signalementRepository.countByClientAndDateCreationBetween(client, debutJour, LocalDateTime.now());
         if (count >= pointsProperties.getPlafondJournalier()) {
-            throw new RequeteInvalideException("Limite de " + pointsProperties.getPlafondJournalier() + " signalements par jour atteinte.");
+            throw new RequeteInvalideException(
+                    "Limite de " + pointsProperties.getPlafondJournalier() + " signalements par jour atteinte.");
         }
     }
 
     private void verifierDoublonPossible(Utilisateur client, bf.assoue.platform.signalement.model.Zone zone) {
         LocalDateTime ilYA24h = LocalDateTime.now().minusHours(24);
-        var existant = signalementRepository.findByClientAndZoneAndDateCreationBetween(client, zone, ilYA24h, LocalDateTime.now());
+        var existant = signalementRepository.findByClientAndZoneAndDateCreationBetween(client, zone, ilYA24h,
+                LocalDateTime.now());
         if (existant.isPresent()) {
             throw new RequeteInvalideException("Un signalement récent existe déjà pour cette zone.");
         }
