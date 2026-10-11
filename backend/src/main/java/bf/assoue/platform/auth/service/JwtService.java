@@ -39,6 +39,30 @@ public class JwtService {
                 .compact();
     }
 
+    public String genererJetonReset(String email, String jti, long dureeValiditeMs) {
+        Date maintenant = new Date();
+        return Jwts.builder()
+                .subject(email)
+                .id(jti)
+                .claim("type", "reset")
+                .issuedAt(maintenant)
+                .expiration(new Date(maintenant.getTime() + dureeValiditeMs))
+                .signWith(cleSecrete)
+                .compact();
+    }
+
+    public String extraireType(String token) {
+        return extraireClaims(token).get("type", String.class);
+    }
+
+    public String extraireJti(String token) {
+        return extraireClaims(token).getId();
+    }
+
+    public Date extraireIssuedAt(String token) {
+        return extraireClaims(token).getIssuedAt();
+    }
+
     public String extraireEmail(String token) {
         return extraireClaims(token).getSubject();
     }

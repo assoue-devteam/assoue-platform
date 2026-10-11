@@ -30,6 +30,18 @@ assoue:
     expediteur: ${ASSOUE_MAIL_FROM:no-reply@assoue.bf}
     # Destinataires des alertes métier (collecte, signalement) — séparés par des virgules.
     alertes-destinataires: ${ASSOUE_MAIL_ALERTES_DESTINATAIRES:}
+  motdepasse:
+    # Clé HMAC pour hacher les codes de réinitialisation. OBLIGATOIRE en production.
+    cle-hmac: ${ASSOUE_MOTDEPASSE_CLE_HMAC:cle-hmac-dev-a-remplacer-en-production}
+    code-duree-min: 10
+    code-essais-max: 5
+    jeton-duree-min: 5
+    delai-entre-envois-secondes: 300
+    plafond-par-heure: 3
+    rate-limit-ip-max: 5
+    rate-limit-ip-fenetre-secondes: 60
+server:
+  forward-headers-strategy: framework
 springdoc:
   api-docs:
     path: /api-docs

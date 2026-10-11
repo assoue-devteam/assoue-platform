@@ -46,6 +46,9 @@ public class Utilisateur {
     @Builder.Default
     private LocalDateTime dateCreation = LocalDateTime.now();
 
+    @Column(name = "mot_de_passe_modifie_le")
+    private LocalDateTime motDePasseModifieLe;
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "utilisateur_role",

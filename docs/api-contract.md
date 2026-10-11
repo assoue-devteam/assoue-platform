@@ -30,6 +30,42 @@ Erreurs : `401` identifiants invalides, `423` compte bloqué après 3 échecs co
 
 Toutes les routes protégées attendent `Authorization: Bearer <token>`.
 
+### `POST /api/auth/mot-de-passe-oublie/demande`
+
+Public. Demande un code de réinitialisation à 6 chiffres envoyé par e-mail.
+
+Requête : `{ "email": "client@example.com" }`
+
+Réponse `200` (toujours identique, que le compte existe ou non) :
+```json
+{ "message": "Si un compte existe avec cette adresse, un code de réinitialisation a été envoyé." }
+```
+
+Erreurs : `429` si débit par IP dépassé (5/min), `400` si email invalide.
+
+### `POST /api/auth/mot-de-passe-oublie/verification`
+
+Public. Vérifie le code et retourne un jeton de réinitialisation (5 min, usage unique).
+
+Requête : `{ "email": "client@example.com", "code": "123456" }`
+
+Réponse `200` :
+```json
+{ "jeton": "<JWT type=reset>" }
+```
+
+Erreurs : `400` code invalide/expiré, `429` si débit par compte dépassé (1 code/5min, 3 codes/heure).
+
+### `POST /api/auth/mot-de-passe-oublie/reinitialisation`
+
+Public. Change le mot de passe avec le jeton de réinitialisation. Tous les jetons d'accès émis avant deviennent invalides.
+
+Requête : `{ "jeton": "<JWT type=reset>", "nouveauMotDePasse": "au moins 8 caractères" }`
+
+Réponse `200` : vide.
+
+Erreurs : `400` jeton invalide/expiré/reutilisé, `400` mot de passe trop court.
+
 ### `GET /api/utilisateurs?verrouilles=`
 Rôle ADMIN. `verrouilles` est optionnel : `true` ne renvoie que les comptes bloqués par le compteur d'échecs (SA-02), `false` que les comptes actifs. Réponse `200` :
 ```json
@@ -199,7 +235,7 @@ Les formulaires admin n'exposent plus que l'upload (`app-image-upload`) ; les an
 
 ### `POST /api/images`
 Rôle ADMIN, `multipart/form-data` avec le champ `fichier`. Le client redimensionne déjà à 2000 px (JPEG 0,85, orientation EXIF appliquée) ; le serveur accepte aussi les envois directs : il vérifie le type réel par magic bytes (JPEG et PNG uniquement — pas de WebP, ImageIO ne le lit pas sans plugin), les dimensions avant décodage (9000 px et 50 M pixels au plus, soit une photo 48 MP ≈ 150 Mo transitoires, acceptable pour un envoi admin), applique l'orientation EXIF aux pixels (lecture manuelle du tag APP1, sans nouvelle dépendance), **redimensionne au plus grand côté 1600 px**, puis **réencode** (supprime EXIF/GPS et contenus annexes). Réponse `201` : `{ "cle": "<uuid>.jpg" }` — la clé, jamais un chemin disque ni le nom client. Le nom d'origine n'est jamais utilisé pour stocker.
-Erreurs : `400` fichier vide/illisible ou clé inconnue dans un formulaire, `413` au-delà de 10 Mo (« L'image dépasse 10 Mo »), `415` format interdit ou contenu non image, `403` sans token (comme tous les endpoints protégés, pas d'`AuthenticationEntryPoint` dédié) ou avec un mauvais rôle.
+Erreurs : `400` fichier vide/illisible ou clé inconnue dans un formulaire, `413` au-delà de 10 Mo (« L'image dépasse 10 Mo »), `415` format interdit ou contenu non image, `429` trop d'envois traités en parallèle (« Réessayez dans un instant », 2 décodages max : ~300 Mo transitoires), `401` sans token (+ `WWW-Authenticate: Bearer`) ou avec un mauvais rôle `403`.
 
 ### `GET /api/images/{cle}`
 Public. `{cle}` validée par regex stricte (UUID + `.jpg`/`.png`, sinon 404) ; `../`, séparateurs encodés et clés inconnues → 4xx sans accès fichier. `Content-Type` fixé par le serveur, `Cache-Control: public, max-age=31536000, immutable` (clé unique), `X-Content-Type-Options: nosniff` global.
@@ -276,9 +312,9 @@ Toute erreur renvoie :
 ```json
 { "horodatage": "2026-01-01T12:00:00Z", "statut": 404, "message": "..." }
 ```
-`400` requête invalide, `401` identifiants invalides (login), `403` accès refusé, `404` ressource introuvable, `409` conflit (ex. email déjà utilisé), `423` compte bloqué.
+`400` requête invalide, `401` non authentifié (sans token, token expiré ou invalide : `WWW-Authenticate: Bearer`, RFC 6750), `403` rôle insuffisant uniquement, `404` ressource introuvable, `409` conflit (ex. email déjà utilisé), `423` compte bloqué, `429` trop de requêtes (uploads parallèles).
 
-`403` est renvoyé par Spring Security quand le rôle ne correspond pas (`@PreAuthorize`). Aucun `AuthenticationEntryPoint` n'est configuré : un appel sans token ou avec un token expiré renvoie probablement aussi `403` plutôt que `401`, et hors du format `ErreurApi` (à confirmer par un test). Le frontend doit donc détecter l'expiration de session en lisant `exp` dans le JWT.
+Un token expiré, mal formé ou mal signé envoyé sur une route publique (`GET /api/produits`, `/api/categories`, `/api/images/{cle}`, `/api/evenements`, `/api/communaute`) est ignoré : la réponse reste celle d'une requête sans token (`200`). `POST /api/auth/login` garde ses réponses métier `401` (« Email ou mot de passe incorrect ») et `423` sans en-tête `WWW-Authenticate`. Les pré-vols `OPTIONS` sont publics et ne sont jamais interceptés. `GET /api/collectes/volumes` reste réservé au rôle ADMIN (`401` sans token, `403` avec un autre rôle).
 
 ## Ce qui n'est pas encore couvert
 

@@ -49,6 +49,7 @@ export const routes: Routes = [
     children: [
       { path: 'connexion', loadComponent: () => import('./features/auth/connexion-page.component').then(m => m.ConnexionPageComponent), title: "Connexion — AS'SOUÉ" },
       { path: 'inscription', loadComponent: () => import('./features/auth/inscription-page.component').then(m => m.InscriptionPageComponent), title: "Inscription — AS'SOUÉ" },
+      { path: 'mot-de-passe-oublie', loadComponent: () => import('./features/auth/mot-de-passe-oublie-page.component').then(m => m.MotDePasseOubliePageComponent), title: "Mot de passe oublié — AS'SOUÉ" },
     ],
   },
 

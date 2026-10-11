@@ -49,6 +49,7 @@ export function messageErreurConnexion(err: unknown): string {
         <label class="souvenir"><input type="checkbox" formControlName="seSouvenir" /> Se souvenir de moi</label>
         <button type="submit" appButton [block]="true" [loading]="envoi()" [disabled]="!reseau.enLigne() || envoi()">Se connecter</button>
       </form>
+      <p class="auth__lien"><a routerLink="/mot-de-passe-oublie">Mot de passe oublié ?</a></p>
       @if (!reseau.enLigne()) { <app-alert tone="warning">La connexion nécessite une connexion internet.</app-alert> }
       <p class="auth__lien">Vous n'avez pas de compte ? <a routerLink="/inscription">Créer un compte</a></p>
     </div></section>`,

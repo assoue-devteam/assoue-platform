@@ -1,5 +1,7 @@
 package bf.assoue.platform.common.security;
 
+import bf.assoue.platform.auth.model.Utilisateur;
+import bf.assoue.platform.auth.repository.UtilisateurRepository;
 import bf.assoue.platform.auth.service.JwtService;
 import bf.assoue.platform.auth.service.UtilisateurDetailsService;
 import jakarta.servlet.FilterChain;
@@ -16,6 +18,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Component
 @RequiredArgsConstructor
@@ -25,6 +29,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UtilisateurDetailsService utilisateurDetailsService;
+    private final UtilisateurRepository utilisateurRepository;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
@@ -40,12 +45,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String token = enTeteAuth.substring(PREFIXE_BEARER.length());
 
         try {
+            if ("reset".equals(jwtService.extraireType(token))) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             String email = jwtService.extraireEmail(token);
 
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = utilisateurDetailsService.loadUserByUsername(email);
 
-                if (jwtService.estValide(token, userDetails)) {
+                if (jwtService.estValide(token, userDetails) && tokenApresChangementMotDePasse(token, email)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
@@ -58,6 +68,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private boolean tokenApresChangementMotDePasse(String token, String email) {
+        Utilisateur utilisateur = utilisateurRepository.findByEmail(email).orElse(null);
+        if (utilisateur == null || utilisateur.getMotDePasseModifieLe() == null) {
+            return true;
+        }
+        LocalDateTime mpm = utilisateur.getMotDePasseModifieLe();
+        long mpmEpoch = mpm.atZone(ZoneId.systemDefault()).toEpochSecond();
+        long iatEpoch = jwtService.extraireIssuedAt(token).getTime() / 1000;
+        return iatEpoch > mpmEpoch;
     }
 
 }

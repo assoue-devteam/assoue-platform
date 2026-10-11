@@ -3,6 +3,7 @@ package bf.assoue.platform.common.exception;
 import bf.assoue.platform.images.ImageInvalideException;
 import bf.assoue.platform.images.ImageService;
 import bf.assoue.platform.images.ImageTropLourdeException;
+import bf.assoue.platform.images.TropDeRequetesImageException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.web.servlet.MultipartProperties;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -77,6 +78,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ImageTropLourdeException.class)
     public ResponseEntity<ErreurApi> gererImageTropLourde(ImageTropLourdeException ex) {
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(ErreurApi.de(413, ex.getMessage()));
+    }
+
+    @ExceptionHandler(TropDeRequetesImageException.class)
+    public ResponseEntity<ErreurApi> gererTropDeRequetes(TropDeRequetesImageException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(ErreurApi.de(429, ex.getMessage()));
+    }
+
+    @ExceptionHandler(TropDeRequetesException.class)
+    public ResponseEntity<ErreurApi> gererTropDeRequetesAuth(TropDeRequetesException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(ErreurApi.de(429, ex.getMessage()));
     }
 
     @ExceptionHandler(ImageInvalideException.class)
