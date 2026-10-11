@@ -73,6 +73,49 @@ export interface LigneCommandeRequest {
 
 export interface CommandeRequest {
   lignes: LigneCommandeRequest[];
+  pointsUtilises?: number;
+}
+
+export type SignalementStatut = 'EN_ATTENTE' | 'VALIDE' | 'REJETE';
+
+export interface PhotoSignalement {
+  id: number;
+  cle: string;
+  contentType: string;
+}
+
+export interface Zone {
+  id: number;
+  nom: string;
+  actif: boolean;
+  dateCreation?: string;
+}
+
+export interface Signalement {
+  id: number;
+  zoneId: number;
+  zoneNom: string;
+  description: string;
+  latitude: number | null;
+  longitude: number | null;
+  statut: SignalementStatut;
+  motifRejet: string | null;
+  dateCreation: string;
+  dateValidation: string | null;
+  photos: PhotoSignalement[];
+}
+
+export interface SoldePoints {
+  solde: number;
+}
+
+export interface MouvementPoints {
+  id: number;
+  type: string;
+  points: number;
+  typeId: number | null;
+  soldeApres: number;
+  dateCreation: string;
 }
 
 export interface Panier {

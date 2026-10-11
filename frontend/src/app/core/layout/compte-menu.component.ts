@@ -36,6 +36,7 @@ let compteur = 0;
           }
           @if (auth.aRole('CLIENT') || auth.aRole('COLLECTEUR')) { <a routerLink="/commandes" (click)="fermer()">Mes commandes</a> }
           @if (auth.aRole('CLIENT') || auth.aRole('COLLECTEUR')) { <a routerLink="/favoris" (click)="fermer()">Mes favoris</a> }
+          @if (auth.aRole('CLIENT') || auth.aRole('COLLECTEUR')) { <a routerLink="/signalements" (click)="fermer()">🪙 Signalements & Points</a> }
           <button type="button" (click)="deconnecter()"><app-icon name="log-out" [size]="16" /> Se déconnecter</button>
         </div>
       }

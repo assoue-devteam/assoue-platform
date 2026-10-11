@@ -22,7 +22,7 @@ public class PointsController {
     private final PointsService pointsService;
 
     @GetMapping("/solde")
-    @PreAuthorize("hasRole('CLIENT')")
+    @PreAuthorize("hasAnyRole('CLIENT','COLLECTEUR')")
     public ResponseEntity<PointsResponse.SoldePointsResponse> solde(@AuthenticationPrincipal Utilisateur client) {
         return ResponseEntity.ok(pointsService.solde(client.getEmail()));
     }
@@ -34,7 +34,7 @@ public class PointsController {
     }
 
     @PostMapping("/utiliser")
-    @PreAuthorize("hasRole('CLIENT')")
+    @PreAuthorize("hasAnyRole('CLIENT','COLLECTEUR')")
     public ResponseEntity<Map<String, Integer>> utiliser(
             @AuthenticationPrincipal Utilisateur client,
             @RequestParam int points,

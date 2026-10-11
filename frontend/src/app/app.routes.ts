@@ -34,6 +34,16 @@ export const routes: Routes = [
 
       { path: 'favoris', canActivate: [roleGuard('CLIENT', 'COLLECTEUR')], loadComponent: () => import('./features/catalogue/favoris-page.component').then(m => m.FavorisPageComponent), title: "Mes favoris · AS'SOUÉ" },
 
+      // Piste E — Signalements et points (client et collecteur)
+      {
+        path: 'signalements',
+        canActivate: [roleGuard('CLIENT', 'COLLECTEUR')],
+        children: [
+          { path: '', loadComponent: () => import('./features/signalement/mes-signalements-page.component').then(m => m.MesSignalementsPageComponent), title: "Mes signalements · AS'SOUÉ" },
+          { path: 'nouveau', loadComponent: () => import('./features/signalement/signalement-form-page.component').then(m => m.SignalementFormPageComponent), title: "Nouveau signalement · AS'SOUÉ" },
+        ],
+      },
+
       {
         path: 'acces-refuse',
         loadComponent: () => import('./shared/pages/pages').then(m => m.PageAccesRefuseComponent),

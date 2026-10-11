@@ -26,7 +26,7 @@ public class SignalementController {
     private final SignalementService signalementService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasRole('CLIENT')")
+    @PreAuthorize("hasAnyRole('CLIENT','COLLECTEUR')")
     public ResponseEntity<SignalementResponse> creer(
             @ModelAttribute CreerSignalementRequest request,
             @RequestParam("photos") List<MultipartFile> photos,
@@ -35,14 +35,14 @@ public class SignalementController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('CLIENT')")
+    @PreAuthorize("hasAnyRole('CLIENT','COLLECTEUR')")
     public ResponseEntity<Page<SignalementResponse>> mesSignalements(
             @AuthenticationPrincipal Utilisateur client, Pageable pageable) {
         return ResponseEntity.ok(signalementService.mesSignalements(client, pageable));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('CLIENT')")
+    @PreAuthorize("hasAnyRole('CLIENT','COLLECTEUR')")
     public ResponseEntity<SignalementResponse> consulter(
             @PathVariable Long id, @AuthenticationPrincipal Utilisateur client) {
         return ResponseEntity.ok(signalementService.consulter(id, client));
