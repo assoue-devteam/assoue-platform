@@ -35,6 +35,8 @@ public class SecurityConfig {
     };
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final EntreeAuthentification entreeAuthentification;
+    private final AccesRefuseHandler accesRefuseHandler;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -48,7 +50,12 @@ public class SecurityConfig {
                         .cacheControl(Customizer.withDefaults())
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(entreeAuthentification)
+                        .accessDeniedHandler(accesRefuseHandler))
                 .authorizeHttpRequests(auth -> auth
+                        // Preflight CORS : jamais d'auth, sinon le navigateur bloque l'appel réel.
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(PUBLIC_PATHS).permitAll()
                         // Vitrine publique : catalogue et page Communauté lisibles sans compte ; toute écriture reste authentifiée.
                         .requestMatchers(HttpMethod.GET, "/api/produits/**", "/api/categories/**",

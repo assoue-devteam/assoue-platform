@@ -14,7 +14,8 @@ import bf.assoue.platform.commerce.repository.CommandeRepository;
 import bf.assoue.platform.commerce.repository.ProduitRepository;
 import bf.assoue.platform.common.exception.RequeteInvalideException;
 import bf.assoue.platform.common.exception.RessourceIntrouvableException;
-import bf.assoue.platform.stock.service.StockService;
+import bf.assoue.platform.signalement.service.PointsService;
+import bf.assoue.platform.signalement.service.PointsProperties;
 import bf.assoue.platform.stock.service.ReservationStockService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,8 +31,9 @@ public class CommandeService {
     private final CommandeRepository commandeRepository;
     private final ProduitRepository produitRepository;
     private final UtilisateurRepository utilisateurRepository;
-    private final StockService stockService;
     private final ReservationStockService reservationStockService;
+    private final PointsService pointsService;
+    private final PointsProperties pointsProperties;
 
     @Transactional
     public CommandeResponse creer(CommandeRequest requete, String emailClient) {
@@ -59,6 +61,11 @@ public class CommandeService {
                     .build();
             commande.getLignes().add(ligne);
         });
+
+        if (pointsProperties.isActif() && requete.pointsAUtiliser() != null && requete.pointsAUtiliser() > 0) {
+            pointsService.utiliserPourCommande(emailClient, requete.pointsAUtiliser(), commande.getId());
+            commande.setPointsUtilises(requete.pointsAUtiliser());
+        }
 
         Commande commandeEnregistree = commandeRepository.saveAndFlush(commande);
         reservationStockService.reserver(commandeEnregistree);

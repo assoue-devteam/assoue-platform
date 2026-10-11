@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 
 import static java.nio.file.StandardOpenOption.CREATE_NEW;
 

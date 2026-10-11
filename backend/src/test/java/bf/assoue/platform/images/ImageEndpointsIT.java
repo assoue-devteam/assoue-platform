@@ -52,8 +52,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Upload et lecture d'images de bout en bout : sécurité réelle (sans token et
  * mauvais rôle refusés), validation serveur, nettoyage des anciens fichiers.
  *
- * Note : sans token l'API renvoie 403 (pas d'AuthenticationEntryPoint dédié,
- * comportement documenté dans api-contract.md), comme tous les endpoints protégés.
+ * Sans token : 401 + WWW-Authenticate (entry point), avec un mauvais rôle : 403.
  */
 @SpringBootTest
 @ActiveProfiles("test")
@@ -129,7 +128,8 @@ class ImageEndpointsIT {
         MockMultipartFile fichier = new MockMultipartFile("fichier", "photo.jpg", "image/jpeg", jpeg());
 
         mockMvc.perform(multipart("/api/images").file(fichier))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized())
+                .andExpect(resultat -> assertThat(resultat.getResponse().getHeader("WWW-Authenticate")).isEqualTo("Bearer"));
 
         mockMvc.perform(multipart("/api/images").file(fichier)
                         .header("Authorization", "Bearer " + tokenClient))

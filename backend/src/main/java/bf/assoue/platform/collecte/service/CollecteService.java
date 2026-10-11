@@ -15,12 +15,15 @@ import bf.assoue.platform.collecte.repository.MateriauRepository;
 import bf.assoue.platform.collecte.repository.PointCollecteRepository;
 import bf.assoue.platform.common.exception.RequeteInvalideException;
 import bf.assoue.platform.common.exception.RessourceIntrouvableException;
+import bf.assoue.platform.common.notification.CollecteDeclareeEvent;
 import bf.assoue.platform.stock.service.StockService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +37,7 @@ public class CollecteService {
     private final MateriauRepository materiauRepository;
     private final UtilisateurRepository utilisateurRepository;
     private final StockService stockService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public CollecteResponse declarer(DeclarationCollecteRequest requete, String emailCollecteur) {
@@ -69,7 +73,12 @@ public class CollecteService {
                 .build();
         collecte.getLignes().add(ligne);
 
-        return CollecteResponse.depuis(collecteRepository.save(collecte));
+        collecte = collecteRepository.save(collecte);
+
+        String zone = pointCollecte.getLatitude() + "," + pointCollecte.getLongitude();
+        eventPublisher.publishEvent(new CollecteDeclareeEvent(collecte.getId(), zone, LocalDateTime.now()));
+
+        return CollecteResponse.depuis(collecte);
     }
 
     /**

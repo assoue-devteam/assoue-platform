@@ -58,7 +58,7 @@ Terminal 2 — frontend :
 ```cmd
 cd frontend
 npm ci
-npx ng serve --proxy-config proxy.conf.json --disable-host-check
+npx ng serve --proxy-config proxy.conf.json
 ```
 Vérifier : `http://localhost:4200` (le `/api` est proxifié vers `:8080`, pas de CORS).
 

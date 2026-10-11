@@ -35,6 +35,8 @@ services:
     restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      # VPS 2 Go : 1 Go de tas suffit (2 décodages image ≈ 300 Mo + appli), le reste pour Postgres/OS.
+      JAVA_OPTS: -Xmx1g
       JWT_SECRET: ${JWT_SECRET}
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}

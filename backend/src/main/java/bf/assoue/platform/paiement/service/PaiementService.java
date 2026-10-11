@@ -4,7 +4,6 @@ import bf.assoue.platform.commerce.dto.CommandeResponse;
 import bf.assoue.platform.commerce.model.Commande;
 import bf.assoue.platform.commerce.model.CommandeStatut;
 import bf.assoue.platform.commerce.repository.CommandeRepository;
-import bf.assoue.platform.commerce.service.CommandeService;
 import bf.assoue.platform.common.exception.PaiementDejaInitieException;
 import bf.assoue.platform.common.exception.RequeteInvalideException;
 import bf.assoue.platform.common.exception.RessourceIntrouvableException;
@@ -20,9 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service

@@ -18,6 +18,7 @@ import bf.assoue.platform.collecte.repository.PointCollecteRepository;
 import bf.assoue.platform.common.exception.RequeteInvalideException;
 import bf.assoue.platform.common.exception.RessourceIntrouvableException;
 import bf.assoue.platform.stock.service.StockService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -46,6 +47,8 @@ class CollecteServiceTest {
     private UtilisateurRepository utilisateurRepository;
     @Mock
     private StockService stockService;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
 
     @InjectMocks
     private CollecteService collecteService;

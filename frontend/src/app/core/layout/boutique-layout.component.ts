@@ -47,8 +47,8 @@ import { RechercheProduitComponent } from '../../features/catalogue/recherche-pr
             <app-icon name="search" />
           </button>
           <button type="button" #boutonBurger class="entete__menu" [attr.aria-expanded]="menuOuvert()"
-                  aria-controls="menu-burger" (click)="basculerBurger()">
-            <app-icon name="menu" /> Menu
+                  aria-controls="menu-burger" aria-label="Menu" (click)="basculerBurger()">
+            <app-icon name="menu" />
           </button>
         </div>
       </div>
@@ -98,30 +98,33 @@ import { RechercheProduitComponent } from '../../features/catalogue/recherche-pr
       position: sticky; top: 0; z-index: 30;
       background: var(--color-surface); border-bottom: 1px solid var(--color-border);
     }
-    .entete__ligne { display: flex; align-items: center; gap: var(--space-4); min-height: 64px; }
-    .logo { display: inline-flex; align-items: center; min-height: 44px; flex: none; }
-    .logo img { height: 44px; width: auto; }
-    .entete__recherche--bureau { flex: 1; max-width: 640px; margin-inline: auto; }
-    .entete__recherche--tablette, .entete__recherche--mobile { display: none; padding-bottom: var(--space-3); }
-    .entete__actions { display: flex; align-items: center; gap: var(--space-1); margin-left: auto; flex: none; }
+    .entete__ligne { display: flex; align-items: center; gap: var(--space-3); min-height: 4rem; min-width: 0; }
+    .logo { display: inline-flex; align-items: center; min-height: 2.75rem; min-width: 0; flex: 0 1 auto; }
+    .logo img { height: 2.75rem; width: auto; max-width: 100%; }
+    .entete__recherche--bureau { flex: 1 1 auto; min-width: 0; max-width: 40rem; margin-inline: auto; }
+    .entete__recherche--tablette, .entete__recherche--mobile { display: none; padding-bottom: var(--space-3); min-width: 0; }
+    .entete__actions { display: flex; align-items: center; gap: var(--space-1); margin-left: auto; min-width: 0; flex: 0 1 auto; }
     .entete__icone, .entete__connexion {
-      display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px; padding-inline: var(--space-2);
+      display: inline-flex; align-items: center; gap: var(--space-2); min-height: 2.75rem; min-width: 2.75rem; justify-content: center; padding-inline: var(--space-2);
       color: var(--color-text); text-decoration: none; font-weight: 600; border-radius: var(--radius-sm);
     }
+    .entete__libelle { display: none; }
+    @media (min-width: 64rem) { .entete__libelle { display: inline; } }
     .entete__icone.actif { color: var(--color-primary); box-shadow: inset 0 -2px var(--color-primary); }
-    .entete__compteur { display:inline-grid; place-items:center; min-width:20px; height:20px; padding-inline:4px; border-radius:var(--radius-sm); background:var(--color-primary-strong); color:var(--color-text-on-dark); font-size:13px; font-variant-numeric:tabular-nums; }
+    .entete__compteur { display:inline-grid; place-items:center; min-width:1.25rem; height:1.25rem; padding-inline:0.25rem; border-radius:var(--radius-sm); background:var(--color-primary-strong); color:var(--color-text-on-dark); font-size:0.8125rem; font-variant-numeric:tabular-nums; }
     .entete__recherche-bouton, .entete__menu {
-      display: none; align-items: center; gap: var(--space-1); min-height: 44px; min-width: 44px; justify-content: center; padding: 0 var(--space-2);
-      border: 0; background: none; color: var(--color-text); font: 600 15px var(--font-text); cursor: pointer; border-radius: var(--radius-sm);
+      display: none; align-items: center; gap: var(--space-1); min-height: 2.75rem; min-width: 2.75rem; justify-content: center; padding: 0 var(--space-2);
+      border: 0; background: none; color: var(--color-text); font: 600 0.9375rem var(--font-text); cursor: pointer; border-radius: var(--radius-sm);
     }
     /* Rangée secondaire : repliée au scroll (seule la rangée ~64px reste), sans transition si réduite. */
     .entete__secondaire { display: grid; grid-template-rows: 1fr; opacity: 1; transition: grid-template-rows .2s ease, opacity .2s ease; }
     .entete__secondaire > nav { overflow: hidden; }
     .entete--repliee .entete__secondaire { grid-template-rows: 0fr; opacity: 0; }
     .entete__nav { display: flex; gap: var(--space-4); padding-bottom: var(--space-2); }
-    .entete__nav a { color: var(--color-text); text-decoration: none; font-weight: 600; min-height: 32px; display: inline-flex; align-items: center; }
+    .entete__nav a { color: var(--color-text); text-decoration: none; font-weight: 600; min-height: 2rem; display: inline-flex; align-items: center; }
     .entete__nav a.actif { color: var(--color-primary); box-shadow: inset 0 -2px var(--color-primary); }
-    .entete__panneau { display: none; }
+    .entete__panneau { display: none; min-width: 0; max-width: 100%; }
+    .entete__recherche--mobile { min-width: 0; max-width: 100%; }
     .entete__recherche-bouton:focus-visible, .entete__menu:focus-visible, .entete__panneau a:focus-visible {
       outline: none; box-shadow: var(--focus-ring);
     }
@@ -131,12 +134,13 @@ import { RechercheProduitComponent } from '../../features/catalogue/recherche-pr
       .entete__recherche--tablette { display: block; }
       .entete__menu { display: inline-flex; }
       .entete__panneau { display: flex; flex-direction: column; padding-bottom: var(--space-2); }
-      .entete__panneau a { display: inline-flex; align-items: center; min-height: 44px; color: var(--color-text); text-decoration: none; font-weight: 600; }
+      .entete__panneau a { display: inline-flex; align-items: center; min-height: 2.75rem; color: var(--color-text); text-decoration: none; font-weight: 600; }
     }
     @media (max-width: 767px) {
-      .logo img { height: 36px; }
-      .entete__libelle { display: none; }
+      .entete__ligne { gap: var(--space-2); }
+      .logo img { height: 2.25rem; }
       .entete__connexion { display: none; }
+      .entete__icone { padding-inline: var(--space-1); }
       .entete__recherche--tablette { display: none; }
       .entete__recherche-bouton { display: inline-flex; }
       .entete__recherche--mobile { display: block; }

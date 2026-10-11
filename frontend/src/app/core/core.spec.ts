@@ -79,6 +79,13 @@ describe('socle core', () => {
     expect(auth.sessionExpiree()).toBeFalse();
   });
 
+  it('le 423 du login (compte bloqué) ne déclenche pas la modale « session expirée »', () => {
+    seConnecter(['CLIENT'], ilYaUneHeure());
+    auth.sessionExpiree.set(false);
+    TestBed.inject(HttpClient).post('/api/auth/login', {}).subscribe({ error: () => {} });
+    http.expectOne('/api/auth/login').flush(null, { status: 423, statusText: 'Locked' });
+    expect(auth.sessionExpiree()).toBeFalse();
+  });
   it('choisit l\'espace ADMIN > COLLECTEUR > CLIENT', () => {
     seConnecter(['CLIENT', 'COLLECTEUR']);
     expect(auth.espaceParDefaut()).toBe('/collecte');
@@ -96,13 +103,13 @@ describe('socle core', () => {
     expect(http.expectOne('/assets/x.json').request.headers.has('Authorization')).toBeFalse();
   });
 
-  it('n\'envoie pas un token expiré et signale la session expirée sur 403', () => {
+  it('n\'envoie pas un token expiré et signale la session expirée sur 401', () => {
     seConnecter(['CLIENT'], ilYaUneHeure());
     TestBed.inject(HttpClient).get('/api/commandes/mes-commandes').subscribe({ error: () => {} });
 
     const req = http.expectOne('/api/commandes/mes-commandes');
     expect(req.request.headers.has('Authorization')).toBeFalse();
-    req.flush(null, { status: 403, statusText: 'Forbidden' });
+    req.flush(null, { status: 401, statusText: 'Unauthorized' });
     expect(auth.sessionExpiree()).toBeTrue();
   });
 

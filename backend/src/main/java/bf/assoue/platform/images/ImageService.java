@@ -21,6 +21,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.UUID;
+import java.util.concurrent.Semaphore;
 
 /**
  * Validation serveur des images (la validation cliente n'est qu'un confort) :
@@ -50,6 +51,13 @@ public class ImageService {
     private final ImageProperties proprietes;
     private final MultipartProperties multipart;
 
+    /**
+     * Deux décodages 48 MP ≈ 300 Mo transitoires (150 Mo chacun) : au-delà,
+     * un VPS 2 Go swappe. Le 3e envoi concurrent est refusé en 429 plutôt
+     * qu'en OutOfMemory. Voir README (mémoire et -Xmx).
+     */
+    private final Semaphore traitements = new Semaphore(2);
+
     /** Enregistre l'image réencodée et renvoie sa clé (UUID + extension détectée). */
     public String enregistrer(MultipartFile fichier) {
         if (fichier == null || fichier.isEmpty()) {
@@ -62,10 +70,17 @@ public class ImageService {
         }
         byte[] octets = lireOctets(fichier);
         boolean png = typeDetecte(octets);
-        byte[] reencode = decoderEtReencoder(octets, png);
-        String cle = UUID.randomUUID() + (png ? ".png" : ".jpg");
-        stockage.enregistrer(cle, reencode);
-        return cle;
+        if (!traitements.tryAcquire()) {
+            throw new TropDeRequetesImageException();
+        }
+        try {
+            byte[] reencode = decoderEtReencoder(octets, png);
+            String cle = UUID.randomUUID() + (png ? ".png" : ".jpg");
+            stockage.enregistrer(cle, reencode);
+            return cle;
+        } finally {
+            traitements.release();
+        }
     }
 
     public FichierImage lire(String cle) {

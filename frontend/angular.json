@@ -55,8 +55,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kB",
-                  "maximumError": "4kB"
+                  "maximumWarning": "4kB",
+                  "maximumError": "6kB"
                 }
               ],
               "outputHashing": "all",
@@ -79,7 +79,13 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "options": {
             "proxyConfig": "proxy.conf.json",
-            "hmr": false
+            "hmr": false,
+            "allowedHosts": [
+              "assoue.serveousercontent.com",
+              ".serveousercontent.com",
+              "assoue.loca.lt",
+              ".loca.lt"
+            ]
           },
           "configurations": {
             "production": {

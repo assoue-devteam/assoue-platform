@@ -174,6 +174,39 @@ class ImageServiceTest {
                 .isInstanceOf(RessourceIntrouvableException.class);
     }
 
+    @Test
+    void exifMalforme_jamais500_imageAccepteeNonPivoteeOuRefusPropre() throws Exception {
+        byte[] base = jpeg(8, 6);
+
+        // APP1 tronqué : le segment s'arrête au milieu du TIFF.
+        byte[] tronque = avecOrientationExif(base, 6);
+        byte[] app1Tronque = java.util.Arrays.copyOf(tronque, 30);
+        assertThat(ImageService.orientationExif(app1Tronque)).isEqualTo(1);
+
+        // Longueur de segment incohérente : dépasse la fin du fichier.
+        byte[] incoherent = avecOrientationExif(base, 6);
+        incoherent[4] = (byte) 0x7F;
+        incoherent[5] = (byte) 0xFF;
+        assertThat(ImageService.orientationExif(incoherent)).isEqualTo(1);
+
+        // Valeur d'orientation hors 1-8 : ignorée, image acceptée sans rotation.
+        byte[] horsPlage = avecOrientationExif(base, 9);
+        assertThat(ImageService.orientationExif(horsPlage)).isEqualTo(1);
+        String cle = service.enregistrer(fichier("photo.jpg", "image/jpeg", horsPlage));
+        var stockee = javax.imageio.ImageIO.read(dossier.resolve(cle).toFile());
+        assertThat(stockee.getWidth()).isEqualTo(8);
+        assertThat(stockee.getHeight()).isEqualTo(6);
+
+        // Les deux JPEG corrompus : acceptés tels quels ou refus 4xx, jamais d'exception brute.
+        for (byte[] corrompu : new byte[][]{app1Tronque, incoherent}) {
+            try {
+                service.enregistrer(fichier("photo.jpg", "image/jpeg", corrompu));
+            } catch (ImageInvalideException | RequeteInvalideException attendu) {
+                assertThat(attendu.getMessage()).isNotBlank();
+            }
+        }
+    }
+
     private static MockMultipartFile fichier(String nom, String contentType, byte[] contenu) {
         return new MockMultipartFile("fichier", nom, contentType, contenu);
     }

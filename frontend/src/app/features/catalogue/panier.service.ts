@@ -135,8 +135,14 @@ export class PanierService {
         if (panierVisiteur.length > 0 || operations.length > 0) this.envoyer(lignes, base);
       },
       // Hors ligne : la copie locale (déjà fusionnée et modifiée) sera envoyée au retour du réseau.
-      error: () => {
+      // 401 : session expirée — on garde la copie locale mais on ne marque rien à envoyer,
+      // sinon chaque retour en ligne relancerait la file en boucle contre un 401.
+      error: (erreur: HttpErrorResponse) => {
         if (this.operationsPendantSynchro === operations) this.operationsPendantSynchro = null;
+        if (erreur.status === 401) {
+          localStorage.removeItem(cleEnAttente(cle));
+          return;
+        }
         if (panierVisiteur.length > 0 || operations.length > 0) localStorage.setItem(cleEnAttente(cle), '1');
       },
     });
@@ -155,8 +161,14 @@ export class PanierService {
       this.enregistrer(versLignes(panier));
       return;
     }
-    // Pas de réponse ou session expirée : on garde la modification, elle repartira plus tard.
-    if (!erreur || erreur.status === 0 || erreur.status === 401 || erreur.status === 403) return;
+    // Pas de réponse : on garde la modification, elle repartira au retour du réseau.
+    if (!erreur || erreur.status === 0) return;
+    // Session expirée : on garde la copie locale mais on lève le marqueur à envoyer,
+    // sinon chaque retour en ligne relancerait la file en boucle contre un 401.
+    if (erreur.status === 401 || erreur.status === 403) {
+      localStorage.removeItem(cleEnAttente(envoi.cle));
+      return;
+    }
     // Refus métier (stock insuffisant, produit retiré) : le serveur n'a rien changé.
     localStorage.removeItem(cleEnAttente(envoi.cle));
     this.enregistrer(envoi.siRefus);

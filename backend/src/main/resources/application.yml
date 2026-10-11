@@ -40,6 +40,13 @@ assoue:
     plafond-par-heure: 3
     rate-limit-ip-max: 5
     rate-limit-ip-fenetre-secondes: 60
+  points:
+    # Système de points (récompense signalements) — DÉSACTIVÉ par défaut.
+    # Activez après validation manuelle et tests complets.
+    actif: false
+    points-par-signalement: 10
+    plafond-journalier: 3
+    plafond-reduction-pourcent: 50
 server:
   forward-headers-strategy: framework
 springdoc:

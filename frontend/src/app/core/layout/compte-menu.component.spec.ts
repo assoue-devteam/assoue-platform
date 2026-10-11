@@ -59,6 +59,13 @@ describe('CompteMenuComponent', () => {
     expect(panneau.querySelector('a')).toBeTruthy();
   });
 
+  it('affiche l’email complet dans le panneau déroulant uniquement', () => {
+    const { el, ouvrir } = creer();
+    expect(el.querySelector('.compte__email-complet')).toBeNull();
+    ouvrir();
+    expect(el.querySelector('.compte__email-complet')?.textContent).toContain('awa.ouedraogo@example.com');
+  });
+
   it('ferme au clic extérieur, pas au clic à l’intérieur', () => {
     const { fixture, el, ouvrir } = creer();
     ouvrir();

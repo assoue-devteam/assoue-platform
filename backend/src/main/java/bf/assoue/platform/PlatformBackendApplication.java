@@ -4,12 +4,13 @@ import bf.assoue.platform.auth.service.MotDePasseOublieProperties;
 import bf.assoue.platform.common.mail.MailProprietes;
 import bf.assoue.platform.images.ImageProperties;
 import bf.assoue.platform.paiement.service.PaydunyaProperties;
+import bf.assoue.platform.signalement.service.PointsProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 @SpringBootApplication
-@EnableConfigurationProperties({PaydunyaProperties.class, ImageProperties.class, MailProprietes.class, MotDePasseOublieProperties.class})
+@EnableConfigurationProperties({PaydunyaProperties.class, ImageProperties.class, MailProprietes.class, MotDePasseOublieProperties.class, PointsProperties.class})
 public class PlatformBackendApplication {
 
     public static void main(String[] args) {
