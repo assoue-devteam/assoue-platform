@@ -31,10 +31,13 @@ public class SecurityConfig {
             "/api/paiements/webhook",
             "/swagger-ui/**",
             "/swagger-ui.html",
-            "/api-docs/**"
+            "/api-docs/**",
+            "/error"
     };
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final EntreeAuthentification entreeAuthentification;
+    private final AccesRefuseHandler accesRefuseHandler;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -48,11 +51,16 @@ public class SecurityConfig {
                         .cacheControl(Customizer.withDefaults())
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(entreeAuthentification)
+                        .accessDeniedHandler(accesRefuseHandler))
                 .authorizeHttpRequests(auth -> auth
+                        // Preflight CORS : jamais d'auth, sinon le navigateur bloque l'appel réel.
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(PUBLIC_PATHS).permitAll()
                         // Vitrine publique : catalogue et page Communauté lisibles sans compte ; toute écriture reste authentifiée.
                         .requestMatchers(HttpMethod.GET, "/api/produits/**", "/api/categories/**",
-                                "/api/evenements/**", "/api/communaute/**").permitAll()
+                                "/api/evenements/**", "/api/communaute/**", "/api/images/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

@@ -33,9 +33,11 @@ export interface Categorie {
 export interface Produit {
   id: number;
   nom: string;
-  description: string;
+  description: string | null;
   prix: number;
   imageUrl: string | null;
+  /** Clé d'image uploadée (null si URL legacy ou sans image). */
+  imageCle: string | null;
   categorie: string;
   enRupture: boolean;
   vedette: boolean;
@@ -71,6 +73,49 @@ export interface LigneCommandeRequest {
 
 export interface CommandeRequest {
   lignes: LigneCommandeRequest[];
+  pointsUtilises?: number;
+}
+
+export type SignalementStatut = 'EN_ATTENTE' | 'VALIDE' | 'REJETE';
+
+export interface PhotoSignalement {
+  id: number;
+  cle: string;
+  contentType: string;
+}
+
+export interface Zone {
+  id: number;
+  nom: string;
+  actif: boolean;
+  dateCreation?: string;
+}
+
+export interface Signalement {
+  id: number;
+  zoneId: number;
+  zoneNom: string;
+  description: string;
+  latitude: number | null;
+  longitude: number | null;
+  statut: SignalementStatut;
+  motifRejet: string | null;
+  dateCreation: string;
+  dateValidation: string | null;
+  photos: PhotoSignalement[];
+}
+
+export interface SoldePoints {
+  solde: number;
+}
+
+export interface MouvementPoints {
+  id: number;
+  type: string;
+  points: number;
+  typeId: number | null;
+  soldeApres: number;
+  dateCreation: string;
 }
 
 export interface Panier {
@@ -171,6 +216,19 @@ export interface StockProduit {
   quantite: number;
 }
 
+/** Corps de POST/PUT /api/produits (admin). stockQuantite absent : 0 à la création, inchangé en modification. */
+export interface ProduitGestionRequest {
+  nom: string;
+  categorieId: number;
+  prix: number;
+  description: string | null;
+  imageUrl: string | null;
+  /** Clé renvoyée par POST /api/images ; si présente, elle l'emporte sur imageUrl. */
+  imageCle: string | null;
+  stockQuantite: number | null;
+  vedette: boolean;
+}
+
 export interface StockMatiere {
   materiauId: number;
   materiauNom: string;
@@ -193,6 +251,8 @@ export interface Evenement {
   lieu: string;
   description: string | null;
   imageUrl: string | null;
+  /** Clé renvoyée par POST /api/images ; si présente, elle l'emporte sur imageUrl. */
+  imageCle: string | null;
   placesRestantes: number | null;
 }
 

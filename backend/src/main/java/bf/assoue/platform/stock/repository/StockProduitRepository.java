@@ -7,11 +7,15 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface StockProduitRepository extends JpaRepository<StockProduit, Long> {
 
     Optional<StockProduit> findByProduitId(Long produitId);
+
+    List<StockProduit> findByProduitIdIn(Collection<Long> produitIds);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select stock from StockProduit stock where stock.produit.id = :produitId")

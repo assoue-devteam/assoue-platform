@@ -1,9 +1,11 @@
 # Mises à jour automatiques des dépendances (correctif plutôt que curatif).
 # Les montées majeures Angular restent manuelles (ligne 20.3 verrouillée, cf. docs/quality-baseline.md).
+# Les PRs Dependabot ciblent 'develop' pour suivre le flux de travail Git du projet.
 version: 2
 updates:
   - package-ecosystem: npm
     directory: /frontend
+    target-branch: develop
     schedule:
       interval: weekly
       day: monday
@@ -12,8 +14,17 @@ updates:
     ignore:
       - dependency-name: "@angular/*"
         update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "jasmine-core"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@types/jasmine"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@angular-devkit/build-angular"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: maven
     directory: /backend
+    target-branch: develop
     schedule:
       interval: weekly
       day: monday

@@ -23,9 +23,11 @@ export const STATUTS = {
   CONFIRME: { libelle: 'Confirmé', ton: 'success', icone: 'check' },
   ECHOUE: { libelle: 'Échoué', ton: 'error', icone: 'alert-circle' },
 
-  // CollecteStatut
+  // CollecteStatut & SignalementStatut
   DECLAREE: { libelle: 'Déclarée', ton: 'neutre', icone: 'pencil' },
   VALIDEE: { libelle: 'Validée', ton: 'info', icone: 'lock' },
+  VALIDE: { libelle: 'Validé', ton: 'success', icone: 'check' },
+  REJETE: { libelle: 'Rejeté', ton: 'error', icone: 'x' },
   TRAITEE: { libelle: 'Traitée', ton: 'success', icone: 'check' },
 
   // États locaux de la file hors ligne du collecteur

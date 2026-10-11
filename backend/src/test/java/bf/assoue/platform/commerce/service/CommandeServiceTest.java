@@ -16,6 +16,8 @@ import bf.assoue.platform.commerce.repository.CommandeRepository;
 import bf.assoue.platform.commerce.repository.ProduitRepository;
 import bf.assoue.platform.common.exception.RequeteInvalideException;
 import bf.assoue.platform.common.exception.RessourceIntrouvableException;
+import bf.assoue.platform.signalement.service.PointsProperties;
+import bf.assoue.platform.signalement.service.PointsService;
 import bf.assoue.platform.stock.service.ReservationStockService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,6 +47,10 @@ class CommandeServiceTest {
     private UtilisateurRepository utilisateurRepository;
     @Mock
     private ReservationStockService reservationStockService;
+    @Mock
+    private PointsService pointsService;
+    @Mock
+    private PointsProperties pointsProperties;
 
     @InjectMocks
     private CommandeService commandeService;
@@ -69,6 +75,25 @@ class CommandeServiceTest {
 
         assertThat(commandeService.creer(requete, "client@example.com").id()).isEqualTo(10L);
         verify(reservationStockService).reserver(any(Commande.class));
+    }
+
+    @Test
+    void creer_refuseUnProduitArchive() {
+        Produit produit = Produit.builder()
+                .id(1L).nom("Chaise").prix(BigDecimal.valueOf(15000))
+                .categorie(Categorie.builder().id(1L).nom("Mobilier").build())
+                .archive(true)
+                .build();
+
+        when(utilisateurRepository.findByEmail("client@example.com"))
+                .thenReturn(Optional.of(Utilisateur.builder().id(1L).email("client@example.com").build()));
+        when(produitRepository.findById(1L)).thenReturn(Optional.of(produit));
+
+        assertThatThrownBy(() -> commandeService.creer(
+                new CommandeRequest(List.of(new LigneCommandeRequest(1L, 1))), "client@example.com"))
+                .isInstanceOf(RequeteInvalideException.class)
+                .hasMessageContaining("n'est plus disponible");
+        verify(commandeRepository, never()).saveAndFlush(any(Commande.class));
     }
 
     @Test

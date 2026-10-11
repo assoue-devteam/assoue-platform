@@ -42,7 +42,10 @@ public class Commande {
     @Builder.Default
     private List<LigneCommande> lignes = new ArrayList<>();
 
-    @Version
+@Version
     private Long version;
 
+    @Column(name = "points_utilises", nullable = false)
+    @Builder.Default
+    private Integer pointsUtilises = 0;
 }

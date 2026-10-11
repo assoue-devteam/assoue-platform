@@ -1,0 +1,1 @@
+ALTER TABLE commande ADD COLUMN points_utilises INT DEFAULT 0;

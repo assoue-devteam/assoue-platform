@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { NetworkService } from '../network.service';
+import { CollecteService } from '../../features/collecte/collecte.service';
 import { CompteMenuComponent } from './compte-menu.component';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
 
@@ -21,6 +22,11 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
         } @else {
           <app-icon name="cloud-off" [size]="16" /> Hors ligne
         }
+        @if (collecte.enAttente() > 0) {
+          <span class="pastille-attente" [title]="collecte.enAttente() + ' collecte(s) en attente de synchronisation'">
+            • {{ collecte.enAttente() }} en attente
+          </span>
+        }
       </span>
       <app-compte-menu />
     </header>
@@ -30,6 +36,7 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
     <nav class="bas" aria-label="Navigation collecte">
       <a routerLink="/collecte/nouvelle" routerLinkActive="actif"><app-icon name="plus" /> Déclarer</a>
       <a routerLink="/collecte" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }"><app-icon name="package" /> Mes collectes</a>
+      <a routerLink="/" routerLinkActive="actif" [routerLinkActiveOptions]="{ exact: true }"><app-icon name="shopping-bag" /> Boutique</a>
     </nav>
   `,
   styles: `
@@ -40,10 +47,11 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
     }
     .barre__titre { font-weight: 600; flex: 1; }
     .reseau { display: inline-flex; align-items: center; gap: var(--space-1); font-size: 14px; }
+    .pastille-attente { font-size: 12px; opacity: 0.9; }
     .barre app-compte-menu { color: var(--color-text-on-dark); }
     .contenu { flex: 1; padding: var(--space-4); max-width: 560px; width: 100%; margin-inline: auto; }
     .bas {
-      position: sticky; bottom: 0; display: grid; grid-template-columns: 1fr 1fr;
+      position: sticky; bottom: 0; display: grid; grid-template-columns: repeat(3, 1fr);
       background: var(--color-surface); border-top: 1px solid var(--color-border);
     }
     .bas a {
@@ -55,4 +63,5 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
 })
 export class CollecteurLayoutComponent {
   protected reseau = inject(NetworkService);
+  protected collecte = inject(CollecteService);
 }

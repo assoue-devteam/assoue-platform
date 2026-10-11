@@ -59,7 +59,7 @@ class PanierServiceTest {
         lenient().when(utilisateurRepository.findByEmail("client@example.com")).thenReturn(Optional.of(client));
         lenient().when(produitRepository.findById(5L)).thenReturn(Optional.of(pouf));
         lenient().when(produitService.versReponse(pouf))
-                .thenReturn(new ProduitResponse(5L, "Pouf", null, BigDecimal.valueOf(25000), null, "Mobilier", false, false, null, 0));
+                .thenReturn(new ProduitResponse(5L, "Pouf", null, BigDecimal.valueOf(25000), null, null, "Mobilier", false, false, null, 0));
         lenient().when(lignePanierRepository.saveAll(any())).thenAnswer(appel -> appel.getArgument(0));
     }
 
@@ -107,6 +107,17 @@ class PanierServiceTest {
         assertThatThrownBy(() -> panierService.remplacer(
                 new PanierRequest(List.of(new LigneCommandeRequest(5L, 1))), "client@example.com"))
                 .isInstanceOf(RequeteInvalideException.class);
+    }
+
+    @Test
+    void remplacer_refuseUnProduitArchiveCommeUnProduitEnRupture() {
+        pouf.setArchive(true);
+
+        assertThatThrownBy(() -> panierService.remplacer(
+                new PanierRequest(List.of(new LigneCommandeRequest(5L, 1))), "client@example.com"))
+                .isInstanceOf(RequeteInvalideException.class)
+                .hasMessageContaining("n'est plus disponible");
+        verify(lignePanierRepository, never()).deleteByClientId(any());
     }
 
     @Test

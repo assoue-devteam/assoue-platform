@@ -13,6 +13,16 @@ export interface Session {
 
 const CLE_STOCKAGE = 'assoue.session';
 
+/**
+ * « Se souvenir de moi » est un comportement uniquement front (aucun refresh token côté backend,
+ * GAP-07) : coché, la session va dans localStorage (survit au redémarrage) ; décoché, dans
+ * sessionStorage (vidé à la fermeture de l'onglet). Un seul lecteur lit les deux emplacements.
+ *
+ * Note sécurité : tout stockage navigateur du JWT l'expose au vol par XSS. En contrepartie,
+ * l'application n'injecte jamais de HTML non échappé (interpolation Angular uniquement, pas de
+ * innerHTML sur des données serveur) et le backend reste l'autorité (le claim exp n'est lu
+ * côté front que pour l'UX : déconnexion automatique à l'expiration).
+ */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
@@ -23,19 +33,20 @@ export class AuthService {
   // Passe à true quand une requête échoue avec un token expiré : AppComponent affiche la modale.
   readonly sessionExpiree = signal(false);
 
-  connecter(requete: LoginRequest): Observable<AuthResponse> {
+  connecter(requete: LoginRequest, seSouvenir = true): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/login`, requete)
-      .pipe(tap(reponse => this.ouvrirSession(reponse)));
+      .pipe(tap(reponse => this.ouvrirSession(reponse, seSouvenir)));
   }
 
-  inscrire(requete: RegisterRequest): Observable<AuthResponse> {
+  inscrire(requete: RegisterRequest, seSouvenir = true): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/register`, requete)
-      .pipe(tap(reponse => this.ouvrirSession(reponse)));
+      .pipe(tap(reponse => this.ouvrirSession(reponse, seSouvenir)));
   }
 
   // Ne touche qu'à la session : la file hors ligne du collecteur a son propre stockage et doit survivre.
   deconnecter() {
     localStorage.removeItem(CLE_STOCKAGE);
+    sessionStorage.removeItem(CLE_STOCKAGE);
     this.session.set(null);
     this.sessionExpiree.set(false);
   }
@@ -61,11 +72,18 @@ export class AuthService {
     return '/';
   }
 
-  private ouvrirSession(reponse: AuthResponse) {
+  private ouvrirSession(reponse: AuthResponse, seSouvenir: boolean) {
     const expiration = lireExpiration(reponse.token);
     if (expiration === null) throw new Error('Token reçu illisible');
     const session: Session = { token: reponse.token, email: reponse.email, roles: reponse.roles, expiration };
-    localStorage.setItem(CLE_STOCKAGE, JSON.stringify(session));
+    // On vide l'autre emplacement : une seule session à la fois, pas de doublon persistant/session.
+    if (seSouvenir) {
+      sessionStorage.removeItem(CLE_STOCKAGE);
+      localStorage.setItem(CLE_STOCKAGE, JSON.stringify(session));
+    } else {
+      localStorage.removeItem(CLE_STOCKAGE);
+      sessionStorage.setItem(CLE_STOCKAGE, JSON.stringify(session));
+    }
     this.session.set(session);
     this.sessionExpiree.set(false);
   }
@@ -73,8 +91,9 @@ export class AuthService {
 
 export function lireExpiration(token: string): number | null {
   try {
-    const payload = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    const exp = JSON.parse(atob(payload)).exp;
+    const brut = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    const complete = brut + '='.repeat((4 - (brut.length % 4)) % 4);
+    const exp = JSON.parse(atob(complete)).exp;
     return typeof exp === 'number' ? exp * 1000 : null;
   } catch {
     return null;
@@ -82,10 +101,13 @@ export function lireExpiration(token: string): number | null {
 }
 
 function lireSessionStockee(): Session | null {
-  try {
-    const brut = localStorage.getItem(CLE_STOCKAGE);
-    return brut ? JSON.parse(brut) as Session : null;
-  } catch {
-    return null;
+  for (const stockage of [localStorage, sessionStorage]) {
+    try {
+      const brut = stockage.getItem(CLE_STOCKAGE);
+      if (brut) return JSON.parse(brut) as Session;
+    } catch {
+      // Entrée corrompue : on l'ignore et on essaie l'autre emplacement.
+    }
   }
+  return null;
 }

@@ -9,7 +9,7 @@ import { ToastService } from '../../shared/ui/toast';
 
 const produit: Produit = {
   id: 7, nom: 'Bracelet recyclé', description: 'Un bracelet.', prix: 2500,
-  imageUrl: null, categorie: 'Bijoux', enRupture: false, vedette: false, noteMoyenne: null, nombreAvis: 0,
+  imageUrl: null, imageCle: null, categorie: 'Bijoux', enRupture: false, vedette: false, noteMoyenne: null, nombreAvis: 0,
 };
 
 describe('catalogue et panier', () => {
@@ -171,6 +171,25 @@ describe('catalogue et panier', () => {
       chargement.error(new ProgressEvent('error'));
       expect(panier.nombreArticles()).toBe(1);
       expect(localStorage.getItem('assoue.panier.awa@assoue.bf.aEnvoyer')).toBe('1');
+    });
+
+    it('un 401 pendant la synchronisation ne relance pas la file en boucle', () => {
+      localStorage.setItem('assoue.session', JSON.stringify(sessionClient));
+      const panier = TestBed.inject(PanierService);
+      TestBed.tick();
+      http.expectOne('/api/panier').flush(reponse(0));
+      panier.ajouter(produit);
+      http.expectOne({ method: 'PUT', url: '/api/panier' }).flush(
+        { statut: 401, message: 'Authentification requise' },
+        { status: 401, statusText: 'Unauthorized' });
+      expect(panier.nombreArticles()).toBe(1);
+      expect(localStorage.getItem('assoue.panier.awa@assoue.bf.aEnvoyer')).toBeNull();
+
+      window.dispatchEvent(new Event('offline'));
+      TestBed.tick();
+      window.dispatchEvent(new Event('online'));
+      TestBed.tick();
+      http.expectNone({ method: 'PUT', url: '/api/panier' });
     });
 
     it('envoie les modifications restées en attente plutôt que d\'écraser avec le serveur', () => {

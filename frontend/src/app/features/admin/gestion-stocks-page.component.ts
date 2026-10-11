@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Produit, StockMatiere, StockProduit } from '../../shared/models/api';
+import { messageErreur } from '../../core/http/erreurs';
 import { GestionService } from './gestion.service';
 import { AlertComponent } from '../../shared/ui/alert.component';
 import { ButtonDirective } from '../../shared/ui/button.directive';
@@ -17,7 +18,7 @@ export class GestionStocksPageComponent {
   private service = inject(GestionService); protected produits = signal<StockProduit[]>([]); protected matieres = signal<StockMatiere[]>([]); protected editions: Record<number, number> = {}; protected message = signal<string | null>(null); protected messageTone = signal<'success' | 'error'>('success'); protected vitrine = signal<Produit[]>([]);
   constructor() { this.charger(); }
   private charger(): void { this.service.stocksProduits().subscribe(produits => { this.produits.set(produits); for (const stock of produits) this.editions[stock.produitId] = stock.quantite; }); this.service.stocksMatieres().subscribe(matieres => this.matieres.set(matieres)); this.service.produits().subscribe(produits => this.vitrine.set(produits)); }
-  protected enregistrer(stock: StockProduit): void { const quantite = Number(this.editions[stock.produitId]); if (!Number.isInteger(quantite) || quantite < 0) { this.message.set('Saisissez une quantité entière positive.'); this.messageTone.set('error'); return; } this.service.ajusterStock(stock.produitId, quantite).subscribe({ next: () => { this.message.set('Stock mis à jour.'); this.messageTone.set('success'); this.charger(); }, error: () => { this.message.set('La mise à jour du stock a échoué.'); this.messageTone.set('error'); } }); }
+  protected enregistrer(stock: StockProduit): void { const quantite = Number(this.editions[stock.produitId]); if (!Number.isInteger(quantite) || quantite < 0) { this.message.set('Saisissez une quantité entière positive.'); this.messageTone.set('error'); return; } this.service.ajusterStock(stock.produitId, quantite).subscribe({ next: () => { this.message.set('Stock mis à jour.'); this.messageTone.set('success'); this.charger(); }, error: err => { this.message.set(messageErreur(err)); this.messageTone.set('error'); } }); }
   protected basculerVedette(produit: Produit, caseVedette: HTMLInputElement): void {
     const vedette = caseVedette.checked;
     this.service.definirVedette(produit.id, vedette).subscribe({
