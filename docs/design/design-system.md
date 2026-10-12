@@ -304,7 +304,7 @@ Format : **Données** · **Endpoint(s)** · **Actions** · **États** · **Permi
 
 ### PUB-05 Notre impact — P1
 - Données : statiques, plaquette AS'SOUÉ 2026 (source affichée sous les chiffres). Aucun endpoint.
-- Affiche : surtitre « Depuis 8 ans au Burkina Faso », H1 « L'art du recyclage pour un avenir durable », bandeau sombre de 4 chiffres (400 670 pneus recyclés, 801 emplois directs, 1 857 emplois indirects, 5 régions), Notre mission (3 cartes : réduire la pollution, protéger la santé, créer des emplois), Nos valeurs (4), Distinctions (2022-2025), appel « Découvrir la boutique ».
+- Affiche : surtitre « Depuis 8 ans au Burkina Faso », H1 « L'art du recyclage pour un avenir durable », bandeau sombre de 4 chiffres (400 670 pneus recyclés, 801 emplois directs, 1 857 emplois indirects, 5 régions), Notre mission (3 cartes : réduire la pollution, protéger la santé, créer des emplois), Nos valeurs (4), Distinctions (2022-2025), appel « Découvrir la boutique » (vers `/`, route du catalogue PUB-01).
 - Animation : les chiffres défilent de 0 à leur valeur (1,6 s, une fois) quand le bandeau devient visible ; valeur finale affichée sans animation si `prefers-reduced-motion` ou sans IntersectionObserver.
 - Accès : menu de l'en-tête et colonne Boutique du footer. Jamais sur l'accueil.
 

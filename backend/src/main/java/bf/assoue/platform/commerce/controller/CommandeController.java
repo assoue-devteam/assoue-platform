@@ -26,13 +26,13 @@ public class CommandeController {
     private final CommandeService commandeService;
 
     @PostMapping
-    @PreAuthorize("hasRole('CLIENT')")
+    @PreAuthorize("hasAnyRole('CLIENT','COLLECTEUR')")
     public ResponseEntity<CommandeResponse> creer(@Valid @RequestBody CommandeRequest requete, Principal principal) {
         return ResponseEntity.status(HttpStatus.CREATED).body(commandeService.creer(requete, principal.getName()));
     }
 
     @GetMapping("/mes-commandes")
-    @PreAuthorize("hasRole('CLIENT')")
+    @PreAuthorize("hasAnyRole('CLIENT','COLLECTEUR')")
     public List<CommandeResponse> mesCommandes(Principal principal) {
         return commandeService.listerPourClient(principal.getName());
     }
@@ -50,7 +50,7 @@ public class CommandeController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('CLIENT','ADMIN')")
+    @PreAuthorize("hasAnyRole('CLIENT','COLLECTEUR','ADMIN')")
     public CommandeResponse consulter(@PathVariable Long id, Authentication authentication) {
         return commandeService.consulter(id, authentication.getName(), estManager(authentication));
     }

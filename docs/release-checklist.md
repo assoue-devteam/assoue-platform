@@ -28,6 +28,7 @@
 ## Déploiement
 
 - [ ] La base PostgreSQL de production est sauvegardée avant migration.
+- [ ] `ASSOUE_IMAGES_DIR` est un chemin absolu avec un volume monté (sinon le backend refuse de démarrer, et les images seraient perdues au redéploiement sur disque éphémère).
 - [ ] Les URLs de callback et de retour PayDunya pointent vers le domaine de production.
 - [ ] Les logs et métriques de démarrage sont consultés après déploiement.
 - [ ] Un rollback applicatif et la procédure de restauration de base sont connus de l'équipe.

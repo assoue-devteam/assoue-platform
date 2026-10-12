@@ -14,7 +14,8 @@ import bf.assoue.platform.commerce.repository.CommandeRepository;
 import bf.assoue.platform.commerce.repository.ProduitRepository;
 import bf.assoue.platform.common.exception.RequeteInvalideException;
 import bf.assoue.platform.common.exception.RessourceIntrouvableException;
-import bf.assoue.platform.stock.service.StockService;
+import bf.assoue.platform.signalement.service.PointsService;
+import bf.assoue.platform.signalement.service.PointsProperties;
 import bf.assoue.platform.stock.service.ReservationStockService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,8 +31,9 @@ public class CommandeService {
     private final CommandeRepository commandeRepository;
     private final ProduitRepository produitRepository;
     private final UtilisateurRepository utilisateurRepository;
-    private final StockService stockService;
     private final ReservationStockService reservationStockService;
+    private final PointsService pointsService;
+    private final PointsProperties pointsProperties;
 
     @Transactional
     public CommandeResponse creer(CommandeRequest requete, String emailClient) {
@@ -47,6 +49,9 @@ public class CommandeService {
         requete.lignes().forEach(ligneRequete -> {
             Produit produit = produitRepository.findById(ligneRequete.produitId())
                     .orElseThrow(() -> new RessourceIntrouvableException("Produit introuvable : " + ligneRequete.produitId()));
+            if (produit.isArchive()) {
+                throw new RequeteInvalideException("« " + produit.getNom() + " » n'est plus disponible");
+            }
 
             LigneCommande ligne = LigneCommande.builder()
                     .commande(commande)
@@ -56,6 +61,11 @@ public class CommandeService {
                     .build();
             commande.getLignes().add(ligne);
         });
+
+        if (pointsProperties.isActif() && requete.pointsAUtiliser() != null && requete.pointsAUtiliser() > 0) {
+            pointsService.utiliserPourCommande(emailClient, requete.pointsAUtiliser(), commande.getId());
+            commande.setPointsUtilises(requete.pointsAUtiliser());
+        }
 
         Commande commandeEnregistree = commandeRepository.saveAndFlush(commande);
         reservationStockService.reserver(commandeEnregistree);
@@ -67,6 +77,7 @@ public class CommandeService {
      * statut réel sans dépendre du webhook ; le client, lui, reste limité aux
      * siennes (404 sur celle d'un tiers, pour ne pas en révéler l'existence).
      */
+    @Transactional(readOnly = true)
     public CommandeResponse consulter(Long id, String emailAppelant, boolean estManager) {
         Commande commande = trouver(id);
 
@@ -78,6 +89,7 @@ public class CommandeService {
     }
 
     /** CL-05 : le client consulte l'historique de ses propres commandes. */
+    @Transactional(readOnly = true)
     public List<CommandeResponse> listerPourClient(String emailClient) {
         return commandeRepository.findByClientEmailOrderByDateCreationDesc(emailClient).stream()
                 .map(CommandeResponse::depuis)
@@ -85,6 +97,7 @@ public class CommandeService {
     }
 
     /** MG-02 : suivi de l'ensemble des commandes clients, filtrable par statut. */
+    @Transactional(readOnly = true)
     public List<CommandeAdminResponse> lister(CommandeStatut statut) {
         List<Commande> commandes = statut != null
                 ? commandeRepository.findByStatutOrderByDateCreationDesc(statut)
@@ -98,6 +111,7 @@ public class CommandeService {
      * Pas de notification poussée tant que l'infra temps réel (US-04) n'existe pas —
      * le manager interroge cet endpoint.
      */
+    @Transactional(readOnly = true)
     public List<CommandeEnAttenteResponse> enAttenteDepuis(int heures) {
         LocalDateTime maintenant = LocalDateTime.now();
 

@@ -24,6 +24,7 @@ describe('socle core', () => {
 
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     TestBed.configureTestingModule({
       providers: [provideHttpClient(withInterceptors([apiInterceptor])), provideHttpClientTesting(), provideRouter([])],
     });
@@ -50,6 +51,41 @@ describe('socle core', () => {
     expect(JSON.parse(localStorage.getItem('assoue.session')!).roles).toEqual(['CLIENT']);
   });
 
+  it('« Se souvenir de moi » décoché : session en sessionStorage, pas en localStorage', () => {
+    auth.connecter({ email: 'awa@example.com', motDePasse: 'secret123' }, false).subscribe();
+    http.expectOne('/api/auth/login').flush({ token: jwt(dansUneHeure()), email: 'awa@example.com', roles: ['CLIENT'] });
+    expect(auth.connecte()).toBeTrue();
+    expect(sessionStorage.getItem('assoue.session')).toContain('awa@example.com');
+    expect(localStorage.getItem('assoue.session')).toBeNull();
+  });
+
+  it('changer d\u2019option vide l\u2019autre emplacement, la déconnexion vide les deux', () => {
+    auth.connecter({ email: 'awa@example.com', motDePasse: 'secret123' }, false).subscribe();
+    http.expectOne('/api/auth/login').flush({ token: jwt(dansUneHeure()), email: 'awa@example.com', roles: ['CLIENT'] });
+    auth.connecter({ email: 'awa@example.com', motDePasse: 'secret123' }, true).subscribe();
+    http.expectOne('/api/auth/login').flush({ token: jwt(dansUneHeure()), email: 'awa@example.com', roles: ['CLIENT'] });
+    expect(sessionStorage.getItem('assoue.session')).toBeNull();
+    expect(localStorage.getItem('assoue.session')).toContain('awa@example.com');
+    auth.deconnecter();
+    expect(localStorage.getItem('assoue.session')).toBeNull();
+    expect(sessionStorage.getItem('assoue.session')).toBeNull();
+  });
+
+  it('le 401 du login ne déclenche pas la modale « session expirée », même expirée', () => {
+    seConnecter(['CLIENT'], ilYaUneHeure());
+    auth.sessionExpiree.set(false);
+    TestBed.inject(HttpClient).post('/api/auth/login', {}).subscribe({ error: () => {} });
+    http.expectOne('/api/auth/login').flush(null, { status: 401, statusText: 'Unauthorized' });
+    expect(auth.sessionExpiree()).toBeFalse();
+  });
+
+  it('le 423 du login (compte bloqué) ne déclenche pas la modale « session expirée »', () => {
+    seConnecter(['CLIENT'], ilYaUneHeure());
+    auth.sessionExpiree.set(false);
+    TestBed.inject(HttpClient).post('/api/auth/login', {}).subscribe({ error: () => {} });
+    http.expectOne('/api/auth/login').flush(null, { status: 423, statusText: 'Locked' });
+    expect(auth.sessionExpiree()).toBeFalse();
+  });
   it('choisit l\'espace ADMIN > COLLECTEUR > CLIENT', () => {
     seConnecter(['CLIENT', 'COLLECTEUR']);
     expect(auth.espaceParDefaut()).toBe('/collecte');
@@ -67,13 +103,13 @@ describe('socle core', () => {
     expect(http.expectOne('/assets/x.json').request.headers.has('Authorization')).toBeFalse();
   });
 
-  it('n\'envoie pas un token expiré et signale la session expirée sur 403', () => {
+  it('n\'envoie pas un token expiré et signale la session expirée sur 401', () => {
     seConnecter(['CLIENT'], ilYaUneHeure());
     TestBed.inject(HttpClient).get('/api/commandes/mes-commandes').subscribe({ error: () => {} });
 
     const req = http.expectOne('/api/commandes/mes-commandes');
     expect(req.request.headers.has('Authorization')).toBeFalse();
-    req.flush(null, { status: 403, statusText: 'Forbidden' });
+    req.flush(null, { status: 401, statusText: 'Unauthorized' });
     expect(auth.sessionExpiree()).toBeTrue();
   });
 

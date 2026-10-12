@@ -30,6 +30,42 @@ Erreurs : `401` identifiants invalides, `423` compte bloqué après 3 échecs co
 
 Toutes les routes protégées attendent `Authorization: Bearer <token>`.
 
+### `POST /api/auth/mot-de-passe-oublie/demande`
+
+Public. Demande un code de réinitialisation à 6 chiffres envoyé par e-mail.
+
+Requête : `{ "email": "client@example.com" }`
+
+Réponse `200` (toujours identique, que le compte existe ou non) :
+```json
+{ "message": "Si un compte existe avec cette adresse, un code de réinitialisation a été envoyé." }
+```
+
+Erreurs : `429` si débit par IP dépassé (5/min), `400` si email invalide.
+
+### `POST /api/auth/mot-de-passe-oublie/verification`
+
+Public. Vérifie le code et retourne un jeton de réinitialisation (5 min, usage unique).
+
+Requête : `{ "email": "client@example.com", "code": "123456" }`
+
+Réponse `200` :
+```json
+{ "jeton": "<JWT type=reset>" }
+```
+
+Erreurs : `400` code invalide/expiré, `429` si débit par compte dépassé (1 code/5min, 3 codes/heure).
+
+### `POST /api/auth/mot-de-passe-oublie/reinitialisation`
+
+Public. Change le mot de passe avec le jeton de réinitialisation. Tous les jetons d'accès émis avant deviennent invalides.
+
+Requête : `{ "jeton": "<JWT type=reset>", "nouveauMotDePasse": "au moins 8 caractères" }`
+
+Réponse `200` : vide.
+
+Erreurs : `400` jeton invalide/expiré/reutilisé, `400` mot de passe trop court.
+
 ### `GET /api/utilisateurs?verrouilles=`
 Rôle ADMIN. `verrouilles` est optionnel : `true` ne renvoie que les comptes bloqués par le compteur d'échecs (SA-02), `false` que les comptes actifs. Réponse `200` :
 ```json
@@ -63,7 +99,23 @@ Public. `categorieId` optionnel. Réponse `200` :
 `imageUrl` peut être `null` (CL-03, migration V9). Aucun endpoint ne permet encore de le renseigner.
 
 ### `GET /api/produits/{id}`
-Public. Réponse `200` : un objet au même format qu'un élément de la liste ci-dessus. `404` si introuvable.
+Public. Réponse `200` : un objet au même format qu'un élément de la liste ci-dessus. `404` si introuvable ou archivé (un produit archivé est introuvable partout côté public, comme s'il n'existait pas).
+
+### `POST /api/produits`
+Rôle ADMIN. Crée un produit du catalogue avec son stock initial. Requête :
+```json
+{ "nom": "Tabouret en pneu", "categorieId": 1, "prix": 12000, "description": "...", "imageUrl": "https://.../tabouret.jpg", "stockQuantite": 5, "vedette": false }
+```
+`nom` (non vide, 200 car. max), `categorieId` (existante) et `prix` (entier FCFA ≥ 0, jamais de float ; `0` accepté) sont obligatoires. `description` (2000 car. max), `imageUrl` (optionnel, `http(s)://` uniquement, même règle que les événements — pas d'upload), `stockQuantite` (optionnel, ≥ 0 ; absent = `0`, donc en rupture) et `vedette` (optionnel, défaut `false`) sont facultatifs. `enRupture` n'est jamais saisi : il est dérivé du stock (`0` ou ligne absente → en rupture).
+Réponse `201` au format produit. Erreurs : `400` validation, `404` catégorie inconnue.
+
+### `PUT /api/produits/{id}`
+Rôle ADMIN. Remplace les champs du produit ; `stockQuantite` présent **remplace** le stock (absent = inchangé) — pas d'endpoint dédié, un seul appel suffit. Réponse `200` au format produit. Erreurs : `400` validation, `404` produit introuvable, archivé ou catégorie inconnue.
+
+### `DELETE /api/produits/{id}`
+Rôle ADMIN. Suppression toujours logique (archivage, jamais de `409`, jamais de suppression physique) : le produit disparaît du catalogue mais reste lisible dans l'historique des commandes, favoris et paniers qui le référencent. Réponse `204`. `404` si introuvable ou déjà archivé.
+
+Un produit archivé est refusé comme un produit en rupture : `PUT /api/panier` et `POST /api/commandes` renvoient `400` (« « \<nom\> » n'est plus disponible »).
 
 ### `POST /api/commandes`
 Authentifié (rôle CLIENT). Requête :
@@ -177,6 +229,23 @@ Rôle ADMIN. Requête : `{ "titre", "dateDebut", "lieu", "description"?, "imageU
 ### `GET /api/communaute/chiffres` · `PUT /api/communaute/chiffres`
 `GET` public : `[{ "libelle": "Artisans soutenus", "valeur": 245 }]`, dans l'ordre d'affichage, vide tant que l'admin n'a rien saisi. `PUT` (ADMIN) remplace toute la liste : `{ "chiffres": [{ "libelle", "valeur" }] }`, 6 au plus, libellé 80 car., valeur >= 0.
 
+## Images (upload admin, lot 8)
+
+Les formulaires admin n'exposent plus que l'upload (`app-image-upload`) ; les anciennes `imageUrl` en `https` restent affichées telles quelles (aucune migration de données).
+
+### `POST /api/images`
+Rôle ADMIN, `multipart/form-data` avec le champ `fichier`. Le client redimensionne déjà à 2000 px (JPEG 0,85, orientation EXIF appliquée) ; le serveur accepte aussi les envois directs : il vérifie le type réel par magic bytes (JPEG et PNG uniquement — pas de WebP, ImageIO ne le lit pas sans plugin), les dimensions avant décodage (9000 px et 50 M pixels au plus, soit une photo 48 MP ≈ 150 Mo transitoires, acceptable pour un envoi admin), applique l'orientation EXIF aux pixels (lecture manuelle du tag APP1, sans nouvelle dépendance), **redimensionne au plus grand côté 1600 px**, puis **réencode** (supprime EXIF/GPS et contenus annexes). Réponse `201` : `{ "cle": "<uuid>.jpg" }` — la clé, jamais un chemin disque ni le nom client. Le nom d'origine n'est jamais utilisé pour stocker.
+Erreurs : `400` fichier vide/illisible ou clé inconnue dans un formulaire, `413` au-delà de 10 Mo (« L'image dépasse 10 Mo »), `415` format interdit ou contenu non image, `429` trop d'envois traités en parallèle (« Réessayez dans un instant », 2 décodages max : ~300 Mo transitoires), `401` sans token (+ `WWW-Authenticate: Bearer`) ou avec un mauvais rôle `403`.
+
+### `GET /api/images/{cle}`
+Public. `{cle}` validée par regex stricte (UUID + `.jpg`/`.png`, sinon 404) ; `../`, séparateurs encodés et clés inconnues → 4xx sans accès fichier. `Content-Type` fixé par le serveur, `Cache-Control: public, max-age=31536000, immutable` (clé unique), `X-Content-Type-Options: nosniff` global.
+
+### Champs `imageCle` (produits et événements)
+`POST/PUT /api/produits` et `POST/PUT /api/evenements` acceptent `imageCle` (clé renvoyée par l'upload, doit exister sinon `400`) en plus de `imageUrl` (legacy `http(s)`, même validateur qu'avant). **Si les deux arrivent ensemble, `imageCle` l'emporte** et `imageUrl` est vidée. Les réponses portent `imageCle` (ou `null`) et `imageUrl` **résolue** : URL legacy telle quelle, sinon `/api/images/{cle}`, sinon `null` — le front n'a rien changé à son affichage. Côté front, `/api/images/...` passe par le proxy en dev et la même origine en prod ; si un jour front et API sont sur des origines différentes, le helper `resoudreUrlImage` préfixe avec l'origine de `apiUrl` (absolue).
+Remplacement d'image ou suppression d'événement (physique) : l'ancien fichier est supprimé après commit. Archivage produit (suppression logique) : le fichier est gardé (commandes, paniers et favoris pointent le produit vivant, aucune copie d'image n'est stockée dans l'historique). Un upload jamais rattaché à un formulaire reste orphelin (nettoyage à prévoir, voir dette technique).
+
+Stockage : interface `StockageImage`, implémentation disque, dossier `ASSOUE_IMAGES_DIR` (`./uploads` en dev, **absolu obligatoire en production**, échec clair au démarrage sinon — volume à monter, voir README). Disque éphémère = images perdues à chaque redéploiement : passer au stockage objet = 2e implémentation de l'interface, sans autre changement.
+
 ## Collecte
 
 ### `POST /api/collectes`
@@ -235,7 +304,7 @@ Réponse `200` : `[{ "produitId": 1, "produitNom": "...", "quantite": 12 }]`
 Réponse `200` : `[{ "materiauId": 1, "materiauNom": "Plastique", "quantite": 42.5 }]`
 
 ### `PUT /api/stocks/produits/{produitId}`
-Requête : `{ "quantite": 20 }` (≥ 0, remplace la valeur). Ajuste manuellement le stock d'un produit fini. `404` si le produit n'a pas de ligne de stock. Verrou optimiste (`@Version`, migration V10) : en cas de modification concurrente, l'exception n'est pas gérée par `GlobalExceptionHandler` et sort en `500`.
+Requête : `{ "quantite": 20 }` (≥ 0, remplace la valeur). Ajuste manuellement le stock d'un produit fini. `404` si le produit n'a pas de ligne de stock. Verrou optimiste (`@Version`, migration V10) : en cas de modification concurrente, `409` (« La quantité a changé entre-temps. Rechargez la page. »).
 
 ## Codes d'erreur communs
 
@@ -243,12 +312,12 @@ Toute erreur renvoie :
 ```json
 { "horodatage": "2026-01-01T12:00:00Z", "statut": 404, "message": "..." }
 ```
-`400` requête invalide, `401` identifiants invalides (login), `403` accès refusé, `404` ressource introuvable, `409` conflit (ex. email déjà utilisé), `423` compte bloqué.
+`400` requête invalide, `401` non authentifié (sans token, token expiré ou invalide : `WWW-Authenticate: Bearer`, RFC 6750), `403` rôle insuffisant uniquement, `404` ressource introuvable, `409` conflit (ex. email déjà utilisé), `423` compte bloqué, `429` trop de requêtes (uploads parallèles).
 
-`403` est renvoyé par Spring Security quand le rôle ne correspond pas (`@PreAuthorize`). Aucun `AuthenticationEntryPoint` n'est configuré : un appel sans token ou avec un token expiré renvoie probablement aussi `403` plutôt que `401`, et hors du format `ErreurApi` (à confirmer par un test). Le frontend doit donc détecter l'expiration de session en lisant `exp` dans le JWT.
+Un token expiré, mal formé ou mal signé envoyé sur une route publique (`GET /api/produits`, `/api/categories`, `/api/images/{cle}`, `/api/evenements`, `/api/communaute`) est ignoré : la réponse reste celle d'une requête sans token (`200`). `POST /api/auth/login` garde ses réponses métier `401` (« Email ou mot de passe incorrect ») et `423` sans en-tête `WWW-Authenticate`. Les pré-vols `OPTIONS` sont publics et ne sont jamais interceptés. `GET /api/collectes/volumes` reste réservé au rôle ADMIN (`401` sans token, `403` avec un autre rôle).
 
 ## Ce qui n'est pas encore couvert
 
 - **US-04 (Should Have)** : pas de notification temps réel sur le changement de statut de commande — l'infra de notification (WebSocket/push) n'existe pas encore dans ce lot. Le frontend peut pour l'instant faire du polling sur `GET /api/commandes/{id}`.
-- **Création de produits/catégories côté admin** : pas d'endpoint `POST`/`PUT` sur `/api/produits` ou `/api/categories` dans ce lot — à ajouter si le besoin d'admin apparaît avant la fin de la livraison.
+- **Catégories côté admin** : pas d'endpoint `POST` sur `/api/categories` — les quatre catégories (Mobilier, Bijoux, Chaussures, Accessoires) sont fournies par les données de départ, il n'y a pas de besoin réel.
 - **Déclaration de Depot par un fournisseur** : pas d'endpoint dédié — le lien `Collecte.depot` existe en base mais rien ne le renseigne encore côté API.

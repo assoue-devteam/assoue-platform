@@ -19,3 +19,9 @@ paydunya:
   return-url: https://example.test/paiement/retour
   cancel-url: https://example.test/paiement/annule
   store-name: AS'Soué test
+
+assoue:
+  motdepasse:
+    cle-hmac: test-cle-hmac-pour-tests-uniquement
+    rate-limit-ip-max: 5
+    rate-limit-ip-fenetre-secondes: 60

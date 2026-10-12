@@ -15,7 +15,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +37,18 @@ public class StockService {
         return stockProduitRepository.findByProduitId(produitId)
                 .map(stock -> stock.getQuantite() <= 0)
                 .orElse(true);
+    }
+
+    /** Ruptures par produit en une seule requête (listes catalogue, favoris). */
+    public Map<Long, Boolean> rupturesParProduit(Collection<Long> produitIds) {
+        if (produitIds.isEmpty()) {
+            return Map.of();
+        }
+        return stockProduitRepository.findByProduitIdIn(produitIds).stream()
+                .collect(Collectors.toMap(
+                        stock -> stock.getProduit().getId(),
+                        stock -> stock.getQuantite() <= 0,
+                        (a, b) -> a));
     }
 
     /** Unités encore vendables : les commandes en attente de paiement les ont déjà retirées. */

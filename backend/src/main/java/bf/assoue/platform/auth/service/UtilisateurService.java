@@ -35,6 +35,7 @@ public class UtilisateurService {
      * SA-02 : {@code verrouilles=true} ne retient que les comptes bloqués par le
      * compteur d'échecs, ceux que le super admin doit débloquer.
      */
+    @Transactional(readOnly = true)
     public List<UtilisateurResponse> lister(Boolean verrouilles) {
         return utilisateurRepository.findAll().stream()
                 .map(UtilisateurResponse::depuis)

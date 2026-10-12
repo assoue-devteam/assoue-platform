@@ -15,12 +15,15 @@ import bf.assoue.platform.collecte.repository.MateriauRepository;
 import bf.assoue.platform.collecte.repository.PointCollecteRepository;
 import bf.assoue.platform.common.exception.RequeteInvalideException;
 import bf.assoue.platform.common.exception.RessourceIntrouvableException;
+import bf.assoue.platform.common.notification.CollecteDeclareeEvent;
 import bf.assoue.platform.stock.service.StockService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +37,7 @@ public class CollecteService {
     private final MateriauRepository materiauRepository;
     private final UtilisateurRepository utilisateurRepository;
     private final StockService stockService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public CollecteResponse declarer(DeclarationCollecteRequest requete, String emailCollecteur) {
@@ -69,7 +73,12 @@ public class CollecteService {
                 .build();
         collecte.getLignes().add(ligne);
 
-        return CollecteResponse.depuis(collecteRepository.save(collecte));
+        collecte = collecteRepository.save(collecte);
+
+        String zone = pointCollecte.getLatitude() + "," + pointCollecte.getLongitude();
+        eventPublisher.publishEvent(new CollecteDeclareeEvent(collecte.getId(), zone, LocalDateTime.now()));
+
+        return CollecteResponse.depuis(collecte);
     }
 
     /**
@@ -102,12 +111,14 @@ public class CollecteService {
         return CollecteResponse.depuis(collecteRepository.save(collecte));
     }
 
+    @Transactional(readOnly = true)
     public List<CollecteResponse> mesCollectes(String emailCollecteur) {
         return collecteRepository.findByCollecteurEmailOrderByDateDeclarationDesc(emailCollecteur).stream()
                 .map(CollecteResponse::depuis)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public List<MateriauResponse> materiaux() {
         return materiauRepository.findAll().stream()
                 .map(MateriauResponse::depuis)
@@ -119,6 +130,7 @@ public class CollecteService {
      * par statut. Le filtre statut est appliqué en mémoire, le volume de déclarations
      * reste faible à ce stade du projet.
      */
+    @Transactional(readOnly = true)
     public List<CollecteAdminResponse> lister(Long collecteurId, CollecteStatut statut) {
         List<Collecte> collectes = collecteurId != null
                 ? collecteRepository.findByCollecteurIdOrderByDateDeclarationDesc(collecteurId)
@@ -131,6 +143,7 @@ public class CollecteService {
     }
 
     /** Volumes cumulés par collecteur et par matériau (MG-04). */
+    @Transactional(readOnly = true)
     public List<VolumeCollecteResponse> volumes() {
         Map<String, VolumeCollecteResponse> cumul = new LinkedHashMap<>();
 
