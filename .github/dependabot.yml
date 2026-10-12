@@ -30,3 +30,7 @@ updates:
       day: monday
     open-pull-requests-limit: 5
     labels: [deps, security]
+    ignore:
+      # Spring Boot 4 casse la compilation (#40) : migration majeure a faire a la main.
+      - dependency-name: "org.springframework.boot:*"
+        update-types: ["version-update:semver-major"]
