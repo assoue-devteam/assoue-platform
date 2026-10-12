@@ -56,18 +56,18 @@ Le backend génère des cookies et des tokens JWT. **Sans HTTPS, ils transitent 
 
 Le service mail est implémenté et configuré dans `.env`. La connexion et l'authentification SMTP Brevo ont été testées avec succès.
 
-- [x] Renseigner `ASSOUE_MAIL_USERNAME` dans `.env` (`bdace0001@smtp-brevo.com`)
-- [x] Vérifier l'expéditeur dans Brevo (`mhddubinks09@gmail.com`)
-- [x] Renseigner `ASSOUE_MAIL_ALERTES_DESTINATAIRES` (`assouegroup@gmail.com,k6487439@gmail.com`)
+- [x] Renseigner `ASSOUE_MAIL_USERNAME` dans `.env` (`votre-login-smtp@brevo.com`)
+- [x] Vérifier l'expéditeur dans Brevo (`votre-expediteur@domaine.com`)
+- [x] Renseigner `ASSOUE_MAIL_ALERTES_DESTINATAIRES` (`alertes@domaine.com`)
 
 **Config Brevo dans `.env` :**
 ```bash
 ASSOUE_MAIL_HOST=smtp-relay.brevo.com
 ASSOUE_MAIL_PORT=587
-ASSOUE_MAIL_USERNAME=bdace0001@smtp-brevo.com
-ASSOUE_MAIL_PASSWORD=xsmtpsib-...
-ASSOUE_MAIL_FROM=mhddubinks09@gmail.com
-ASSOUE_MAIL_ALERTES_DESTINATAIRES=admin@assoue.bf
+ASSOUE_MAIL_USERNAME=votre-login-smtp@brevo.com
+ASSOUE_MAIL_PASSWORD=votre-cle-smtp
+ASSOUE_MAIL_FROM=votre-expediteur@domaine.com
+ASSOUE_MAIL_ALERTES_DESTINATAIRES=alertes@domaine.com
 ```
 
 ---
@@ -196,10 +196,10 @@ Actuellement configuré en mode `test`. Pour la production :
 | `JWT_SECRET` | ✅ Sécurisé | Généré (128 chars hex) le 2026-10-11 |
 | `ASSOUE_MAIL_HOST` | ✅ Configuré | `smtp-relay.brevo.com` |
 | `ASSOUE_MAIL_PORT` | ✅ Configuré | `587` |
-| `ASSOUE_MAIL_PASSWORD` | ✅ Configuré | Clé SMTP Brevo |
-| `ASSOUE_MAIL_USERNAME` | ✅ Configuré | `bdace0001@smtp-brevo.com` |
-| `ASSOUE_MAIL_FROM` | ✅ Configuré | `mhddubinks09@gmail.com` |
-| `ASSOUE_MAIL_ALERTES_DESTINATAIRES` | ✅ Configuré | `assouegroup@gmail.com,k6487439@gmail.com` |
+| `ASSOUE_MAIL_PASSWORD` | ✅ Configuré | Clé SMTP Brevo (dans `.env`) |
+| `ASSOUE_MAIL_USERNAME` | ✅ Configuré | Identifiant Brevo (dans `.env`) |
+| `ASSOUE_MAIL_FROM` | ✅ Configuré | Expéditeur vérifié (dans `.env`) |
+| `ASSOUE_MAIL_ALERTES_DESTINATAIRES` | ✅ Configuré | Destinataires configurés (dans `.env`) |
 | `ASSOUE_MOTDEPASSE_CLE_HMAC` | ✅ Sécurisé | Généré (64 chars hex) le 2026-10-11 |
 | `PAYDUNYA_MASTER_KEY` | ❌ Vide | Mode test — clés live à obtenir |
 | `PAYDUNYA_PRIVATE_KEY` | ❌ Vide | Mode test — clés live à obtenir |
