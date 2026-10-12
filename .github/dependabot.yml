@@ -25,6 +25,11 @@ updates:
         update-types: ["version-update:semver-major"]
       - dependency-name: "@angular-devkit/build-angular"
         update-types: ["version-update:semver-major"]
+      # angular-eslint suit la version d'Angular et n'accepte pas eslint 10 (#69, #70) : a monter avec Angular.
+      - dependency-name: "angular-eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: maven
     directory: /backend
     target-branch: develop
