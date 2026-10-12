@@ -18,7 +18,7 @@ Guide d'exécution au quotidien. La conception du projet vit dans `docs/` (`guid
 docker compose up -d
 docker ps
 ```
-Attendus : `assoue-db` (healthy, :5432), `assoue-adminer` (:8081), `assoue-backend` (:8080).
+Attendus : `assoue-db` (healthy, port `POSTGRES_PORT` du `.env`, 5433 chez nous), `assoue-adminer` (:8081), `assoue-backend` (:8080).
 
 Base vide au premier lancement ? Normal : Flyway crée le schéma + les rôles, pas de données métier. Injecte le seed **dev uniquement** :
 ```cmd
@@ -132,7 +132,8 @@ git push origin --delete ancien-nom
 | Page blanche après rebuild | vieux service worker en cache | DevTools → Application → Service Workers → Unregister + `Ctrl+Maj+R` (SW réservé à la prod depuis le fix) |
 | Badge « En ligne » alors que l'API est coupée | corrigé : l'intercepteur constate la panne (statut 0) | mettre à jour (`git pull`) |
 | `package-lock.json` modifié après `npm install` | utiliser `npm ci` | `git checkout -- frontend/package-lock.json` puis `npm ci` |
-| Conteneur backend sans tes derniers changements Java | image construite avant | `docker compose up -d --build backend` |
+| Conteneur backend sans tes derniers changements de dépendances | image construite avant la modif du `pom.xml` | `docker compose up -d --build backend` |
+| `conventionErrorViewResolver` déjà défini, le backend redémarre en boucle | springdoc 3.x (fait pour Spring Boot 4) dans le `pom.xml` | garder springdoc 2.8.x tant qu'on est en Spring Boot 3, puis `docker compose up -d --build backend` |
 | `JAVA_HOME not found in your environment` | `JAVA_HOME` non défini | §1 `setx JAVA_HOME ...` puis rouvrir le terminal |
-| `Could not resolve placeholder 'jwt.expiration-ms'` | aucun profil Spring actif | `set SPRING_PROFILES_ACTIVE=dev` avant `mvnw.cmd spring-boot:run` (§3) |
+| `Could not resolve placeholder 'jwt.expiration-ms'` | aucun profil Spring actif | lancer le backend local avec `backend\run-local.cmd` (§3), pas `mvnw.cmd` seul |
 | Docker `npipe ... daemon is running` | Docker Desktop éteint | le démarrer, puis `docker compose up -d` |
