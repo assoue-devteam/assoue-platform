@@ -43,14 +43,14 @@ node scripts/seed_catalogue_2026.mjs
 
 ## 3. Démarrage quotidien
 
-Terminal 1 — backend (tourne aussi dans Docker, mais en local on garde le hot-reload) :
+Terminal 1 — backend, base et Adminer (Docker) :
 ```cmd
-backend\run-local.cmd
+docker compose up -d
 ```
-Le script charge les variables du `.env` (`mvnw.cmd` ne le lit pas seul), active le profil `dev` (sans lui : `Could not resolve placeholder 'jwt.expiration-ms'`), pointe la base sur `POSTGRES_PORT` (5433 chez nous, pas 5432), arrête le conteneur `assoue-backend` qui occupe le port 8080, puis lance `mvnw.cmd spring-boot:run`.
-Vérifier : `http://localhost:8080/swagger-ui.html` et `curl http://localhost:8080/api/produits` (ou `http://localhost:8080/api/produits` dans le navigateur).
+`backend/src` est monté dans le conteneur : une modif Java redémarre l'appli toute seule (devtools). Après une modif du `pom.xml` ou du `Dockerfile`, rebuild : `docker compose up -d --build backend`. Logs : `docker logs -f assoue-backend`.
+Vérifier : `http://localhost:8080/swagger-ui.html` et `curl http://localhost:8080/api/produits` (ou `http://localhost:8080/api/produits` dans le navigateur). Le premier démarrage compile le projet dans le conteneur : compter 1 à 2 minutes.
 
-> `JAVA_HOME not found` : voir les prérequis (`setx JAVA_HOME ...`, puis rouvrir le terminal). Pour revenir au backend Docker : `docker start assoue-backend` (rebuild après chaque modif Java ou du `pom.xml` : `docker compose up -d --build backend`).
+> Alternative sans Docker pour le backend : `backend\run-local.cmd`. Il charge le `.env`, active le profil `dev`, pointe la base sur `POSTGRES_PORT` et arrête le conteneur `assoue-backend` qui occupe le port 8080. Prérequis : `JAVA_HOME` défini (voir §1). Retour à Docker : `docker start assoue-backend`.
 
 Terminal 2 — frontend :
 ```cmd
