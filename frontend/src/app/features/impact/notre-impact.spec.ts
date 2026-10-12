@@ -4,7 +4,7 @@ import localeFr from '@angular/common/locales/fr';
 import { Meta } from '@angular/platform-browser';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { DONNEES_IMPACT, SURTITRE_IMPACT } from './impact-donnees';
+import { SURTITRE_IMPACT } from './impact-donnees';
 import { NotreImpactPageComponent } from './notre-impact-page.component';
 
 describe('page Notre impact', () => {
