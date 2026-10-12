@@ -32,7 +32,7 @@
     "@angular/compiler-cli": "^20.3.32",
     "@playwright/test": "^1.64.0",
     "@types/jasmine": "~5.1.0",
-    "angular-eslint": "^20.7.0",
+    "angular-eslint": "^22.5.0",
     "eslint": "^9.39.5",
     "jasmine-core": "~5.13.0",
     "karma": "~6.4.0",
