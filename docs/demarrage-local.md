@@ -52,10 +52,10 @@ Vérifier : `http://localhost:8080/swagger-ui.html` et `curl http://localhost:80
 
 > Alternative sans Docker pour le backend : `backend\run-local.cmd`. Il charge le `.env`, active le profil `dev`, pointe la base sur `POSTGRES_PORT` et arrête le conteneur `assoue-backend` qui occupe le port 8080. Prérequis : `JAVA_HOME` défini (voir §1). Retour à Docker : `docker start assoue-backend`.
 
-Terminal 2 — frontend :
+Terminal 2 — frontend, depuis la racine du repo (si l'invite finit déjà par `rontend>`, saute le `cd`) :
 ```cmd
 cd frontend
-npm ci
+npm ci        :: seulement au premier lancement ou après un changement de package-lock.json, avec ng serve arrêté
 npx ng serve --proxy-config proxy.conf.json
 ```
 Vérifier : `http://localhost:4200` (le `/api` est proxifié vers `:8080`, pas de CORS).
@@ -131,6 +131,9 @@ git push origin --delete ancien-nom
 | Login `423` en boucle | hash dev invalide ou 3 échecs | relance le seed (reset mdp + compteur) ou débloque en admin |
 | Page blanche après rebuild | vieux service worker en cache | DevTools → Application → Service Workers → Unregister + `Ctrl+Maj+R` (SW réservé à la prod depuis le fix) |
 | Badge « En ligne » alors que l'API est coupée | corrigé : l'intercepteur constate la panne (statut 0) | mettre à jour (`git pull`) |
+| `npm ci` : `EPERM: operation not permitted, unlink ...esbuild.exe` | un `ng serve` tourne encore et verrouille `node_modules` | `Ctrl+C` dans le terminal du `ng serve` (ou fermer l'autre terminal), puis relancer `npm ci` |
+| `Could not find the '@angular-devkit/build-angular:dev-server' builder` | `node_modules` incomplet (un `npm ci` a échoué en route) | relancer `npm ci` jusqu'au bout, puis `ng serve` |
+| `cd frontend` : `Le chemin d'accès spécifié est introuvable` | déjà dans `frontend` | rien à faire, passer à la commande suivante |
 | `package-lock.json` modifié après `npm install` | utiliser `npm ci` | `git checkout -- frontend/package-lock.json` puis `npm ci` |
 | Conteneur backend sans tes derniers changements de dépendances | image construite avant la modif du `pom.xml` | `docker compose up -d --build backend` |
 | `conventionErrorViewResolver` déjà défini, le backend redémarre en boucle | springdoc 3.x (fait pour Spring Boot 4) dans le `pom.xml` | garder springdoc 2.8.x tant qu'on est en Spring Boot 3, puis `docker compose up -d --build backend` |
