@@ -10,28 +10,138 @@
   gap: var(--space-2);
   min-height: var(--control-height);
   padding: 0 var(--space-5);
-  border: 1px solid transparent;
+  border: 1px solid var(--color-primary);
   border-radius: var(--radius-sm);
   font: 600 16px/1 var(--font-text);
   text-decoration: none;
   cursor: pointer;
   background: var(--color-primary);
   color: var(--color-text-on-dark);
+  transition: background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease, transform .05s ease;
 
-  &:hover { background: var(--color-primary-strong); color: var(--color-text-on-dark); }
-  &:disabled, &[aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
+  &:hover {
+    background: var(--color-primary-strong);
+    border-color: var(--color-primary-strong);
+    color: var(--color-text-on-dark);
+  }
 
-  &--purchase { background: var(--color-accent); }
-  &--purchase:hover { background: var(--color-accent-strong); }
+  &:active {
+    background: var(--color-primary-strong);
+    border-color: var(--color-primary-strong);
+    transform: translateY(1px);
+  }
 
-  &--secondary { background: var(--color-surface); color: var(--color-primary); border-color: var(--color-primary); }
-  &--secondary:hover { background: var(--color-primary-tint); color: var(--color-primary-strong); }
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
 
-  &--ghost { background: transparent; color: var(--color-primary); }
-  &--ghost:hover { background: var(--color-primary-tint); color: var(--color-primary-strong); }
+  // Bouton désactivé (Indisponible, non connecté, etc.) :
+  // Gris neutre tokenisé (#E2E8F0 / #475569), ratio de contraste 6,05:1 (conforme WCAG AA).
+  &:disabled,
+  &[aria-disabled="true"]:not(.btn--loading) {
+    background: var(--color-border);
+    color: var(--color-text-muted);
+    border-color: var(--color-border);
+    cursor: not-allowed;
+    opacity: 1;
+    transform: none;
+    box-shadow: none;
 
-  &--danger { background: var(--color-error); }
-  &--danger:hover { background: var(--color-error-strong); }
+    &:hover,
+    &:active {
+      background: var(--color-border);
+      color: var(--color-text-muted);
+      border-color: var(--color-border);
+      transform: none;
+    }
+  }
+
+  // Variante primaire explicite
+  &--primary {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-text-on-dark);
+  }
+
+  // Alias rétrocompatibilité : toutes les actions d'achat passent au vert principal
+  &--purchase {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-text-on-dark);
+
+    &:hover {
+      background: var(--color-primary-strong);
+      border-color: var(--color-primary-strong);
+    }
+
+    &:active {
+      background: var(--color-primary-strong);
+      border-color: var(--color-primary-strong);
+      transform: translateY(1px);
+    }
+  }
+
+  &--secondary {
+    background: var(--color-surface);
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+
+    &:hover {
+      background: var(--color-primary-tint);
+      color: var(--color-primary-strong);
+      border-color: var(--color-primary-strong);
+    }
+
+    &:active {
+      background: var(--color-primary-tint);
+      color: var(--color-primary-strong);
+      border-color: var(--color-primary-strong);
+      transform: translateY(1px);
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: var(--color-primary);
+    border-color: transparent;
+
+    &:hover {
+      background: var(--color-primary-tint);
+      color: var(--color-primary-strong);
+      border-color: transparent;
+    }
+
+    &:active {
+      background: var(--color-primary-tint);
+      color: var(--color-primary-strong);
+      border-color: transparent;
+      transform: translateY(1px);
+    }
+  }
+
+  &--danger {
+    background: var(--color-error);
+    border-color: var(--color-error);
+    color: var(--color-text-on-dark);
+
+    &:hover {
+      background: var(--color-error-strong);
+      border-color: var(--color-error-strong);
+      color: var(--color-text-on-dark);
+    }
+
+    &:active {
+      background: var(--color-error-strong);
+      border-color: var(--color-error-strong);
+      transform: translateY(1px);
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-error-strong);
+    }
+  }
 
   &--block { width: 100%; }
   &--small { min-height: 40px; padding: 0 var(--space-4); font-size: 15px; }

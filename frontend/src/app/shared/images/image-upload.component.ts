@@ -40,13 +40,13 @@ let compteur = 0;
         <div class="actions">
           @if (etat() === 'envoi') {
             <progress [value]="progression()" max="100">{{ progression() }} %</progress>
-            <button type="button" class="bouton" (click)="annuler()">Annuler</button>
+            <button type="button" class="btn btn--secondary btn--small bouton" (click)="annuler()">Annuler</button>
           } @else {
-            <label class="bouton" [for]="idChamp">
+            <label class="btn btn--secondary btn--small bouton" [for]="idChamp">
               @if (affichage()) { Remplacer } @else { Choisir une image }
             </label>
             @if (affichage()) {
-              <button type="button" class="bouton bouton--danger" (click)="supprimer()">Supprimer</button>
+              <button type="button" class="btn btn--danger btn--small bouton bouton--danger" (click)="supprimer()">Supprimer</button>
             }
           }
         </div>
@@ -72,14 +72,7 @@ let compteur = 0;
     .depot p { margin: 0; }
     .aide { color: var(--color-text-muted); font-size: 14px; }
     .actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--space-2); }
-    .bouton {
-      display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 var(--space-4);
-      border: 1px solid var(--color-primary); border-radius: var(--radius-sm); background: var(--color-surface);
-      color: var(--color-primary-strong); font: 600 15px var(--font-text); cursor: pointer;
-    }
-    .bouton--danger { border-color: var(--color-error); color: var(--color-error); background: none; }
-    .bouton:focus-visible { outline: none; box-shadow: var(--focus-ring); }
-    input.sr-only:focus-visible + .actions .bouton { box-shadow: var(--focus-ring); }
+    input.sr-only:focus-visible + .actions .btn { box-shadow: var(--focus-ring); }
     progress { width: min(100%, 280px); height: 12px; }
     .erreur { display: flex; align-items: center; gap: var(--space-2); color: var(--color-error); font-size: 14px; }
     .lien { text-decoration: underline; cursor: pointer; min-height: 44px; display: inline-flex; align-items: center; }

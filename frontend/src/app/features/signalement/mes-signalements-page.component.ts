@@ -21,7 +21,7 @@ import { environment } from '../../../environments/environment';
           <p class="eyebrow">Engagement citoyen</p>
           <h1>Mes signalements & Points</h1>
         </div>
-        <a routerLink="/signalements/nouveau" class="btn-action">
+        <a routerLink="/signalements/nouveau" appButton>
           <app-icon name="plus" [size]="20" />
           <span>Signaler un dépôt</span>
         </a>
@@ -159,17 +159,12 @@ import { environment } from '../../../environments/environment';
     .entete { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-4); flex-wrap: wrap; }
     .eyebrow { color: var(--color-primary); font-weight: 600; font-size: 14px; margin: 0; }
     .entete h1 { margin: 4px 0 0; font-size: 26px; }
-    .btn-action {
-      display: inline-flex; align-items: center; gap: var(--space-2);
-      padding: var(--space-3) var(--space-4); background: var(--color-primary); color: #fff;
-      text-decoration: none; border-radius: var(--radius-sm); font-weight: 600; font-size: 15px;
-    }
-    .btn-action:hover { background: var(--color-primary-strong); }
+
     .grille-compteurs { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: var(--space-3); }
     @media (max-width: 640px) { .grille-compteurs { grid-template-columns: 1fr; } }
     .carte-points {
       display: grid; gap: var(--space-2); padding: var(--space-4);
-      background: linear-gradient(135deg, #065f46 0%, #047857 100%); color: #fff; border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--color-primary-strong) 0%, var(--color-primary-muted) 100%); color: var(--color-text-on-dark); border-radius: var(--radius-md);
     }
     .points-valeur { display: flex; align-items: baseline; gap: var(--space-2); }
     .icone-piece { font-size: 24px; }
@@ -198,7 +193,7 @@ import { environment } from '../../../environments/environment';
     .photo-principale { width: 100%; height: 100%; object-fit: cover; }
     .badge-nb-photos {
       position: absolute; bottom: 6px; right: 6px; padding: 2px 6px;
-      background: rgba(0,0,0,0.7); color: #fff; font-size: 11px; font-weight: 600; border-radius: 4px;
+      background: rgba(0,0,0,0.7); color: var(--color-text-on-dark); font-size: 11px; font-weight: 600; border-radius: 4px;
     }
     .sans-photo { display: grid; place-items: center; width: 100%; height: 100%; color: var(--color-text-muted); }
     .signalement-corps { display: grid; gap: var(--space-2); align-content: start; }
@@ -207,7 +202,7 @@ import { environment } from '../../../environments/environment';
     .description { margin: 0; font-size: 14px; color: var(--color-text); line-height: 1.5; }
     .motif-rejet {
       display: flex; align-items: center; gap: var(--space-2);
-      padding: var(--space-2) var(--space-3); background: #fef2f2; color: #991b1b; border-radius: var(--radius-sm); font-size: 13px;
+      padding: var(--space-2) var(--space-3); background: var(--color-error-bg); color: var(--color-error); border-radius: var(--radius-sm); font-size: 13px;
     }
     .signalement-bas { display: flex; justify-content: space-between; font-size: 12px; color: var(--color-text-muted); }
     .table-responsive { overflow-x: auto; border: 1px solid var(--color-border); border-radius: var(--radius-md); }
@@ -215,8 +210,8 @@ import { environment } from '../../../environments/environment';
     .table-mouvements th, .table-mouvements td { padding: var(--space-3) var(--space-4); border-bottom: 1px solid var(--color-border); }
     .table-mouvements th { background: var(--color-surface-alt); font-weight: 600; }
     .type-mvt { font-weight: 600; }
-    .gain { color: #059669; }
-    .perte { color: #dc2626; }
+    .gain { color: var(--color-success); }
+    .perte { color: var(--color-error); }
   `
 })
 export class MesSignalementsPageComponent {

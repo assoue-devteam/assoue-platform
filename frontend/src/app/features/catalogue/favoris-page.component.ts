@@ -32,7 +32,7 @@ import { PanierService } from './panier.service';
                 @if (produit.enRupture) { <span class="rupture">Indisponible</span> }
               </div>
               <div class="ligne__actions">
-                @if (!produit.enRupture) { <button type="button" appButton="secondary" (click)="panier.ajouter(produit)">Ajouter au panier</button> }
+                @if (!produit.enRupture) { <button type="button" appButton [small]="true" (click)="panier.ajouter(produit)">Ajouter au panier</button> }
                 <app-favori-bouton [produit]="produit" />
               </div>
             </li>

@@ -23,8 +23,8 @@ import { CommandeService } from './commande.service';
           @if (erreur()) { <app-alert tone="error">{{ erreur() }}</app-alert> }
           <section class="recap"><ul>@for (ligne of item.lignes; track ligne.produitId) { <li><div><strong>{{ ligne.produitNom }}</strong><span>{{ ligne.quantite }} × {{ ligne.prixUnitaire | fcfa }}</span></div><strong>{{ ligne.quantite * ligne.prixUnitaire | fcfa }}</strong></li> }</ul><div class="total"><span>Total</span><strong>{{ item.total | fcfa }}</strong></div></section>
           <p class="information">Vous serez redirigé vers PayDunya pour payer avec Orange Money ou Moov Money.</p>
-          @if (!reseau.enLigne()) { <app-alert tone="warning">Une connexion internet est nécessaire pour payer.</app-alert><button type="button" appButton="purchase" [block]="true" disabled>Payer {{ item.total | fcfa }}</button> }
-          @else { <button type="button" appButton="purchase" [block]="true" [loading]="initiationEnCours()" (click)="payer(item)">Payer {{ item.total | fcfa }}</button> }
+          @if (!reseau.enLigne()) { <app-alert tone="warning">Une connexion internet est nécessaire pour payer.</app-alert><button type="button" appButton [block]="true" disabled>Payer {{ item.total | fcfa }}</button> }
+          @else { <button type="button" appButton [block]="true" [loading]="initiationEnCours()" (click)="payer(item)">Payer {{ item.total | fcfa }}</button> }
         }
       } @else if (chargement()) { <div class="squelette"><app-skeleton [lignes]="6" /></div> } @else { <app-error-state type="introuvable" titre="Commande introuvable" texte="Cette commande n'est pas accessible."><a routerLink="/commandes" appButton="secondary">Voir mes commandes</a></app-error-state> }
     </section>`,

@@ -133,13 +133,13 @@ export function trierProduits(produits: Produit[], tri: TriCatalogue): Produit[]
         <app-etoiles [note]="produit.noteMoyenne" [nombre]="produit.nombreAvis" />
         @if (produit.prix === null || produit.prix === undefined) {
           <p class="carte__prix">Prix sur demande</p>
-          <button type="button" appButton="purchase" [block]="true" disabled>Ajouter au panier</button>
+          <button type="button" appButton [block]="true" disabled>Ajouter au panier</button>
         } @else {
           <p class="carte__prix">{{ produit.prix | fcfa }}</p>
           @if (produit.enRupture) {
             <span class="rupture">Rupture de stock</span>
-            <button type="button" appButton="purchase" [block]="true" disabled>Indisponible</button>
-          } @else { <button type="button" appButton="purchase" [block]="true" (click)="panier.ajouter(produit)">Ajouter au panier</button> }
+            <button type="button" appButton [block]="true" disabled>Indisponible</button>
+          } @else { <button type="button" appButton [block]="true" (click)="panier.ajouter(produit)">Ajouter au panier</button> }
         }
       </div>
     </article>

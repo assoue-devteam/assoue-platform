@@ -4,11 +4,12 @@ import { RouterLink } from '@angular/router';
 import { MotDePasseOublieService } from './mot-de-passe-oublie.service';
 import { FieldComponent } from '../../shared/ui/field.component';
 import { IconComponent } from '../../shared/ui/icon/icon.component';
+import { ButtonDirective } from '../../shared/ui/button.directive';
 
 @Component({
   selector: 'app-mot-de-passe-oublie-page',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, FieldComponent, IconComponent],
+  imports: [ReactiveFormsModule, RouterLink, FieldComponent, IconComponent, ButtonDirective],
   template: `
     <div class="auth-page">
       <div class="auth-card">
@@ -28,7 +29,7 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
             @if (messageErreur()) {
               <p class="error-message">{{ messageErreur() }}</p>
             }
-            <button type="submit" class="btn btn-primary" [disabled]="envoiEnCours() || formDemande.invalid">
+            <button type="submit" appButton [block]="true" [disabled]="envoiEnCours() || formDemande.invalid">
               {{ envoiEnCours() ? 'Envoi…' : 'Envoyer le code' }}
             </button>
           </form>
@@ -44,10 +45,10 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
             @if (messageErreur()) {
               <p class="error-message">{{ messageErreur() }}</p>
             }
-            <button type="submit" class="btn btn-primary" [disabled]="envoiEnCours() || formCode.invalid">
+            <button type="submit" appButton [block]="true" [disabled]="envoiEnCours() || formCode.invalid">
               {{ envoiEnCours() ? 'Vérification…' : 'Vérifier le code' }}
             </button>
-            <button type="button" class="btn btn-link" (click)="renvoyerCode()" [disabled]="compteARebour() > 0">
+            <button type="button" appButton="ghost" [block]="true" (click)="renvoyerCode()" [disabled]="compteARebour() > 0">
               {{ compteARebour() > 0 ? 'Renvoyer dans ' + compteARebour() + 's' : 'Renvoyer le code' }}
             </button>
           </form>
@@ -62,7 +63,7 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
             @if (messageErreur()) {
               <p class="error-message">{{ messageErreur() }}</p>
             }
-            <button type="submit" class="btn btn-primary" [disabled]="envoiEnCours() || formNouveau.invalid">
+            <button type="submit" appButton [block]="true" [disabled]="envoiEnCours() || formNouveau.invalid">
               {{ envoiEnCours() ? 'Modification…' : 'Modifier le mot de passe' }}
             </button>
           </form>
@@ -72,7 +73,7 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
           <div class="success-block">
             <app-icon name="check" [size]="24" />
             <p>Votre mot de passe a été modifié avec succès.</p>
-            <a routerLink="/connexion" class="btn btn-primary">Se connecter</a>
+            <a routerLink="/connexion" appButton [block]="true">Se connecter</a>
           </div>
         }
 
@@ -82,21 +83,17 @@ import { IconComponent } from '../../shared/ui/icon/icon.component';
   `,
   styles: [`
     .auth-page { display: flex; justify-content: center; padding: 2rem 1rem; }
-    .auth-card { width: 100%; max-width: 400px; background: #fff; border-radius: 12px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+    .auth-card { width: 100%; max-width: 400px; background: var(--color-surface); border-radius: var(--radius-md); padding: 2rem; box-shadow: var(--shadow-1); border: 1px solid var(--color-border); }
     .auth-header { text-align: center; margin-bottom: 1.5rem; }
     .auth-header h1 { font-size: 1.25rem; margin: .5rem 0 0; }
-    .info-message { background: #ecfdf5; color: #065f46; padding: .75rem; border-radius: 8px; font-size: .875rem; }
-    .error-message { background: #fef2f2; color: #991b1b; padding: .75rem; border-radius: 8px; font-size: .875rem; }
-    .hint { font-size: .8rem; color: #6b7280; margin: -.25rem 0 .75rem; }
-    .instructions { font-size: .9rem; color: #374151; margin-bottom: 1rem; }
-    .btn { width: 100%; padding: .75rem; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; margin-top: .5rem; }
-    .btn-primary { background: #15803d; color: #fff; }
-    .btn-primary:disabled { background: #9ca3af; cursor: not-allowed; }
-    .btn-link { background: none; color: #15803d; font-weight: 400; }
+    .info-message { background: var(--color-success-bg); color: var(--color-success); padding: .75rem; border-radius: var(--radius-sm); font-size: .875rem; }
+    .error-message { background: var(--color-error-bg); color: var(--color-error); padding: .75rem; border-radius: var(--radius-sm); font-size: .875rem; }
+    .hint { font-size: .8rem; color: var(--color-text-muted); margin: -.25rem 0 .75rem; }
+    .instructions { font-size: .9rem; color: var(--color-text); margin-bottom: 1rem; }
     .success-block { text-align: center; }
     .success-block p { margin: 1rem 0; }
-    .back-link { display: block; text-align: center; margin-top: 1rem; color: #6b7280; text-decoration: none; font-size: .875rem; }
-    input { width: 100%; padding: .625rem; border: 1px solid #d1d5db; border-radius: 8px; font-size: 1rem; box-sizing: border-box; }
+    .back-link { display: block; text-align: center; margin-top: 1rem; color: var(--color-text-muted); text-decoration: none; font-size: .875rem; }
+    input { width: 100%; min-height: var(--control-height); padding: 0 var(--space-3); border: 1px solid var(--color-border-strong); border-radius: var(--radius-sm); font-size: 1rem; box-sizing: border-box; }
   `]
 })
 export class MotDePasseOubliePageComponent {

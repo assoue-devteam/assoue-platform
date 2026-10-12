@@ -52,21 +52,21 @@ Le backend génère des cookies et des tokens JWT. **Sans HTTPS, ils transitent 
 
 ## 🟡 Importants — Fonctionnalités partiellement inactives
 
-### 4. Mail SMTP (Brevo configuré — il manque le login)
+### 4. Mail SMTP (Brevo configuré et vérifié)
 
-Le service mail est implémenté et la clé API Brevo est dans `.env`. **Il manque le login Brevo** (ton adresse email de compte) dans `ASSOUE_MAIL_USERNAME`.
+Le service mail est implémenté et configuré dans `.env`. La connexion et l'authentification SMTP Brevo ont été testées avec succès.
 
-- [ ] Renseigner `ASSOUE_MAIL_USERNAME` dans `.env` (ton email de connexion sur brevo.com)
-- [ ] Vérifier l'expéditeur `no-reply@assoue.bf` dans le tableau de bord Brevo → Expéditeurs & Domaines
-- [ ] Renseigner `ASSOUE_MAIL_ALERTES_DESTINATAIRES` (email admin qui reçoit les alertes collecte/signalement)
+- [x] Renseigner `ASSOUE_MAIL_USERNAME` dans `.env` (`bdace0001@smtp-brevo.com`)
+- [x] Vérifier l'expéditeur dans Brevo (`mhddubinks09@gmail.com`)
+- [x] Renseigner `ASSOUE_MAIL_ALERTES_DESTINATAIRES` (`assouegroup@gmail.com,k6487439@gmail.com`)
 
 **Config Brevo dans `.env` :**
 ```bash
 ASSOUE_MAIL_HOST=smtp-relay.brevo.com
 ASSOUE_MAIL_PORT=587
-ASSOUE_MAIL_USERNAME=ton-email@brevo.com   # ← à remplir
-ASSOUE_MAIL_PASSWORD=xkeysib-...           # ← déjà configuré
-ASSOUE_MAIL_FROM=no-reply@assoue.bf
+ASSOUE_MAIL_USERNAME=bdace0001@smtp-brevo.com
+ASSOUE_MAIL_PASSWORD=xsmtpsib-...
+ASSOUE_MAIL_FROM=mhddubinks09@gmail.com
 ASSOUE_MAIL_ALERTES_DESTINATAIRES=admin@assoue.bf
 ```
 
@@ -196,10 +196,10 @@ Actuellement configuré en mode `test`. Pour la production :
 | `JWT_SECRET` | ✅ Sécurisé | Généré (128 chars hex) le 2026-10-11 |
 | `ASSOUE_MAIL_HOST` | ✅ Configuré | `smtp-relay.brevo.com` |
 | `ASSOUE_MAIL_PORT` | ✅ Configuré | `587` |
-| `ASSOUE_MAIL_PASSWORD` | ✅ Configuré | Clé API Brevo |
-| `ASSOUE_MAIL_USERNAME` | ❌ **À REMPLIR** | Ton email de compte Brevo |
-| `ASSOUE_MAIL_FROM` | ✅ Configuré | `no-reply@assoue.bf` |
-| `ASSOUE_MAIL_ALERTES_DESTINATAIRES` | ❌ **À REMPLIR** | Email admin pour les alertes |
+| `ASSOUE_MAIL_PASSWORD` | ✅ Configuré | Clé SMTP Brevo |
+| `ASSOUE_MAIL_USERNAME` | ✅ Configuré | `bdace0001@smtp-brevo.com` |
+| `ASSOUE_MAIL_FROM` | ✅ Configuré | `mhddubinks09@gmail.com` |
+| `ASSOUE_MAIL_ALERTES_DESTINATAIRES` | ✅ Configuré | `assouegroup@gmail.com,k6487439@gmail.com` |
 | `ASSOUE_MOTDEPASSE_CLE_HMAC` | ✅ Sécurisé | Généré (64 chars hex) le 2026-10-11 |
 | `PAYDUNYA_MASTER_KEY` | ❌ Vide | Mode test — clés live à obtenir |
 | `PAYDUNYA_PRIVATE_KEY` | ❌ Vide | Mode test — clés live à obtenir |

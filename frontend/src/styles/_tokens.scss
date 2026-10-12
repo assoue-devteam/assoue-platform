@@ -9,9 +9,9 @@
   --color-vif: #22C55E;             // icônes, puces, barres : jamais pour du texte courant
   --color-chiffre: #16A34A;         // gros chiffres (>= 24px) sur fond clair, 3,3:1
   --color-logo: #E4002B;            // rouge du logo : filet du footer, cœur des favoris
-  --color-accent: #B45309;          // CTA d'achat uniquement, 1 par écran (5,0:1)
-  --color-accent-strong: #92400E;
-  --color-accent-soft: #D97706;     // décoratif ou texte >= 24px seulement
+  --color-accent: #B45309;          // Accents décoratifs uniquement, jamais pour boutons ni texte courant (5,0:1)
+  --color-accent-strong: #92400E;   // Accents décoratifs denses
+  --color-accent-soft: #D97706;     // Étoiles d'avis et repères décoratifs (>= 24px seulement si texte)
   --color-accent-tint: #FEF3C7;
 
   --color-bg: #F8FAFC;

@@ -22,7 +22,7 @@ import { ControlDirective, FieldComponent } from '../../shared/ui/field.componen
         <div class="gps"><strong>Localisation</strong><span>{{ positionTexte() }}</span><button type="button" appButton="secondary" (click)="localiser()">Utiliser ma position</button>
         @if (!localisation()) { <button type="button" class="texte" (click)="saisieManuelle.set(!saisieManuelle())">{{ saisieManuelle() ? 'Masquer la saisie manuelle' : 'Saisir la position manuellement' }}</button> }
         @if (saisieManuelle() && !localisation()) { <app-field label="Latitude (-90 à 90)"><input appControl class="input" type="number" min="-90" max="90" step="0.0001" formControlName="latManuelle" /></app-field><app-field label="Longitude (-180 à 180)"><input appControl class="input" type="number" min="-180" max="180" step="0.0001" formControlName="lngManuelle" /></app-field> }</div>
-        <button type="submit" appButton="purchase" [block]="true" [loading]="envoi()">{{ edition ? 'Enregistrer la correction' : 'Enregistrer la déclaration' }}</button>
+        <button type="submit" appButton [block]="true" [loading]="envoi()">{{ edition ? 'Enregistrer la correction' : 'Enregistrer la déclaration' }}</button>
       </form>
     </section>` ,
   styles: `.formulaire { display:grid; gap:var(--space-4); } .retour { font-weight:600; } .eyebrow { color:var(--color-primary); font-weight:600; } form { display:grid; gap:var(--space-3); } .gps { display:grid; gap:var(--space-1); padding:var(--space-3); border:1px solid var(--color-border); background:var(--color-surface); } .gps span { color:var(--color-text-muted); } .gps button { justify-self:start; } .texte { border:0; padding:0; background:none; color:inherit; text-decoration:underline; cursor:pointer; font:inherit; }`,

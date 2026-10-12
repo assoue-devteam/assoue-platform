@@ -97,7 +97,7 @@ interface PhotoApercu {
             }
           </div>
 
-          <button type="submit" appButton="purchase" [block]="true" [loading]="envoiEnCours()" [disabled]="photos().length === 0">
+          <button type="submit" appButton [block]="true" [loading]="envoiEnCours()" [disabled]="photos().length === 0">
             Envoyer le signalement
           </button>
         </form>
@@ -112,7 +112,7 @@ interface PhotoApercu {
     .badge-recompense {
       display: inline-flex; align-items: center; gap: var(--space-1);
       width: max-content; padding: 4px var(--space-3); border-radius: var(--radius-full);
-      background: #ecfdf5; color: #065f46; font-size: 13px; font-weight: 600;
+      background: var(--color-success-bg); color: var(--color-success); font-size: 13px; font-weight: 600;
     }
     .entete h1 { margin: 0; font-size: 26px; }
     .description-aide { color: var(--color-text-muted); font-size: 15px; margin: 0; }
@@ -142,13 +142,13 @@ interface PhotoApercu {
     .vignette img { width: 100%; height: 100%; object-fit: cover; }
     .btn-supprimer {
       position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: var(--radius-full);
-      background: rgba(0,0,0,0.7); color: #fff; border: 0; cursor: pointer; font-size: 12px; display: grid; place-items: center;
+      background: rgba(0,0,0,0.7); color: var(--color-text-on-dark); border: 0; cursor: pointer; font-size: 12px; display: grid; place-items: center;
     }
     .succes-carte {
       display: grid; gap: var(--space-4); justify-items: center; text-align: center;
       padding: var(--space-6); background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md);
     }
-    .succes-icone { width: 56px; height: 56px; border-radius: var(--radius-full); background: #ecfdf5; color: #065f46; display: grid; place-items: center; }
+    .succes-icone { width: 56px; height: 56px; border-radius: var(--radius-full); background: var(--color-success-bg); color: var(--color-success); display: grid; place-items: center; }
     .succes-carte h2 { margin: 0; font-size: 22px; }
     .succes-carte p { color: var(--color-text-muted); margin: 0; max-width: 480px; }
     .actions { display: flex; gap: var(--space-3); flex-wrap: wrap; justify-content: center; }

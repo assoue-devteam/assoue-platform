@@ -22,7 +22,7 @@ import { EtoilesComponent } from '../../shared/ui/etoiles.component';
         <div class="produit__grille">
           <div class="produit__media"><app-favori-bouton class="produit__favori" [produit]="item" />@if (item.imageUrl) { <img [src]="item.imageUrl | srcImage" [alt]="item.nom" /> } @else { <span aria-hidden="true">AS'SOUÉ</span> }</div>
           <div class="produit__infos"><p class="categorie">{{ item.categorie }}</p><h1>{{ item.nom }}</h1><app-etoiles [note]="item.noteMoyenne" [nombre]="item.nombreAvis" /><p class="prix">{{ item.prix | fcfa }}</p><p class="description">{{ item.description }}</p>
-            @if (item.enRupture) { <p class="rupture">Ce produit est momentanément indisponible.</p> } @else { <button type="button" appButton="purchase" (click)="panier.ajouter(item)">Ajouter au panier</button> }
+            @if (item.enRupture) { <p class="rupture">Ce produit est momentanément indisponible.</p> } @else { <button type="button" appButton (click)="panier.ajouter(item)">Ajouter au panier</button> }
           </div>
         </div>
         <app-avis-section [produitId]="item.id" />
