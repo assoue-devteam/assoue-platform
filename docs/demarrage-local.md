@@ -45,14 +45,12 @@ node scripts/seed_catalogue_2026.mjs
 
 Terminal 1 — backend (tourne aussi dans Docker, mais en local on garde le hot-reload) :
 ```cmd
-cd backend
-
-mvnw.cmd spring-boot:run
+backend\run-local.cmd
 ```
-Aucun profil n'est actif par défaut : sans `SPRING_PROFILES_ACTIVE=dev`, le démarrage échoue sur `Could not resolve placeholder 'jwt.expiration-ms'`. La ligne `for /f` charge les variables du `.env` (`POSTGRES_USER`, `JWT_SECRET`…) dans le terminal courant, `mvnw.cmd` ne lit pas `.env` seul.
+Le script charge les variables du `.env` (`mvnw.cmd` ne le lit pas seul), active le profil `dev` (sans lui : `Could not resolve placeholder 'jwt.expiration-ms'`), pointe la base sur `POSTGRES_PORT` (5433 chez nous, pas 5432), arrête le conteneur `assoue-backend` qui occupe le port 8080, puis lance `mvnw.cmd spring-boot:run`.
 Vérifier : `http://localhost:8080/swagger-ui.html` et `curl http://localhost:8080/api/produits` (ou `http://localhost:8080/api/produits` dans le navigateur).
 
-> Si le port 8080 est pris par le conteneur `assoue-backend` : `docker stop assoue-backend` (ou travaille directement contre le conteneur, mais rebuild après chaque modif Java : `docker compose up -d --build backend`).
+> `JAVA_HOME not found` : voir les prérequis (`setx JAVA_HOME ...`, puis rouvrir le terminal). Pour revenir au backend Docker : `docker start assoue-backend` (rebuild après chaque modif Java ou du `pom.xml` : `docker compose up -d --build backend`).
 
 Terminal 2 — frontend :
 ```cmd
