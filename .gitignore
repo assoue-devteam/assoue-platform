@@ -63,3 +63,6 @@ backend/uploads/
 
 # Graphify generated workspace output
 graphify-out/
+
+# Configuration locale de l'aperçu Claude Code (propre à chaque poste)
+.claude/launch.json
