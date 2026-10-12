@@ -18,7 +18,7 @@ Guide d'exécution au quotidien. La conception du projet vit dans `docs/` (`guid
 docker compose up -d
 docker ps
 ```
-Attendus : `assoue-db` (healthy, :5432), `assoue-adminer` (:8081), `assoue-backend` (:8080).
+Attendus : `assoue-db` (healthy, port `POSTGRES_PORT` du `.env`, 5433 chez nous), `assoue-adminer` (:8081), `assoue-backend` (:8080).
 
 Base vide au premier lancement ? Normal : Flyway crée le schéma + les rôles, pas de données métier. Injecte le seed **dev uniquement** :
 ```cmd
@@ -43,21 +43,19 @@ node scripts/seed_catalogue_2026.mjs
 
 ## 3. Démarrage quotidien
 
-Terminal 1 — backend (tourne aussi dans Docker, mais en local on garde le hot-reload) :
+Terminal 1 — backend, base et Adminer (Docker) :
 ```cmd
-cd backend
-
-mvnw.cmd spring-boot:run
+docker compose up -d
 ```
-Aucun profil n'est actif par défaut : sans `SPRING_PROFILES_ACTIVE=dev`, le démarrage échoue sur `Could not resolve placeholder 'jwt.expiration-ms'`. La ligne `for /f` charge les variables du `.env` (`POSTGRES_USER`, `JWT_SECRET`…) dans le terminal courant, `mvnw.cmd` ne lit pas `.env` seul.
-Vérifier : `http://localhost:8080/swagger-ui.html` et `curl http://localhost:8080/api/produits` (ou `http://localhost:8080/api/produits` dans le navigateur).
+`backend/src` est monté dans le conteneur : une modif Java redémarre l'appli toute seule (devtools). Après une modif du `pom.xml` ou du `Dockerfile`, rebuild : `docker compose up -d --build backend`. Logs : `docker logs -f assoue-backend`.
+Vérifier : `http://localhost:8080/swagger-ui.html` et `curl http://localhost:8080/api/produits` (ou `http://localhost:8080/api/produits` dans le navigateur). Le premier démarrage compile le projet dans le conteneur : compter 1 à 2 minutes.
 
-> Si le port 8080 est pris par le conteneur `assoue-backend` : `docker stop assoue-backend` (ou travaille directement contre le conteneur, mais rebuild après chaque modif Java : `docker compose up -d --build backend`).
+> Alternative sans Docker pour le backend : `backend\run-local.cmd`. Il charge le `.env`, active le profil `dev`, pointe la base sur `POSTGRES_PORT` et arrête le conteneur `assoue-backend` qui occupe le port 8080. Prérequis : `JAVA_HOME` défini (voir §1). Retour à Docker : `docker start assoue-backend`.
 
-Terminal 2 — frontend :
+Terminal 2 — frontend, depuis la racine du repo (si l'invite finit déjà par `rontend>`, saute le `cd`) :
 ```cmd
 cd frontend
-npm ci
+npm ci        :: seulement au premier lancement ou après un changement de package-lock.json, avec ng serve arrêté
 npx ng serve --proxy-config proxy.conf.json
 ```
 Vérifier : `http://localhost:4200` (le `/api` est proxifié vers `:8080`, pas de CORS).
@@ -133,8 +131,12 @@ git push origin --delete ancien-nom
 | Login `423` en boucle | hash dev invalide ou 3 échecs | relance le seed (reset mdp + compteur) ou débloque en admin |
 | Page blanche après rebuild | vieux service worker en cache | DevTools → Application → Service Workers → Unregister + `Ctrl+Maj+R` (SW réservé à la prod depuis le fix) |
 | Badge « En ligne » alors que l'API est coupée | corrigé : l'intercepteur constate la panne (statut 0) | mettre à jour (`git pull`) |
+| `npm ci` : `EPERM: operation not permitted, unlink ...esbuild.exe` | un `ng serve` tourne encore et verrouille `node_modules` | `Ctrl+C` dans le terminal du `ng serve` (ou fermer l'autre terminal), puis relancer `npm ci` |
+| `Could not find the '@angular-devkit/build-angular:dev-server' builder` | `node_modules` incomplet (un `npm ci` a échoué en route) | relancer `npm ci` jusqu'au bout, puis `ng serve` |
+| `cd frontend` : `Le chemin d'accès spécifié est introuvable` | déjà dans `frontend` | rien à faire, passer à la commande suivante |
 | `package-lock.json` modifié après `npm install` | utiliser `npm ci` | `git checkout -- frontend/package-lock.json` puis `npm ci` |
-| Conteneur backend sans tes derniers changements Java | image construite avant | `docker compose up -d --build backend` |
+| Conteneur backend sans tes derniers changements de dépendances | image construite avant la modif du `pom.xml` | `docker compose up -d --build backend` |
+| `conventionErrorViewResolver` déjà défini, le backend redémarre en boucle | springdoc 3.x (fait pour Spring Boot 4) dans le `pom.xml` | garder springdoc 2.8.x tant qu'on est en Spring Boot 3, puis `docker compose up -d --build backend` |
 | `JAVA_HOME not found in your environment` | `JAVA_HOME` non défini | §1 `setx JAVA_HOME ...` puis rouvrir le terminal |
-| `Could not resolve placeholder 'jwt.expiration-ms'` | aucun profil Spring actif | `set SPRING_PROFILES_ACTIVE=dev` avant `mvnw.cmd spring-boot:run` (§3) |
+| `Could not resolve placeholder 'jwt.expiration-ms'` | aucun profil Spring actif | lancer le backend local avec `backend\run-local.cmd` (§3), pas `mvnw.cmd` seul |
 | Docker `npipe ... daemon is running` | Docker Desktop éteint | le démarrer, puis `docker compose up -d` |

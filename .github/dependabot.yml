@@ -42,3 +42,6 @@ updates:
       # Spring Boot 4 casse la compilation (#40) : migration majeure a faire a la main.
       - dependency-name: "org.springframework.boot:*"
         update-types: ["version-update:semver-major"]
+      # springdoc 3.x cible Spring Boot 4 et empeche le demarrage en 3.5 : a monter avec Spring Boot.
+      - dependency-name: "org.springdoc:*"
+        update-types: ["version-update:semver-major"]

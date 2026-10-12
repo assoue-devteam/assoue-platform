@@ -30,10 +30,7 @@ docker compose up -d
 docker exec -i assoue-db psql -U assoue -d assoue_db < seed_demo_dev.sql   # données de démo (dev uniquement)
 ```
 
-Backend (`cd backend`, en CMD `mvnw.cmd` sans `./`) :
-```bash
-./mvnw spring-boot:run
-```
+Backend : lancé par `docker compose up -d` ci-dessus (hot reload sur `backend/src`, `docker compose up -d --build backend` après une modif du `pom.xml`). Sans Docker : `backend\run-local.cmd` (Windows), détails dans `docs/demarrage-local.md`.
 Vérifier : `http://localhost:8080/swagger-ui.html` et `http://localhost:8080/api/produits`
 
 Frontend (`cd frontend`) :
