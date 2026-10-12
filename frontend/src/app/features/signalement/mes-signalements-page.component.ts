@@ -102,7 +102,7 @@ import { environment } from '../../../environments/environment';
 
                   <div class="signalement-bas">
                     <span class="date">{{ item.dateCreation | date:'d MMMM y à HH:mm':'':'fr' }}</span>
-                    @if (item.latitude != null && item.longitude != null) {
+                    @if (item.latitude !== null && item.longitude !== null) {
                       <span class="coordonnees">{{ item.latitude.toFixed(4) }}, {{ item.longitude.toFixed(4) }}</span>
                     }
                   </div>

@@ -74,16 +74,16 @@ interface PhotoApercu {
 
           <!-- Upload Photos -->
           <div class="bloc-photos">
-            <label class="photos-label">
+            <label class="photos-label" for="photos-signalement">
               <strong>Photos du dépôt (1 à 5 photos) <span class="requis">*</span></strong>
               <span class="photos-aide">Prenez des photos claires montrant les pneus et l'environnement alentour.</span>
             </label>
 
-            <div class="zone-depot" (click)="fileInput.click()">
-              <input #fileInput type="file" accept="image/*" multiple (change)="surSelectionPhotos($event)" style="display:none" />
+            <input #fileInput id="photos-signalement" type="file" accept="image/*" multiple (change)="surSelectionPhotos($event)" style="display:none" />
+            <button type="button" class="zone-depot" (click)="fileInput.click()">
               <app-icon name="plus" [size]="24" />
               <span>Cliquez pour ajouter des photos ({{ photos().length }}/5)</span>
-            </div>
+            </button>
 
             @if (photos().length > 0) {
               <div class="grille-apercus">
@@ -132,9 +132,11 @@ interface PhotoApercu {
     .zone-depot {
       display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-2);
       padding: var(--space-5); border: 2px dashed var(--color-border-strong); border-radius: var(--radius-md);
+      width: 100%; font: inherit; color: inherit;
       cursor: pointer; background: var(--color-surface); transition: background 0.2s;
     }
     .zone-depot:hover { background: var(--color-surface-alt); border-color: var(--color-primary); }
+    .zone-depot:focus-visible { outline: none; box-shadow: var(--focus-ring); }
     .grille-apercus { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: var(--space-3); margin-top: var(--space-2); }
     .vignette { position: relative; aspect-ratio: 1; border-radius: var(--radius-sm); overflow: hidden; border: 1px solid var(--color-border); }
     .vignette img { width: 100%; height: 100%; object-fit: cover; }
