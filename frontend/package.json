@@ -27,7 +27,7 @@
     "zone.js": "^0.15.1"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "^20.3.39",
+    "@angular-devkit/build-angular": "^20.3.40",
     "@angular/cli": "^20.3.32",
     "@angular/compiler-cli": "^20.3.32",
     "@playwright/test": "^1.64.0",
